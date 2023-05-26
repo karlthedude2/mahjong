@@ -1,0 +1,3 @@
+﻿Undo last action or multiple
+Save Game to do again
+High score and stats save

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <userSettings>
+        <MahjongSpriteVersion.Properties.Settings>
+            <setting name="HighScores" serializeAs="String">
+                <value>Karl          Number One           13832
+Karl          Number One           12898
+Karl          Number One           12872
+Karl          Number One           12621
+Karl          Number One           12308
+Karl          Number One           12275
+Karl          Number One           11853
+Karl          Number One           11695
+Karl          Number One           11643
+Karl          Number One           11451
+Karl          Number One           11348
+Karl          Number One           11215
+Karl          Number One           11203
+Karl          Number One           11052
+Karl          Number One           10960
+Karl          Number One           10877
+Karl          Number One           10777
+Karl          Number One           10770
+Karl          Number One           10700
+Karl          Number One           10611
+</value>
+            </setting>
+        </MahjongSpriteVersion.Properties.Settings>
+    </userSettings>
+</configuration>

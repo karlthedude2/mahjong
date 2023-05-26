@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6D136E3E-5EBC-4A1D-BB45-2FF77B13A418}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Mahjong</RootNamespace>
+    <AssemblyName>Mahjong</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CommonTypes.cs" />
+    <Compile Include="Coordinate.cs" />
+    <Compile Include="FavoriteLayout.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Layout.cs" />
+    <Compile Include="LayoutPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="LayoutPanel.Designer.cs">
+      <DependentUpon>LayoutPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleLayout.cs" />
+    <Compile Include="SimpleStyles.cs" />
+    <Compile Include="StandardTiles.cs" />
+    <Compile Include="Tile.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TileStyles.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LayoutPanel.resx">
+      <DependentUpon>LayoutPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Graphics\2bams.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Graphics\1crack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Graphics\1dots.png" />
+    <EmbeddedResource Include="Graphics\1flower.png" />
+    <EmbeddedResource Include="Graphics\1wizard.png" />
+    <EmbeddedResource Include="Graphics\2crack.png" />
+    <EmbeddedResource Include="Graphics\2dots.png" />
+    <EmbeddedResource Include="Graphics\2flower.png" />
+    <EmbeddedResource Include="Graphics\2wizard.png" />
+    <EmbeddedResource Include="Graphics\3bams.png" />
+    <EmbeddedResource Include="Graphics\3crack.png" />
+    <EmbeddedResource Include="Graphics\3dots.png" />
+    <EmbeddedResource Include="Graphics\3flower.png" />
+    <EmbeddedResource Include="Graphics\3wizard.png" />
+    <EmbeddedResource Include="Graphics\4bams.png" />
+    <EmbeddedResource Include="Graphics\4crack.png" />
+    <EmbeddedResource Include="Graphics\4dots.png" />
+    <EmbeddedResource Include="Graphics\4flower.png" />
+    <EmbeddedResource Include="Graphics\4wizard.png" />
+    <EmbeddedResource Include="Graphics\5bams.png" />
+    <EmbeddedResource Include="Graphics\5crack.png" />
+    <EmbeddedResource Include="Graphics\5dots.png" />
+    <EmbeddedResource Include="Graphics\6bams.png" />
+    <EmbeddedResource Include="Graphics\6crack.png" />
+    <EmbeddedResource Include="Graphics\6dots.png" />
+    <EmbeddedResource Include="Graphics\7bams.png" />
+    <EmbeddedResource Include="Graphics\7crack.png" />
+    <EmbeddedResource Include="Graphics\7dots.png" />
+    <EmbeddedResource Include="Graphics\8bams.png" />
+    <EmbeddedResource Include="Graphics\8crack.png" />
+    <EmbeddedResource Include="Graphics\8dots.png" />
+    <EmbeddedResource Include="Graphics\9bams.png" />
+    <EmbeddedResource Include="Graphics\9crack.png" />
+    <EmbeddedResource Include="Graphics\9dots.png" />
+    <EmbeddedResource Include="Graphics\Bdragon.png" />
+    <EmbeddedResource Include="Graphics\Cdragon.png" />
+    <EmbeddedResource Include="Graphics\East.png" />
+    <EmbeddedResource Include="Graphics\Fdragon.png" />
+    <EmbeddedResource Include="Graphics\North.png" />
+    <EmbeddedResource Include="Graphics\peacock.png" />
+    <EmbeddedResource Include="Graphics\South.png" />
+    <EmbeddedResource Include="Graphics\West.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="bk.ico" />
+    <Content Include="Icon1.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
