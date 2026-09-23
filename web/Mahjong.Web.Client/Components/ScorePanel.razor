@@ -16,6 +16,10 @@
         <div class="stat">
             <span class="label">Time</span>
             <span class="value">@clock.ClockText</span>
+            @if (!ClockStarted)
+            {
+                <span class="hint">Starts on your first move</span>
+            }
         </div>
     </div>
 
@@ -61,4 +65,6 @@
 
 @code {
     [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    [Parameter] public bool ClockStarted { get; set; } = true;
 }

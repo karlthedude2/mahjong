@@ -14,14 +14,26 @@
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["Mahjong.Web.styles.css"]" />
     <ImportMap />
-    @* Apply the saved background before the page paints (the game page keeps it up to date). *@
+    @* Apply the saved background and sound setting before the page paints. *@
     <script>
-        try {
-            var bg = localStorage.getItem("mahjong.backgroundUrl");
-            if (bg && /^backgrounds\/[a-z0-9-]+\.(svg|jpg|png|webp)$/.test(bg)) {
-                document.documentElement.style.setProperty("--page-background", 'url("' + bg + '")');
-            }
-        } catch (e) { }
+        window.mahjongApplySettings = function () {
+            try {
+                var root = document.documentElement;
+                var bg = localStorage.getItem("mahjong.backgroundUrl");
+                if (bg && /^backgrounds\/[a-z0-9-]+\.(svg|jpg|png|webp)$/.test(bg)) {
+                    root.style.setProperty("--page-background", 'url("' + bg + '")');
+                }
+                var muted = localStorage.getItem("mahjong.sound") === "off";
+                root.dataset.sound = muted ? "off" : "on";
+                document.querySelectorAll(".sound-toggle").forEach(function (button) {
+                    var label = muted ? "Turn sound on" : "Mute sound";
+                    button.setAttribute("aria-label", label);
+                    button.title = label;
+                    button.setAttribute("aria-pressed", muted ? "true" : "false");
+                });
+            } catch (e) { }
+        };
+        window.mahjongApplySettings();
     </script>
     <link rel="icon" type="image/png" href="favicon.png" />
     @if (!string.IsNullOrEmpty(Ads.Value.ClientId))
@@ -34,6 +46,24 @@
 <body>
     <Routes />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script>
+        // The speaker button in the header: flips the saved sound setting.
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest || !e.target.closest(".sound-toggle")) {
+                return;
+            }
+            try {
+                var muted = localStorage.getItem("mahjong.sound") === "off";
+                localStorage.setItem("mahjong.sound", muted ? "on" : "off");
+            } catch (err) { }
+            window.mahjongApplySettings();
+        });
+        // Page changes inside the site redraw the header, so reapply the settings afterwards.
+        document.addEventListener("DOMContentLoaded", window.mahjongApplySettings);
+        if (window.Blazor) {
+            Blazor.addEventListener("enhancedload", window.mahjongApplySettings);
+        }
+    </script>
     <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
 </body>
 

@@ -3,6 +3,11 @@
 const sounds = new Map();
 
 export function playSound(url) {
+    // Muted with the speaker button in the header.
+    if (getSetting("sound") === "off") {
+        return;
+    }
+
     let audio = sounds.get(url);
     if (!audio) {
         audio = new Audio(url);

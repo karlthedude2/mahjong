@@ -35,7 +35,10 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
     /// <summary>True if this game's score will be verified and can reach the leaderboard.</summary>
     public bool IsRanked => serverGameId.HasValue;
 
-    public bool CanPause => State is SessionState.Playing or SessionState.NoMovesLeft or SessionState.Paused;
+    /// <summary>False until the player's first move: the clock doesn't run before then.</summary>
+    public bool ClockStarted { get; private set; }
+
+    public bool CanPause => ClockStarted && State is SessionState.Playing or SessionState.NoMovesLeft or SessionState.Paused;
 
     /// <summary>A problem to show the player (e.g. a pause that couldn't reach the server), or null.</summary>
     public string? Message { get; private set; }
@@ -67,7 +70,8 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
 
         Game = new MahjongGame(layout, seed);
         State = SessionState.Playing;
-        playTime.Restart();
+        ClockStarted = false;
+        playTime.Reset();
         timer = new Timer(_ => OnTick(), null, TimeSpan.FromMilliseconds(250), TimeSpan.FromMilliseconds(250));
         Changed?.Invoke();
     }
@@ -75,6 +79,11 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
     public async Task ClickAsync(Tile tile)
     {
         if (Game == null || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !Game.Board.IsFree(tile))
+        {
+            return;
+        }
+
+        if (!await StartClockAsync())
         {
             return;
         }
@@ -164,6 +173,11 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
             return;
         }
 
+        if (!await StartClockAsync())
+        {
+            return;
+        }
+
         Selected = null;
         CatchUpClock();
         if (change(Game))
@@ -172,6 +186,30 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         }
 
         Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// Starts the clock on the player's first move. A ranked game starts out paused on the server,
+    /// so this also resumes it there; if the server can't be reached, the move is held back.
+    /// </summary>
+    private async Task<bool> StartClockAsync()
+    {
+        if (ClockStarted)
+        {
+            return true;
+        }
+
+        if (serverGameId is { } id && !await api.SetPausedAsync(id, paused: false))
+        {
+            Message = "Couldn't start the game: the server didn't respond. Check your connection and try again.";
+            Changed?.Invoke();
+            return false;
+        }
+
+        Message = null;
+        ClockStarted = true;
+        playTime.Start();
+        return true;
     }
 
     private async Task UpdateStateAsync()

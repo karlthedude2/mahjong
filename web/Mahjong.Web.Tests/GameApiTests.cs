@@ -111,6 +111,22 @@ public sealed class GameApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TimeBeforeTheFirstMoveIsNotCounted()
+    {
+        var client = app.ClientFor("alice");
+        var started = await StartAsync(client, startClock: false);
+
+        // Ten minutes studying the board, then the first move starts the clock.
+        app.Time.Advance(TimeSpan.FromMinutes(10));
+        (await client.PostAsync($"api/games/{started.GameId}/resume", null)).EnsureSuccessStatusCode();
+
+        var game = Play(started.Seed, secondsPerMove: 2);
+        var response = await FinishAsync(client, started.GameId, game.Record!);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task PausedTimeIsLeftOutOfTheClockCheck()
     {
         var client = app.ClientFor("alice");
@@ -134,7 +150,7 @@ public sealed class GameApiTests : IAsyncLifetime
         var client = app.ClientFor("alice");
         var started = await StartAsync(client);
 
-        await client.PostAsync($"api/games/{started.GameId}/resume", null); // not paused: no effect
+        await client.PostAsync($"api/games/{started.GameId}/resume", null); // already running: no effect
         await client.PostAsync($"api/games/{started.GameId}/pause", null);
         app.Time.Advance(TimeSpan.FromMinutes(5));
         await client.PostAsync($"api/games/{started.GameId}/pause", null); // already paused: keeps the first time
@@ -230,11 +246,18 @@ public sealed class GameApiTests : IAsyncLifetime
         Assert.Equal(Enumerable.Range(1, GameService.LeaderboardSize), board.Select(e => e.Rank));
     }
 
-    private static async Task<StartGameResponse> StartAsync(HttpClient client)
+    /// <summary>Starts a game and makes the first move's call that starts its clock, like the browser does.</summary>
+    private static async Task<StartGameResponse> StartAsync(HttpClient client, bool startClock = true)
     {
         var response = await client.PostAsJsonAsync("api/games", new StartGameRequest(TestLayout));
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<StartGameResponse>())!;
+        var started = (await response.Content.ReadFromJsonAsync<StartGameResponse>())!;
+        if (startClock)
+        {
+            (await client.PostAsync($"api/games/{started.GameId}/resume", null)).EnsureSuccessStatusCode();
+        }
+
+        return started;
     }
 
     private static Task<HttpResponseMessage> FinishAsync(HttpClient client, Guid gameId, GameRecord record) =>

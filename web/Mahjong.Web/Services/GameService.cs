@@ -40,14 +40,19 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return null;
         }
 
+        var now = time.GetUtcNow().UtcDateTime;
         var game = new GameEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             LayoutName = layout.Name,
             Seed = NewSeed(),
-            StartedUtc = time.GetUtcNow().UtcDateTime,
+            StartedUtc = now,
             Status = GameOutcome.InProgress,
+
+            // The clock starts with the player's first move, which resumes the game; until then
+            // the game counts as paused, so looking at the board first costs nothing.
+            PausedAtUtc = now,
         };
         db.Games.Add(game);
         await db.Users.Where(u => u.Id == userId)

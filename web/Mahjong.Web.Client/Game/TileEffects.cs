@@ -13,7 +13,8 @@ public interface ITileEffects
     ValueTask OnPairRemovedAsync(Tile first, Tile second);
 }
 
-public sealed class SoundTileEffects(BrowserInterop browser, PlayerPreferences preferences) : ITileEffects
+/// <summary>Plays a click; the browser skips it when the header's speaker button has muted sound.</summary>
+public sealed class SoundTileEffects(BrowserInterop browser) : ITileEffects
 {
     private const string ClickSound = "sounds/click.wav";
 
@@ -21,11 +22,5 @@ public sealed class SoundTileEffects(BrowserInterop browser, PlayerPreferences p
 
     public ValueTask OnPairRemovedAsync(Tile first, Tile second) => PlayAsync();
 
-    private async ValueTask PlayAsync()
-    {
-        if (preferences.SoundOn)
-        {
-            await browser.PlaySoundAsync(ClickSound);
-        }
-    }
+    private ValueTask PlayAsync() => browser.PlaySoundAsync(ClickSound);
 }

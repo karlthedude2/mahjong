@@ -3,7 +3,7 @@ using Mahjong.Web.Client.Api;
 namespace Mahjong.Web.Client.Game;
 
 /// <summary>
-/// Tile set, background, sound and last layout. Kept in the browser's local storage; the tile set
+/// Tile set, background and last layout. Kept in the browser's local storage; the tile set
 /// and background are also saved to the player's profile when signed in, so they follow them to
 /// other devices.
 /// </summary>
@@ -11,7 +11,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 {
     private const string TileSetKey = "tileSet";
     private const string BackgroundKey = "background";
-    private const string SoundKey = "sound";
     private const string LayoutKey = "layout";
 
     private bool signedIn;
@@ -20,8 +19,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 
     public BackgroundInfo Background { get; private set; } = Backgrounds.Default;
 
-    public bool SoundOn { get; private set; } = true;
-
     public string? LastLayout { get; private set; }
 
     public async Task LoadAsync(bool isSignedIn)
@@ -29,7 +26,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         signedIn = isSignedIn;
         TileSet = TileSets.Find(await browser.GetSettingAsync(TileSetKey));
         Background = Backgrounds.Find(await browser.GetSettingAsync(BackgroundKey));
-        SoundOn = await browser.GetSettingAsync(SoundKey) != "off";
         LastLayout = await browser.GetSettingAsync(LayoutKey);
 
         if (signedIn)
@@ -71,12 +67,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         {
             await api.UpdateProfileAsync(new UpdateProfileRequest(null, null, background.Id));
         }
-    }
-
-    public async Task SetSoundAsync(bool on)
-    {
-        SoundOn = on;
-        await browser.SetSettingAsync(SoundKey, on ? "on" : "off");
     }
 
     public async Task SetLastLayoutAsync(string layout)
