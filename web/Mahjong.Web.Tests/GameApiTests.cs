@@ -111,6 +111,55 @@ public sealed class GameApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PausedTimeIsLeftOutOfTheClockCheck()
+    {
+        var client = app.ClientFor("alice");
+        var started = await StartAsync(client);
+
+        // A ten-minute pause in the middle; the game clock doesn't move while paused.
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync($"api/games/{started.GameId}/pause", null)).StatusCode);
+        app.Time.Advance(TimeSpan.FromMinutes(10));
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync($"api/games/{started.GameId}/resume", null)).StatusCode);
+
+        var game = Play(started.Seed, secondsPerMove: 2);
+        var response = await FinishAsync(client, started.GameId, game.Record!);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True((await response.Content.ReadFromJsonAsync<FinishGameResponse>())!.Won);
+    }
+
+    [Fact]
+    public async Task RepeatedPauseOrResumeCallsAreHarmless()
+    {
+        var client = app.ClientFor("alice");
+        var started = await StartAsync(client);
+
+        await client.PostAsync($"api/games/{started.GameId}/resume", null); // not paused: no effect
+        await client.PostAsync($"api/games/{started.GameId}/pause", null);
+        app.Time.Advance(TimeSpan.FromMinutes(5));
+        await client.PostAsync($"api/games/{started.GameId}/pause", null); // already paused: keeps the first time
+        app.Time.Advance(TimeSpan.FromMinutes(5));
+        await client.PostAsync($"api/games/{started.GameId}/resume", null);
+
+        double paused = await app.WithDbAsync(async db => (await db.Games.FindAsync(started.GameId))!.PausedSeconds);
+        Assert.Equal(600, paused, precision: 3);
+    }
+
+    [Fact]
+    public async Task OnlyTheOwnerCanPauseAnUnfinishedGame()
+    {
+        var alice = app.ClientFor("alice");
+        var started = await StartAsync(alice);
+
+        var byBob = await app.ClientFor("bob").PostAsync($"api/games/{started.GameId}/pause", null);
+        await FinishAsync(alice, started.GameId, Play(started.Seed, secondsPerMove: 1).Record!);
+        var afterFinish = await alice.PostAsync($"api/games/{started.GameId}/pause", null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, byBob.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, afterFinish.StatusCode);
+    }
+
+    [Fact]
     public async Task PlayersCannotFinishSomeoneElsesGame()
     {
         var started = await StartAsync(app.ClientFor("alice"));

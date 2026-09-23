@@ -32,13 +32,13 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
 
     public SessionState State { get; private set; } = SessionState.NotStarted;
 
-    /// <summary>
-    /// True if this game's score will be verified and can reach the leaderboard. Ranked games
-    /// can't be paused: the server checks the game clock against real time.
-    /// </summary>
+    /// <summary>True if this game's score will be verified and can reach the leaderboard.</summary>
     public bool IsRanked => serverGameId.HasValue;
 
-    public bool CanPause => !IsRanked && State is SessionState.Playing or SessionState.Paused;
+    public bool CanPause => State is SessionState.Playing or SessionState.NoMovesLeft or SessionState.Paused;
+
+    /// <summary>A problem to show the player (e.g. a pause that couldn't reach the server), or null.</summary>
+    public string? Message { get; private set; }
 
     /// <summary>The server's result for a finished ranked game (null for guests or if it failed).</summary>
     public FinishGameResponse? Result { get; private set; }
@@ -51,6 +51,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         serverGameId = null;
         Result = null;
         Selected = null;
+        Message = null;
 
         long seed;
         if (ranked)
@@ -111,23 +112,44 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
 
     public async Task RedoAsync() => await ChangeBoardAsync(game => game.Redo());
 
-    public void TogglePause()
+    /// <summary>
+    /// Pauses or resumes. The board is hidden while paused and the clock stops. For ranked games
+    /// the server records the pause too (it times pauses itself), so the verified clock still
+    /// matches; if the server can't be reached, nothing changes and a message is shown.
+    /// </summary>
+    public async Task TogglePauseAsync()
     {
-        if (!CanPause)
+        if (!CanPause || Game == null)
         {
             return;
         }
 
-        if (State == SessionState.Playing)
+        bool pausing = State != SessionState.Paused;
+        if (pausing)
         {
             CatchUpClock();
+        }
+
+        if (serverGameId is { } id && !await api.SetPausedAsync(id, pausing))
+        {
+            Message = pausing
+                ? "Couldn't pause: the server didn't respond. Check your connection and try again."
+                : "Couldn't resume: the server didn't respond. Check your connection and try again.";
+            Changed?.Invoke();
+            return;
+        }
+
+        Message = null;
+        if (pausing)
+        {
             playTime.Stop();
+            Selected = null;
             State = SessionState.Paused;
         }
         else
         {
             playTime.Start();
-            State = SessionState.Playing;
+            State = Game.Status == GameStatus.NoMovesLeft ? SessionState.NoMovesLeft : SessionState.Playing;
         }
 
         Changed?.Invoke();

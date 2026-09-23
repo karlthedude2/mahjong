@@ -38,7 +38,7 @@
             <button class="btn btn-sm btn-light" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)" title="Redeals the remaining tiles. Costs 1,000 of the no-shuffle bonus.">Shuffle</button>
             <button class="btn btn-sm btn-light" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)">Undo</button>
             <button class="btn btn-sm btn-light" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)">Redo</button>
-            <button class="btn btn-sm btn-light" @onclick="Session.TogglePause" disabled="@(!Session.CanPause)" title="@(Session.IsRanked ? "Ranked games can't be paused" : null)">
+            <button class="btn btn-sm btn-light" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)">
                 @(Session.State == SessionState.Paused ? "Resume" : "Pause")
             </button>
             <label class="sound-toggle">
@@ -54,6 +54,11 @@
         @if (error != null)
         {
             <div class="notice warning">@error</div>
+        }
+
+        @if (Session.Message != null)
+        {
+            <div class="notice warning">@Session.Message</div>
         }
 
         @if (Session.State == SessionState.NoMovesLeft)

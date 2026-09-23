@@ -26,6 +26,20 @@ public sealed class GameApi(HttpClient http)
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<FinishGameResponse>() : null;
     }
 
+    /// <summary>Tells the server a ranked game is paused (or resumed). Returns false if the call failed.</summary>
+    public async Task<bool> SetPausedAsync(Guid gameId, bool paused)
+    {
+        try
+        {
+            var response = await http.PostAsync($"api/games/{gameId}/{(paused ? "pause" : "resume")}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
     public Task<PlayerProfile?> GetProfileAsync() => http.GetFromJsonAsync<PlayerProfile>("api/me");
 
     public async Task UpdateProfileAsync(UpdateProfileRequest request)

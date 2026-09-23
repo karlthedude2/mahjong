@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Mahjong.Web.Services;
 
-public enum FinishOutcome
+public enum GameActionOutcome
 {
     Ok,
     NotFound,
@@ -16,7 +16,7 @@ public enum FinishOutcome
     Invalid
 }
 
-public sealed record FinishResult(FinishOutcome Outcome, FinishGameResponse? Response = null, string? Error = null);
+public sealed record FinishResult(GameActionOutcome Outcome, FinishGameResponse? Response = null, string? Error = null);
 
 /// <summary>
 /// Starts ranked games and verifies finished ones. The server picks the seed, replays the
@@ -27,8 +27,8 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     public const int LeaderboardSize = 20;
 
     /// <summary>
-    /// How far the game clock may drift from real time. Ranked games can't be paused, so the
-    /// game clock should match the time since the server started the game, less request latency.
+    /// How far the game clock may drift from the real time played (time since the server started
+    /// the game, less the pauses the server recorded), allowing for request latency.
     /// </summary>
     public static readonly TimeSpan ClockTolerance = TimeSpan.FromSeconds(30);
 
@@ -59,20 +59,10 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
     public async Task<FinishResult> FinishAsync(string userId, Guid gameId, GameRecord? record)
     {
-        var game = await db.Games.FindAsync(gameId);
+        var (game, problem) = await FindOwnGameInProgressAsync(userId, gameId);
         if (game == null)
         {
-            return new(FinishOutcome.NotFound);
-        }
-
-        if (game.UserId != userId)
-        {
-            return new(FinishOutcome.Forbidden);
-        }
-
-        if (game.Status != GameOutcome.InProgress)
-        {
-            return new(FinishOutcome.AlreadyFinished);
+            return new(problem);
         }
 
         var now = time.GetUtcNow().UtcDateTime;
@@ -87,7 +77,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             game.Status = GameOutcome.Lost;
             await db.SaveChangesAsync();
             logger.LogWarning("Rejected game {GameId} from {UserId}: {Error}", gameId, userId, error);
-            return new(FinishOutcome.Invalid, Error: error);
+            return new(GameActionOutcome.Invalid, Error: error);
         }
 
         game.Status = replay!.Complete ? GameOutcome.Won : GameOutcome.Lost;
@@ -105,7 +95,34 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
         }
 
         await db.SaveChangesAsync();
-        return new(FinishOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank));
+        return new(GameActionOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank));
+    }
+
+    /// <summary>
+    /// Pauses or resumes a ranked game. The server times pauses itself, so paused time is
+    /// left out of the clock check without trusting the browser. Repeating a call is harmless.
+    /// </summary>
+    public async Task<GameActionOutcome> SetPausedAsync(string userId, Guid gameId, bool paused)
+    {
+        var (game, problem) = await FindOwnGameInProgressAsync(userId, gameId);
+        if (game == null)
+        {
+            return problem;
+        }
+
+        var now = time.GetUtcNow().UtcDateTime;
+        if (paused && game.PausedAtUtc == null)
+        {
+            game.PausedAtUtc = now;
+        }
+        else if (!paused && game.PausedAtUtc is { } pausedAt)
+        {
+            game.PausedSeconds += (now - pausedAt).TotalSeconds;
+            game.PausedAtUtc = null;
+        }
+
+        await db.SaveChangesAsync();
+        return GameActionOutcome.Ok;
     }
 
     public async Task<IReadOnlyList<LeaderboardEntry>> GetLeaderboardAsync(string layoutName)
@@ -139,14 +156,35 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return replay.Error;
         }
 
-        var wallClock = now - game.StartedUtc;
+        var playTime = game.PlayTime(now);
         var gameClock = TimeSpan.FromSeconds(replay.ElapsedSeconds);
-        if (gameClock > wallClock + ClockTolerance || gameClock < wallClock - ClockTolerance)
+        if (gameClock > playTime + ClockTolerance || gameClock < playTime - ClockTolerance)
         {
-            return $"Game clock ({gameClock.TotalSeconds:0}s) doesn't match the time since the game started ({wallClock.TotalSeconds:0}s).";
+            return $"Game clock ({gameClock.TotalSeconds:0}s) doesn't match the time played ({playTime.TotalSeconds:0}s).";
         }
 
         return null;
+    }
+
+    private async Task<(GameEntity? Game, GameActionOutcome Problem)> FindOwnGameInProgressAsync(string userId, Guid gameId)
+    {
+        var game = await db.Games.FindAsync(gameId);
+        if (game == null)
+        {
+            return (null, GameActionOutcome.NotFound);
+        }
+
+        if (game.UserId != userId)
+        {
+            return (null, GameActionOutcome.Forbidden);
+        }
+
+        if (game.Status != GameOutcome.InProgress)
+        {
+            return (null, GameActionOutcome.AlreadyFinished);
+        }
+
+        return (game, GameActionOutcome.Ok);
     }
 
     /// <summary>Adds the score if it makes the top 20, trims the list, and returns the new rank.</summary>

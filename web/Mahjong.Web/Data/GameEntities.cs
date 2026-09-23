@@ -28,6 +28,24 @@ public class GameEntity
 
     public GameOutcome Status { get; set; }
 
+    /// <summary>Total time the game spent paused, measured by the server.</summary>
+    public double PausedSeconds { get; set; }
+
+    /// <summary>When the current pause began, if the game is paused now.</summary>
+    public DateTime? PausedAtUtc { get; set; }
+
+    /// <summary>Real time spent playing: time since the start, less time spent paused.</summary>
+    public TimeSpan PlayTime(DateTime now)
+    {
+        var paused = TimeSpan.FromSeconds(PausedSeconds);
+        if (PausedAtUtc is { } pausedAt)
+        {
+            paused += now - pausedAt;
+        }
+
+        return now - StartedUtc - paused;
+    }
+
     /// <summary>The score the server computed by replaying the game.</summary>
     public int? Score { get; set; }
 

@@ -33,15 +33,14 @@ public static partial class ApiEndpoints
         games.MapPost("/{id:guid}/finish", async (Guid id, FinishGameRequest request, ClaimsPrincipal user, GameService service) =>
         {
             var result = await service.FinishAsync(UserId(user), id, request.Record);
-            return result.Outcome switch
-            {
-                FinishOutcome.Ok => Results.Ok(result.Response),
-                FinishOutcome.NotFound => Results.NotFound(),
-                FinishOutcome.Forbidden => Results.Forbid(),
-                FinishOutcome.AlreadyFinished => Results.Conflict("This game has already been finished."),
-                _ => Results.BadRequest(result.Error),
-            };
+            return result.Outcome == GameActionOutcome.Ok ? Results.Ok(result.Response) : ToResult(result.Outcome, result.Error);
         });
+
+        games.MapPost("/{id:guid}/pause", async (Guid id, ClaimsPrincipal user, GameService service) =>
+            ToResult(await service.SetPausedAsync(UserId(user), id, paused: true)));
+
+        games.MapPost("/{id:guid}/resume", async (Guid id, ClaimsPrincipal user, GameService service) =>
+            ToResult(await service.SetPausedAsync(UserId(user), id, paused: false)));
 
         var me = api.MapGroup("/me").RequireAuthorization();
 
@@ -86,6 +85,15 @@ public static partial class ApiEndpoints
             return Results.NoContent();
         });
     }
+
+    private static IResult ToResult(GameActionOutcome outcome, string? error = null) => outcome switch
+    {
+        GameActionOutcome.Ok => Results.NoContent(),
+        GameActionOutcome.NotFound => Results.NotFound(),
+        GameActionOutcome.Forbidden => Results.Forbid(),
+        GameActionOutcome.AlreadyFinished => Results.Conflict("This game has already been finished."),
+        _ => Results.BadRequest(error),
+    };
 
     private static string UserId(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 

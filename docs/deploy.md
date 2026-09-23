@@ -140,7 +140,9 @@ Also register `https://localhost:7015/signin-google` as a redirect URI.
 - The server replays those moves with the same rules code (`Mahjong.Core`) and rejects any
   impossible move.
 - The score is computed by the server; any score the browser claims is ignored.
-- The game clock must match the real time since the game started, within 30 seconds. That's also
-  why ranked games can't be paused.
+- The game clock must match the real time played, within 30 seconds. Pausing works for everyone:
+  the browser tells the server when a ranked game is paused and resumed, and the server times the
+  pause itself, so paused time is left out without trusting the browser. The board is hidden
+  while paused.
 - A player can still play well with help, but forged scores, impossible games and faked times are
   rejected.
