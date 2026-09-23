@@ -7,6 +7,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mahjong.Core", "Mahjong.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mahjong.Core.Tests", "Mahjong.Core.Tests\Mahjong.Core.Tests.csproj", "{E5919FF1-E2A9-41C9-B44E-F6DA6B14C722}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web", "web", "{256F4E96-6A73-9ABE-786F-840C672A50F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mahjong.Web", "web\Mahjong.Web\Mahjong.Web.csproj", "{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mahjong.Web.Client", "web\Mahjong.Web.Client\Mahjong.Web.Client.csproj", "{8B9B7537-DC70-4216-8D09-363C80C69D62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mahjong.Web.Tests", "web\Mahjong.Web.Tests\Mahjong.Web.Tests.csproj", "{AE1461D3-77B3-4976-9A88-EFB77298EB64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,9 +61,50 @@ Global
 		{E5919FF1-E2A9-41C9-B44E-F6DA6B14C722}.Release|x64.Build.0 = Release|Any CPU
 		{E5919FF1-E2A9-41C9-B44E-F6DA6B14C722}.Release|x86.ActiveCfg = Release|Any CPU
 		{E5919FF1-E2A9-41C9-B44E-F6DA6B14C722}.Release|x86.Build.0 = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|x64.Build.0 = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Debug|x86.Build.0 = Debug|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|x64.ActiveCfg = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|x64.Build.0 = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE}.Release|x86.Build.0 = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|x64.Build.0 = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Debug|x86.Build.0 = Debug|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|x64.ActiveCfg = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|x64.Build.0 = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|x86.ActiveCfg = Release|Any CPU
+		{8B9B7537-DC70-4216-8D09-363C80C69D62}.Release|x86.Build.0 = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|x64.Build.0 = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Debug|x86.Build.0 = Debug|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|x64.ActiveCfg = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|x64.Build.0 = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AE9D8C71-F65D-4D7A-BC7B-1FF52CF0A0DE} = {256F4E96-6A73-9ABE-786F-840C672A50F4}
+		{8B9B7537-DC70-4216-8D09-363C80C69D62} = {256F4E96-6A73-9ABE-786F-840C672A50F4}
+		{AE1461D3-77B3-4976-9A88-EFB77298EB64} = {256F4E96-6A73-9ABE-786F-840C672A50F4}
 	EndGlobalSection
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 3

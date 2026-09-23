@@ -1,0 +1,44 @@
+@using Mahjong.Web.Client.Game
+@inject BrowserInterop Browser
+
+@*
+    One Google AdSense unit. Until the AdSense client ID and this slot's ID are configured
+    (Ads:ClientId and Ads:*Slot in the server's settings), it shows a labelled placeholder.
+*@
+<div class="ad-slot @CssClass">
+    @if (string.IsNullOrEmpty(ClientId) || string.IsNullOrEmpty(SlotId))
+    {
+        <div class="ad-placeholder">Advertisement</div>
+    }
+    else
+    {
+        <ins @ref="unit"
+             class="adsbygoogle"
+             style="display:block"
+             data-ad-client="@ClientId"
+             data-ad-slot="@SlotId"
+             data-ad-format="@Format"
+             data-full-width-responsive="true"></ins>
+    }
+</div>
+
+@code {
+    private ElementReference unit;
+
+    [Parameter] public string? ClientId { get; set; }
+
+    [Parameter] public string? SlotId { get; set; }
+
+    /// <summary>AdSense format: "auto", "vertical", "horizontal" or "rectangle".</summary>
+    [Parameter] public string Format { get; set; } = "auto";
+
+    [Parameter] public string? CssClass { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!string.IsNullOrEmpty(ClientId) && !string.IsNullOrEmpty(SlotId))
+        {
+            await Browser.PushAdAsync(unit);
+        }
+    }
+}

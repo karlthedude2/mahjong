@@ -1,0 +1,123 @@
+/*
+    Wide screens: [ad rail] [game] [ad rail]; signed-in players get only the right rail.
+    Narrow screens: rails are hidden and a banner sits under the game instead.
+*/
+.play-page {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr) 160px;
+    grid-template-areas: "left game right";
+    gap: 1rem;
+    height: calc(100vh - var(--nav-height));
+    padding: 1rem;
+}
+
+.play-page.signed-in {
+    grid-template-columns: minmax(0, 1fr) 160px;
+    grid-template-areas: "game right";
+}
+
+.ad-rail.left { grid-area: left; }
+.ad-rail.right { grid-area: right; }
+
+.ad-banner {
+    display: none;
+}
+
+.game {
+    grid-area: game;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-height: 0;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.toolbar .form-select {
+    width: auto;
+}
+
+.sound-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    margin-left: 0.25rem;
+}
+
+.notice {
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.85);
+    color: #2b2116;
+    font-size: 0.9rem;
+}
+
+.notice.warning {
+    background: #fff3cd;
+}
+
+.play-table {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: 1rem;
+}
+
+.board-area {
+    min-height: 0;
+    position: relative;
+}
+
+.paused,
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+@media (max-width: 1200px) {
+    .play-page,
+    .play-page.signed-in {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "game" "banner";
+        grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    .ad-rail {
+        display: none;
+    }
+
+    .ad-banner {
+        display: block;
+        grid-area: banner;
+        min-height: 90px;
+    }
+}
+
+@media (max-width: 800px) {
+    .play-page,
+    .play-page.signed-in {
+        height: auto;
+    }
+
+    .play-table {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .board-area {
+        height: 70vh;
+    }
+}

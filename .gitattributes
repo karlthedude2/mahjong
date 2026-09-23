@@ -1,0 +1,10 @@
+* text=auto
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.wav binary
+*.psd binary
+*.bmp binary
+*.exe binary

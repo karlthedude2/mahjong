@@ -1,0 +1,66 @@
+@page "/stats"
+@using System.Security.Claims
+@using Mahjong.Web.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize]
+@inject ApplicationDbContext Db
+
+<PageTitle>My stats</PageTitle>
+
+<h1>My stats</h1>
+
+@if (user != null)
+{
+    <div class="d-flex gap-4 flex-wrap mb-4">
+        <div><div class="text-muted small">Games played</div><div class="fs-3 fw-bold">@user.GamesPlayed</div></div>
+        <div><div class="text-muted small">Games won</div><div class="fs-3 fw-bold">@user.GamesWon</div></div>
+        <div><div class="text-muted small">Win rate</div><div class="fs-3 fw-bold">@(user.GamesPlayed == 0 ? "-" : $"{100.0 * user.GamesWon / user.GamesPlayed:0}%")</div></div>
+    </div>
+
+    <h2 class="h4">Best scores</h2>
+    @if (bests.Count == 0)
+    {
+        <p>Win a game to set your first best score.</p>
+    }
+    else
+    {
+        <table class="table table-sm">
+            <thead><tr><th scope="col">Layout</th><th scope="col" class="text-end">Best</th><th scope="col" class="text-end">Wins</th></tr></thead>
+            <tbody>
+                @foreach (var best in bests)
+                {
+                    <tr>
+                        <td><a href="leaderboards?layout=@Uri.EscapeDataString(best.Layout)">@best.Layout</a></td>
+                        <td class="text-end">@best.Score.ToString("N0")</td>
+                        <td class="text-end">@best.Wins</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private ApplicationUser? user;
+    private List<Best> bests = [];
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = (await AuthState).User.FindFirstValue(ClaimTypes.NameIdentifier);
+        user = await Db.Users.FindAsync(userId);
+
+        var rows = await Db.Games
+            .Where(g => g.UserId == userId && g.Status == GameOutcome.Won)
+            .GroupBy(g => g.LayoutName)
+            .Select(g => new { Layout = g.Key, Score = g.Max(x => x.Score) ?? 0, Wins = g.Count() })
+            .OrderByDescending(b => b.Score)
+            .ToListAsync();
+        bests = rows.Select(r => new Best(r.Layout, r.Score, r.Wins)).ToList();
+    }
+
+    private sealed record Best(string Layout, int Score, int Wins);
+}

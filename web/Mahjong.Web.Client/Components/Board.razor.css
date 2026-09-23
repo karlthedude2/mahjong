@@ -1,0 +1,59 @@
+.board {
+    width: 100%;
+    height: 100%;
+    display: block;
+    user-select: none;
+}
+
+.tile {
+    cursor: pointer;
+}
+
+.tile.selected {
+    filter: brightness(0.72);
+}
+
+.tile:hover:not(.selected) {
+    filter: brightness(1.05);
+}
+
+/* Drawn ("Simple") tile set */
+
+.glyph-edge {
+    fill: #b9a57a;
+    stroke: #6b5a36;
+    stroke-width: 1.5;
+}
+
+.glyph-face {
+    fill: #fffdf6;
+    stroke: #6b5a36;
+    stroke-width: 1.5;
+}
+
+.board ::deep .glyph-main,
+.board ::deep .glyph-caption {
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+}
+
+.board ::deep .glyph-main {
+    font-size: 52px;
+    font-weight: 800;
+}
+
+.board ::deep .glyph-caption {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.board ::deep .red { fill: #c0141b; }
+.board ::deep .green { fill: #0d7a2e; }
+.board ::deep .blue { fill: #134ea8; }
+.board ::deep .wind { fill: #1b1b1b; }
+.board ::deep .flower { fill: #b0217a; }
+.board ::deep .season { fill: #b35a00; }
