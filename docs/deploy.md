@@ -17,10 +17,14 @@ the database and deploys on every push to `main`.
   - The app sleeps when idle, so the first visit after a quiet spell takes a few seconds.
   - No custom domain, so the site lives at `https://<APP_NAME>.azurewebsites.net`.
   - No staging slot.
+  - A subscription can have several free plans (currently up to 10 per region), so this can sit
+    alongside other free apps you run.
 - **Azure SQL free offer.**
-  - 100,000 vCore-seconds and 32 GB a month, free.
+  - Up to **10 free databases per subscription**, each with its own monthly allowance of
+    100,000 vCore-seconds and 32 GB.
   - If the allowance runs out, the database pauses until next month instead of charging you.
-  - **Each subscription gets one free database.**
+  - **All free databases in a subscription must be in the same region.** If you already have one,
+    deploy to that region (see step 1).
 - **Email.** Pay per message, fractions of a cent each.
 
 To upgrade, run `infra.yml` and pick `B1` (about $13/month; always on, health checks) or `S1`
@@ -37,6 +41,11 @@ To upgrade, run `infra.yml` and pick `B1` (about $13/month; always on, health ch
 ```powershell
 ./infra/bootstrap.ps1 -AppName mahjong-karl -Location eastus
 ```
+
+Choose `-Location` carefully. Everything is created in that region, and Azure requires all of a
+subscription's free databases to share one region. If you already have a free Azure SQL database,
+use its region: in the Azure portal, open that database and read **Location** on its Overview
+page, then pass the short name (for example `westus2` for "West US 2").
 
 It creates the resource group and an app registration that trusts this repository, and gives it
 Contributor on the resource group. When it finishes, it prints the values to add to GitHub.
