@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -5,6 +6,9 @@ namespace Mahjong.Web.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
+    /// <summary>Identity's table layout (Version3 adds passkeys). Shared by the app and the EF tools.</summary>
+    public static readonly Version IdentitySchemaVersion = IdentitySchemaVersions.Version3;
+
     public DbSet<GameEntity> Games => Set<GameEntity>();
 
     public DbSet<HighScoreEntity> HighScores => Set<HighScoreEntity>();

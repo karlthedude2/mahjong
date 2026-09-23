@@ -1,12 +1,24 @@
 # Mahjong By Karl
 
-Mahjong solitaire for Windows (WinForms, .NET Framework 4.8).
+Mahjong solitaire for Windows (WinForms, .NET Framework 4.8) and the web (Blazor, .NET 10). Both versions share the same rules and layouts.
 
 ## Projects
 
-- **MahjongSpriteVersion**: the game window. It handles drawing, clicks, sound and high scores.
-- **Mahjong.Core**: the game rules, with no UI. It covers the board, the blocking rule, the winnable dealer, scoring, undo/redo and the layout files.
+- **Mahjong.Core**: the game rules, with no UI. Both versions use it. It covers:
+  - the board and the blocking rule;
+  - the winnable dealer;
+  - scoring, with a breakdown of each bonus;
+  - undo/redo;
+  - game records and replay;
+  - shared tile geometry;
+  - the layout files.
 - **Mahjong.Core.Tests**: tests for the rules. Run them with `dotnet test Mahjong.Core.Tests`.
+- **MahjongSpriteVersion**: the desktop game window. It handles drawing, clicks, sound and high scores.
+- **web/Mahjong.Web**: the web server. It provides accounts (email, Google, Microsoft, Facebook), the API that verifies games, leaderboards and player stats. It runs on Azure App Service with Azure SQL.
+- **web/Mahjong.Web.Client**: the game in the browser (Blazor WebAssembly). It provides the board, score panel, tile sets, sound and ad slots.
+- **web/Mahjong.Web.Tests**: integration tests for the web API.
+
+See [docs/deploy.md](docs/deploy.md) for running the web version locally and for deploying to Azure (CI/CD with GitHub Actions).
 
 ## Adding a layout
 

@@ -1,0 +1,98 @@
+name: Deploy web app
+
+# Every push to main is tested, the database is migrated, and the site is deployed.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # sign in to Azure with OIDC (no stored password)
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Add required reviewers to this environment in GitHub to approve each deploy.
+    environment:
+      name: production
+      url: https://${{ vars.APP_NAME }}.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: |
+          dotnet test Mahjong.Core.Tests --configuration Release
+          dotnet test web/Mahjong.Web.Tests --configuration Release
+
+      - name: Publish
+        run: dotnet publish web/Mahjong.Web --configuration Release --output ${{ runner.temp }}/web
+
+      - name: Build migration bundle
+        run: |
+          dotnet tool restore
+          dotnet ef migrations bundle --project web/Mahjong.Web --configuration Release \
+            --self-contained --target-runtime linux-x64 --output ${{ runner.temp }}/efbundle
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # The database only accepts Azure services, so let this runner in just for the migration.
+      - name: Open database firewall for this runner
+        id: firewall
+        run: |
+          ip=$(curl -s https://api.ipify.org)
+          echo "ip=$ip" >> "$GITHUB_OUTPUT"
+          az sql server firewall-rule create --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --server "${{ vars.APP_NAME }}-sql" --name "github-${{ github.run_id }}" \
+            --start-ip-address "$ip" --end-ip-address "$ip" --output none
+
+      - name: Migrate database
+        env:
+          CONNECTION: >-
+            Server=tcp:${{ vars.APP_NAME }}-sql.database.windows.net,1433;Database=mahjong;
+            User ID=${{ vars.SQL_ADMIN_LOGIN }};Password=${{ secrets.SQL_ADMIN_PASSWORD }};
+            Encrypt=True;Connection Timeout=120;
+        # The free serverless database may be paused; the first connection wakes it up.
+        run: ${{ runner.temp }}/efbundle --connection "$CONNECTION"
+
+      - name: Close database firewall
+        if: always() && steps.firewall.outcome == 'success'
+        run: |
+          az sql server firewall-rule delete --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --server "${{ vars.APP_NAME }}-sql" --name "github-${{ github.run_id }}"
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.APP_NAME }}
+          package: ${{ runner.temp }}/web
+
+      # The free plan sleeps when idle, so give it a few minutes to wake up.
+      - name: Smoke test
+        run: |
+          url="https://${{ vars.APP_NAME }}.azurewebsites.net/healthz"
+          for attempt in $(seq 1 20); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$url")" = "200" ]; then
+              echo "Healthy after $attempt attempt(s)."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "The site did not report healthy at $url"
+          exit 1
