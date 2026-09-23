@@ -49,7 +49,7 @@ public static partial class ApiEndpoints
             var user = await users.GetUserAsync(principal);
             return user is null
                 ? Results.Unauthorized()
-                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.GamesPlayed, user.GamesWon));
+                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.PreferredBackground, user.GamesPlayed, user.GamesWon));
         });
 
         me.MapPut("/", async (UpdateProfileRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
@@ -73,12 +73,22 @@ public static partial class ApiEndpoints
 
             if (request.PreferredTileSet is { } tileSet)
             {
-                if (!TileSetId().IsMatch(tileSet))
+                if (!ChoiceId().IsMatch(tileSet))
                 {
                     return Results.BadRequest("Unknown tile set.");
                 }
 
                 user.PreferredTileSet = tileSet;
+            }
+
+            if (request.PreferredBackground is { } background)
+            {
+                if (!ChoiceId().IsMatch(background))
+                {
+                    return Results.BadRequest("Unknown background.");
+                }
+
+                user.PreferredBackground = background;
             }
 
             await users.UpdateAsync(user);
@@ -98,5 +108,5 @@ public static partial class ApiEndpoints
     private static string UserId(ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
     [GeneratedRegex("^[a-z0-9-]{1,32}$")]
-    private static partial Regex TileSetId();
+    private static partial Regex ChoiceId();
 }

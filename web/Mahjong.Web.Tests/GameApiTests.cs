@@ -160,6 +160,22 @@ public sealed class GameApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TileSetAndBackgroundChoicesAreSavedToTheProfile()
+    {
+        var client = app.ClientFor("alice");
+
+        var before = await client.GetFromJsonAsync<PlayerProfile>("api/me");
+        var saved = await client.PutAsJsonAsync("api/me", new UpdateProfileRequest(null, "simple", "jade-silk"));
+        var after = await client.GetFromJsonAsync<PlayerProfile>("api/me");
+        var rejected = await client.PutAsJsonAsync("api/me", new UpdateProfileRequest(null, null, "../../etc/passwd"));
+
+        Assert.Equal("dragon-mountains", before!.PreferredBackground);
+        Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
+        Assert.Equal(("simple", "jade-silk"), (after!.PreferredTileSet, after.PreferredBackground));
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+    }
+
+    [Fact]
     public async Task PlayersCannotFinishSomeoneElsesGame()
     {
         var started = await StartAsync(app.ClientFor("alice"));

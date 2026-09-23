@@ -17,6 +17,8 @@ public sealed class BrowserInterop(IJSRuntime js) : IAsyncDisposable
     public async ValueTask SetSettingAsync(string key, string value) =>
         await (await module.Value).InvokeVoidAsync("setSetting", key, value);
 
+    public async ValueTask SetBackgroundAsync(string url) => await (await module.Value).InvokeVoidAsync("setBackground", url);
+
     public async ValueTask PushAdAsync(ElementReference slot) => await (await module.Value).InvokeVoidAsync("pushAd", slot);
 
     public async ValueTask DisposeAsync()

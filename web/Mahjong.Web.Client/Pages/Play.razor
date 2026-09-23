@@ -34,6 +34,12 @@
                     <option value="@set.Id">@set.Name</option>
                 }
             </select>
+            <select class="form-select form-select-sm" aria-label="Background" value="@Preferences.Background.Id" @onchange="OnBackgroundChanged">
+                @foreach (var background in Backgrounds.All)
+                {
+                    <option value="@background.Id">@background.Name</option>
+                }
+            </select>
             <button class="btn btn-sm btn-light" @onclick="NewGameAsync">New game</button>
             <button class="btn btn-sm btn-light" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)" title="Redeals the remaining tiles. Costs 1,000 of the no-shuffle bonus.">Shuffle</button>
             <button class="btn btn-sm btn-light" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)">Undo</button>
@@ -154,6 +160,8 @@
     }
 
     private async Task OnTileSetChanged(ChangeEventArgs e) => await Preferences.SetTileSetAsync(TileSets.Find((string?)e.Value));
+
+    private async Task OnBackgroundChanged(ChangeEventArgs e) => await Preferences.SetBackgroundAsync(Backgrounds.Find((string?)e.Value));
 
     private async Task OnSoundChanged(ChangeEventArgs e) => await Preferences.SetSoundAsync(e.Value is true);
 

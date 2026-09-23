@@ -14,6 +14,9 @@ public class ApplicationUser : IdentityUser
     [MaxLength(32)]
     public string PreferredTileSet { get; set; } = "classic";
 
+    [MaxLength(32)]
+    public string PreferredBackground { get; set; } = "dragon-mountains";
+
     public int GamesPlayed { get; set; }
 
     public int GamesWon { get; set; }

@@ -40,3 +40,9 @@ export function pushAd(slot) {
         // Ad blockers or AdSense not loaded yet.
     }
 }
+
+// Background images are applied through a CSS variable; App.razor applies the saved one on load.
+export function setBackground(url) {
+    document.documentElement.style.setProperty("--page-background", `url("${url}")`);
+    setSetting("backgroundUrl", url);
+}

@@ -43,6 +43,15 @@ The `EveryDealCanBeCleared` test checks every built-in layout automatically.
 
 The shape layouts (Pyramid, Fortress, Cat and so on) are drawn as text grids in `tools/generate_layouts.py`, one grid per layer. Editing a grid and running `python tools/generate_layouts.py` is often easier than typing coordinates by hand.
 
+## Adding a tile set or background (web)
+
+- **Tile set:** put one PNG per face (`2bams.png`, `Cdragon.png`, ...) in `web/Mahjong.Web.Client/wwwroot/tilesets/<id>/`, then add a line to `TileSets.All` in `web/Mahjong.Web.Client/Game/TileSets.cs`.
+- **Background:** put a wide image (about 16:9) in `web/Mahjong.Web.Client/wwwroot/backgrounds/`, then add a line to `Backgrounds.All` in `web/Mahjong.Web.Client/Game/Backgrounds.cs`. SVG, JPG, PNG and WebP all work; for anything but SVG, also set `Url`.
+
+Both show up in the game's menus. Players' choices are saved in their browser, and in their profile when signed in.
+
+The built-in backgrounds are drawn by `tools/generate_backgrounds.py`. Run `python tools/generate_backgrounds.py` to regenerate them after editing it.
+
 ## How winnable deals work
 
 The dealer removes random pairs of free positions from the empty layout until the layout is empty. Each removed pair then gets the same face, so replaying that order clears the board. Shuffle uses the same method on the tiles that are left.

@@ -30,9 +30,9 @@ public sealed record BreakdownDto(
 
 public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, DateTime AchievedUtc);
 
-public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, int GamesPlayed, int GamesWon);
+public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon);
 
-public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet);
+public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground);
 
 /// <summary>Settings the browser needs from the server's configuration.</summary>
 public sealed record ClientConfig(string? AdsClientId, string? AdSlotRail, string? AdSlotBanner, string? AdSlotResults, bool ShowHiddenLayouts);
