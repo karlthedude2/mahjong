@@ -76,10 +76,6 @@
             // cboLayout
             // 
             this.cboLayout.FormattingEnabled = true;
-            this.cboLayout.Items.AddRange(new object[] {
-            "Number One",
-            "The Runner Up",
-            "Test"});
             this.cboLayout.Location = new System.Drawing.Point(18, 22);
             this.cboLayout.Name = "cboLayout";
             this.cboLayout.Size = new System.Drawing.Size(156, 21);

@@ -8,11 +8,39 @@ namespace MahjongSpriteVersion
 {
     public class HighScoreManager
     {
+        // Scores are stored by layout name, so renamed layouts keep their scores through this map.
+        private static readonly Dictionary<string, string> RenamedLayouts = new Dictionary<string, string>
+        {
+            { "Number One", "Twin Peaks" },
+            { "The Runner Up", "Temple" },
+        };
+
         List<HighScore> HighScores { get; set; }
         public HighScoreManager()
         {
             HighScores = new List<HighScore>();
             Deserialize(Properties.Settings.Default.HighScores);
+
+            if (ApplyLayoutRenames())
+            {
+                Properties.Settings.Default.HighScores = Serialize();
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        private bool ApplyLayoutRenames()
+        {
+            bool changed = false;
+            foreach (HighScore score in HighScores)
+            {
+                if (RenamedLayouts.TryGetValue(score.LayoutName, out string newName))
+                {
+                    score.LayoutName = newName;
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
 
         public HighScore AddScore(int score, string layoutName, string user)

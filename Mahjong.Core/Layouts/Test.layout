@@ -1,0 +1,28 @@
+name: Test
+# Not shown in the layout menu; start the game with --show-hidden-layouts to play it.
+hidden: true
+# x y z  (x and y in half-tile units; a tile is 2 wide and 2 tall)
+0 1 0
+4 1 0
+8 1 0
+12 1 0
+16 1 0
+20 1 0
+0 3 0
+4 3 0
+8 3 0
+12 3 0
+16 3 0
+20 3 0
+0 5 0
+4 5 0
+8 5 0
+12 5 0
+16 5 0
+20 5 0
+0 7 0
+4 7 0
+8 7 0
+12 7 0
+16 7 0
+20 7 0
