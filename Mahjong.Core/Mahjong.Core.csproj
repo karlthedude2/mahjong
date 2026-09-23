@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Mahjong.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Every .layout file in Layouts\ is embedded and shows up in LayoutCatalog automatically. -->
+    <EmbeddedResource Include="Layouts\*.layout" LogicalName="Layouts.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

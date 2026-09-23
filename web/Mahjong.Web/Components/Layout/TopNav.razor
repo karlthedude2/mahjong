@@ -1,0 +1,57 @@
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
+<nav class="top-nav">
+    <a class="brand" href="">Mahjong</a>
+    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Play</NavLink>
+    <NavLink class="nav-link" href="leaderboards">Leaderboards</NavLink>
+
+    <span class="spacer"></span>
+
+    @* Toggled by the script in App.razor; the setting is kept in the browser. *@
+    <button type="button" class="sound-toggle" aria-label="Mute sound" title="Mute sound">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h4l5-4v14l-5-4H4z" />
+            <path class="wave" d="M16 9.5a3.5 3.5 0 0 1 0 5" />
+            <path class="wave" d="M18.5 7a7 7 0 0 1 0 10" />
+        </svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9h4l5-4v14l-5-4H4z" />
+            <path class="wave" d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
+        </svg>
+    </button>
+
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-link" href="stats">My stats</NavLink>
+            <NavLink class="nav-link" href="Account/Manage">@context.User.Identity?.Name</NavLink>
+            <form action="Account/Logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                <button type="submit" class="nav-link">Sign out</button>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <NavLink class="nav-link" href="Account/Login">Sign in</NavLink>
+            <NavLink class="nav-link register" href="Account/Register">Create account</NavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</nav>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose() => NavigationManager.LocationChanged -= OnLocationChanged;
+}

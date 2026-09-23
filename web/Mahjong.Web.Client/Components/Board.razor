@@ -1,0 +1,76 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+
+@*
+    The board is one SVG scaled to fit its container. Tiles are drawn in the shared draw order, so
+    the tile on top is also the one that receives a click. Each tile is its own <g> element, which
+    is where future animations (CSS classes on the element) will go.
+*@
+<svg class="board" viewBox="@viewBox" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mahjong board">
+    @foreach (var tile in BoardGeometry.InDrawOrder(Game.Board.Tiles))
+    {
+        var bounds = BoardGeometry.Bounds(tile.Position);
+        <g @key="tile.Id"
+           class="tile @(tile == Selected ? "selected" : null)"
+           transform="translate(@bounds.Left @bounds.Top)"
+           @onclick="() => OnTileClick.InvokeAsync(tile)">
+            @if (TileSet.Kind == TileSetKind.Images)
+            {
+                <image href="@TileSets.ImageUrl(TileSet, tile.Face.Name)" width="@BoardGeometry.TileWidth" height="@ImageHeight" />
+            }
+            else
+            {
+                var glyph = TileSets.Glyph(tile.Face.Name);
+                <rect class="glyph-edge" x="@EdgeDepth" y="@EdgeDepth" width="@FaceWidth" height="@FaceHeight" rx="9" />
+                <rect class="glyph-face" x="0" y="0" width="@FaceWidth" height="@FaceHeight" rx="9" />
+                @GlyphText(glyph)
+            }
+        </g>
+    }
+</svg>
+
+@code {
+    // The classic PNGs are 66 x 86, drawn at 4/3 scale like the desktop game.
+    private const int ImageHeight = 115;
+
+    // Drawn tiles: a face plus a darker copy offset right and down, which reads as the tile's side.
+    private const int EdgeDepth = 8;
+    private const int FaceWidth = BoardGeometry.TileWidth - EdgeDepth - 2;
+    private const int FaceHeight = BoardGeometry.TileHeight - EdgeDepth - 4;
+
+    private string viewBox = "0 0 1 1";
+
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    [Parameter] public Tile? Selected { get; set; }
+
+    [Parameter] public TileSetInfo TileSet { get; set; } = TileSets.Default;
+
+    [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
+
+    // Razor reserves <text>, so the SVG text elements are built in code.
+    private static RenderFragment GlyphText(TileGlyph glyph) => builder =>
+    {
+        builder.OpenElement(0, "text");
+        builder.AddAttribute(1, "class", $"glyph-main {glyph.ColorClass}");
+        builder.AddAttribute(2, "x", FaceWidth / 2);
+        builder.AddAttribute(3, "y", FaceHeight * 0.44);
+        builder.AddContent(4, glyph.Main);
+        builder.CloseElement();
+
+        builder.OpenElement(5, "text");
+        builder.AddAttribute(6, "class", $"glyph-caption {glyph.ColorClass}");
+        builder.AddAttribute(7, "x", FaceWidth / 2);
+        builder.AddAttribute(8, "y", FaceHeight * 0.82);
+        builder.AddContent(9, glyph.Caption);
+        builder.CloseElement();
+    };
+
+    protected override void OnParametersSet()
+    {
+        // Size to the whole layout (not the tiles left), so the board doesn't jump as tiles go.
+        var bounds = BoardGeometry.Bounds(Game.Layout.Positions);
+        const int margin = 8;
+        viewBox = $"{bounds.Left - margin} {bounds.Top - margin} {bounds.Width + 2 * margin} {bounds.Height + 2 * margin}";
+    }
+}

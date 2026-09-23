@@ -1,0 +1,70 @@
+@using Mahjong.Core
+
+@{
+    var card = Game.Scoring.Card;
+    var clock = Game.Scoring.Clock;
+    int tilesToPace = Scoring.TilesPerBonus - card.TilesTowardPaceBonus;
+    bool finishBonusesLive = Game.Scoring.EarnsFinalBonus;
+}
+
+<section class="score-panel" aria-label="Score">
+    <div class="headline">
+        <div class="stat">
+            <span class="label">Score</span>
+            <span class="value">@card.Score.ToString("N0")</span>
+        </div>
+        <div class="stat">
+            <span class="label">Time</span>
+            <span class="value">@clock.ClockText</span>
+            @if (!ClockStarted)
+            {
+                <span class="hint">Starts on your first move</span>
+            }
+        </div>
+    </div>
+
+    <div class="bonus" title="Remove 20 tiles inside one 30-second window to earn 100 points for every second still left in it.">
+        <div class="bonus-name">Speed bonus</div>
+        <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="@card.SpeedWindowTiles">
+            <div class="meter-fill" style="width: @(card.SpeedWindowTiles * 100 / Scoring.TilesPerBonus)%"></div>
+        </div>
+        <div class="bonus-detail">
+            @card.SpeedWindowTiles of 20 tiles &middot; @clock.SpeedWindowSeconds s left
+            &middot; worth @((Scoring.SpeedBonusPerSecond * clock.SpeedWindowSeconds).ToString("N0")) now
+        </div>
+        <div class="bonus-earned">Earned: @card.SpeedBonusCount &times; = @card.SpeedBonusTotal.ToString("N0")</div>
+    </div>
+
+    <div class="bonus" title="Every 20 tiles you remove adds the seconds left on the 5-minute bonus clock.">
+        <div class="bonus-name">Pace bonus</div>
+        <div class="bonus-detail">
+            Next in @tilesToPace tile@(tilesToPace == 1 ? "" : "s"), worth @clock.BonusClockSeconds
+        </div>
+        <div class="bonus-earned">Earned: @card.PaceBonusTotal.ToString("N0")</div>
+    </div>
+
+    <div class="bonus @(finishBonusesLive ? null : "expired")" title="Paid when you clear the board, but only if you finish before the 5-minute bonus clock runs out.">
+        <div class="bonus-name">
+            Finish bonuses
+            <span class="bonus-clock">@(finishBonusesLive ? $"{clock.BonusClockSeconds / 60}:{clock.BonusClockSeconds % 60:00} left" : "clock ran out")</span>
+        </div>
+        @if (finishBonusesLive)
+        {
+            <ul class="finish-list">
+                <li title="30 points for every second left on the bonus clock."><span>Time</span><span>@Game.Scoring.TimeBonusNow.ToString("N0")</span></li>
+                <li title="Starts at 5,000 and drops in steps after 2:40."><span>Quick finish</span><span>@clock.QuickFinishBonus.ToString("N0")</span></li>
+                <li title="Starts at 3,000; each shuffle costs 1,000."><span>No shuffle</span><span>@card.NoShuffleBonus.ToString("N0")</span></li>
+            </ul>
+        }
+        else
+        {
+            <div class="bonus-detail">Finish bonuses are only paid for games under 5 minutes.</div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    [Parameter] public bool ClockStarted { get; set; } = true;
+}

@@ -1,0 +1,61 @@
+@page "/leaderboards"
+@using Mahjong.Core
+@using Mahjong.Web.Client.Api
+@using Mahjong.Web.Services
+@inject GameService Games
+
+<PageTitle>Leaderboards</PageTitle>
+
+<h1>Leaderboards</h1>
+<p>The top @GameService.LeaderboardSize verified scores for each layout. <a href="Account/Login">Sign in</a> and play to get on the board.</p>
+
+<form method="get" class="d-flex gap-2 align-items-center mb-3">
+    <label for="layout" class="form-label mb-0">Layout</label>
+    <select id="layout" name="layout" class="form-select w-auto" onchange="this.form.submit()">
+        @foreach (var l in LayoutCatalog.Visible)
+        {
+            <option value="@l.Name" selected="@(l.Name == selected)">@l.Name</option>
+        }
+    </select>
+    <noscript><button type="submit" class="btn btn-primary">Show</button></noscript>
+</form>
+
+@if (entries.Count == 0)
+{
+    <p>No scores on @selected yet. Be the first!</p>
+}
+else
+{
+    <table class="table table-sm">
+        <thead>
+            <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end">Date</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in entries)
+            {
+                <tr>
+                    <td>@entry.Rank</td>
+                    <td>@entry.DisplayName</td>
+                    <td class="text-end">@entry.Score.ToString("N0")</td>
+                    <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private const string DefaultLayoutName = "Twin Peaks";
+
+    private string selected = DefaultLayoutName;
+    private IReadOnlyList<LeaderboardEntry> entries = [];
+
+    [SupplyParameterFromQuery]
+    private string? Layout { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        selected = LayoutCatalog.Visible.FirstOrDefault(l => l.Name == Layout)?.Name ?? DefaultLayoutName;
+        entries = await Games.GetLeaderboardAsync(selected);
+    }
+}

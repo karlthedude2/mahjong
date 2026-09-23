@@ -1,0 +1,91 @@
+.top-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: var(--nav-height);
+    padding: 0 1rem;
+    background: rgba(20, 12, 6, 0.82);
+    backdrop-filter: blur(6px);
+    color: #fff;
+}
+
+.brand {
+    margin-right: 1rem;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.spacer {
+    flex: 1;
+}
+
+.top-nav ::deep .nav-link,
+.top-nav button.nav-link {
+    padding: 0.35rem 0.7rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: none;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+}
+
+.top-nav ::deep .nav-link:hover,
+.top-nav button.nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.top-nav ::deep .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.top-nav ::deep .nav-link.register {
+    background: var(--accent);
+    color: #fff;
+}
+
+form {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .brand {
+        display: none;
+    }
+}
+
+.sound-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-right: 0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+}
+
+.sound-toggle:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.sound-toggle svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: currentColor;
+}
+
+.sound-toggle .wave {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}

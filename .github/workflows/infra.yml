@@ -1,0 +1,51 @@
+name: Deploy Azure infrastructure
+
+# Run by hand after changing infra/main.bicep or any sign-in/ad setting. Deploys are
+# incremental, so running it again only applies what changed.
+on:
+  workflow_dispatch:
+    inputs:
+      appServiceSku:
+        description: App Service plan (F1 is free)
+        type: choice
+        options: [ F1, B1, B2, S1, P0v3 ]
+        default: F1
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  infra:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Bicep
+        run: |
+          az deployment group create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --template-file infra/main.bicep \
+            --parameters \
+              appName="${{ vars.APP_NAME }}" \
+              appServiceSku="${{ inputs.appServiceSku }}" \
+              sqlAdminLogin="${{ vars.SQL_ADMIN_LOGIN }}" \
+              sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
+              googleClientId="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              googleClientSecret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              microsoftClientId="${{ secrets.MICROSOFT_CLIENT_ID }}" \
+              microsoftClientSecret="${{ secrets.MICROSOFT_CLIENT_SECRET }}" \
+              facebookAppId="${{ secrets.FACEBOOK_APP_ID }}" \
+              facebookAppSecret="${{ secrets.FACEBOOK_APP_SECRET }}" \
+              adsClientId="${{ vars.ADS_CLIENT_ID }}" \
+              adsRailSlot="${{ vars.ADS_RAIL_SLOT }}" \
+              adsBannerSlot="${{ vars.ADS_BANNER_SLOT }}" \
+              adsResultsSlot="${{ vars.ADS_RESULTS_SLOT }}" \
+            --query properties.outputs --output json

@@ -1,0 +1,170 @@
+@page "/"
+@using Mahjong.Core
+@using Mahjong.Web.Client.Api
+@using Mahjong.Web.Client.Components
+@using Mahjong.Web.Client.Game
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@implements IDisposable
+@inject GameSession Session
+@inject PlayerPreferences Preferences
+@inject GameApi Api
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Mahjong</PageTitle>
+
+<div class="play-page @(signedIn ? "signed-in" : "guest")">
+    @if (!signedIn)
+    {
+        <aside class="ad-rail left" aria-label="Advertisement">
+            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+        </aside>
+    }
+
+    <section class="game">
+        <div class="toolbar">
+            <select class="form-select form-select-sm" aria-label="Layout" value="@currentLayout?.Name" @onchange="OnLayoutChanged">
+                @foreach (var l in layouts)
+                {
+                    <option value="@l.Name">@l.Name</option>
+                }
+            </select>
+            <select class="form-select form-select-sm" aria-label="Tile set" value="@Preferences.TileSet.Id" @onchange="OnTileSetChanged">
+                @foreach (var set in TileSets.All)
+                {
+                    <option value="@set.Id">@set.Name</option>
+                }
+            </select>
+            <select class="form-select form-select-sm" aria-label="Background" value="@Preferences.Background.Id" @onchange="OnBackgroundChanged">
+                @foreach (var background in Backgrounds.All)
+                {
+                    <option value="@background.Id">@background.Name</option>
+                }
+            </select>
+            <button class="btn btn-sm btn-light" @onclick="NewGameAsync">New game</button>
+            <button class="btn btn-sm btn-light" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)" title="Redeals the remaining tiles. Costs 1,000 of the no-shuffle bonus.">Shuffle</button>
+            <button class="btn btn-sm btn-light" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)">Undo</button>
+            <button class="btn btn-sm btn-light" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)">Redo</button>
+            <button class="btn btn-sm btn-light" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)">
+                @(Session.State == SessionState.Paused ? "Resume" : "Pause")
+            </button>
+        </div>
+
+        @if (!signedIn)
+        {
+            <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
+        }
+
+        @if (error != null)
+        {
+            <div class="notice warning">@error</div>
+        }
+
+        @if (Session.Message != null)
+        {
+            <div class="notice warning">@Session.Message</div>
+        }
+
+        @if (Session.State == SessionState.NoMovesLeft)
+        {
+            <div class="notice warning">No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.</div>
+        }
+
+        <div class="play-table">
+            @if (Session.Game is { } game)
+            {
+                <div class="board-area">
+                    @if (Session.State == SessionState.Paused)
+                    {
+                        <div class="paused">Paused</div>
+                    }
+                    else
+                    {
+                        <Board Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync" />
+                    }
+                </div>
+                <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
+            }
+            else
+            {
+                <div class="loading">Dealing&hellip;</div>
+            }
+        </div>
+    </section>
+
+    <aside class="ad-rail right" aria-label="Advertisement">
+        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+    </aside>
+
+    <aside class="ad-banner" aria-label="Advertisement">
+        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
+    </aside>
+</div>
+
+@if (Session.State == SessionState.Won && currentLayout != null)
+{
+    <ResultsDialog Session="Session" Config="config" LayoutName="@currentLayout.Name" OnPlayAgain="NewGameAsync" />
+}
+
+@code {
+    private const string DefaultLayoutName = "Twin Peaks";
+
+    private bool signedIn;
+    private ClientConfig? config;
+    private IReadOnlyList<LayoutDefinition> layouts = LayoutCatalog.Visible;
+    private LayoutDefinition? currentLayout;
+    private string? error;
+
+    private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Session.Changed += OnSessionChanged;
+
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        signedIn = auth.User.Identity?.IsAuthenticated == true;
+
+        config = await Api.GetConfigAsync();
+        layouts = config.ShowHiddenLayouts ? LayoutCatalog.All : LayoutCatalog.Visible;
+
+        await Preferences.LoadAsync(signedIn);
+        currentLayout = layouts.FirstOrDefault(l => l.Name == Preferences.LastLayout)
+            ?? layouts.FirstOrDefault(l => l.Name == DefaultLayoutName)
+            ?? layouts[0];
+
+        await NewGameAsync();
+    }
+
+    private async Task NewGameAsync()
+    {
+        error = null;
+        try
+        {
+            await Session.StartAsync(currentLayout!, ranked: signedIn);
+        }
+        catch (HttpRequestException)
+        {
+            // If the server can't start a ranked game, still let them play.
+            error = "Couldn't reach the server, so this game won't be saved.";
+            await Session.StartAsync(currentLayout!, ranked: false);
+        }
+    }
+
+    private async Task OnLayoutChanged(ChangeEventArgs e)
+    {
+        currentLayout = layouts.First(l => l.Name == (string?)e.Value);
+        await Preferences.SetLastLayoutAsync(currentLayout.Name);
+        await NewGameAsync();
+    }
+
+    private async Task OnTileSetChanged(ChangeEventArgs e) => await Preferences.SetTileSetAsync(TileSets.Find((string?)e.Value));
+
+    private async Task OnBackgroundChanged(ChangeEventArgs e) => await Preferences.SetBackgroundAsync(Backgrounds.Find((string?)e.Value));
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Session.Changed -= OnSessionChanged;
+        Session.Dispose();
+    }
+}

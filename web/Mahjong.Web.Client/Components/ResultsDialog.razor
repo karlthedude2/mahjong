@@ -1,0 +1,106 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Api
+@implements IDisposable
+
+@{
+    // Ranked games show the server's verified breakdown; guests see the local one.
+    var breakdown = Session.Result?.Breakdown ?? BreakdownDto.From(Session.Game!.Scoring.Card.Breakdown);
+}
+
+<div class="results-backdrop" role="dialog" aria-modal="true" aria-labelledby="results-title">
+    <div class="results">
+        <h2 id="results-title">You cleared @LayoutName!</h2>
+
+        <table class="breakdown">
+            <tbody>
+                <tr title="Face value of every tile you removed.">
+                    <th>Tile points</th><td>@breakdown.TilePoints.ToString("N0")</td>
+                </tr>
+                <tr title="20 tiles inside one 30-second window: 100 points per second left.">
+                    <th>Speed bonuses <span class="count">(@breakdown.SpeedBonusCount &times;)</span></th><td>@breakdown.SpeedBonusTotal.ToString("N0")</td>
+                </tr>
+                <tr title="Every 20 tiles: the seconds left on the 5-minute bonus clock.">
+                    <th>Pace bonuses</th><td>@breakdown.PaceBonusTotal.ToString("N0")</td>
+                </tr>
+                <tr title="30 points per second left on the bonus clock when you finished.">
+                    <th>Time bonus</th><td>@breakdown.TimeBonus.ToString("N0")</td>
+                </tr>
+                <tr title="5,000 for a fast finish, dropping in steps after 2:40.">
+                    <th>Quick finish bonus</th><td>@breakdown.QuickFinishBonus.ToString("N0")</td>
+                </tr>
+                <tr title="3,000, less 1,000 for each shuffle.">
+                    <th>No-shuffle bonus</th><td>@breakdown.NoShuffleBonus.ToString("N0")</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th><td>@breakdown.Total.ToString("N0")</td></tr>
+            </tfoot>
+        </table>
+
+        @if (Session.IsRanked)
+        {
+            <p class="verdict">
+                @if (Session.SubmittingResult)
+                {
+                    <span>Checking your game&hellip;</span>
+                }
+                else if (Session.Result is { Rank: { } rank })
+                {
+                    <span>Verified. You're <strong>#@rank</strong> on the @LayoutName leaderboard!</span>
+                }
+                else if (Session.Result != null)
+                {
+                    <span>Verified. Not in the top 20 this time.</span>
+                }
+                else
+                {
+                    <span class="error">We couldn't verify this game, so it wasn't saved.</span>
+                }
+            </p>
+        }
+        else
+        {
+            <p class="verdict"><a href="Account/Login">Sign in</a> to save your scores, get on the leaderboards and see fewer ads.</p>
+            <AdSlot ClientId="@Config?.AdsClientId" SlotId="@Config?.AdSlotResults" Format="rectangle" CssClass="results-ad" />
+        }
+
+        <div class="actions">
+            <button class="btn btn-primary" disabled="@(countdown > 0)" @onclick="OnPlayAgain">
+                @(countdown > 0 ? $"Play again ({countdown})" : "Play again")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int countdown;
+    private Timer? timer;
+
+    [Parameter, EditorRequired] public Game.GameSession Session { get; set; } = default!;
+
+    [Parameter] public ClientConfig? Config { get; set; }
+
+    [Parameter] public string LayoutName { get; set; } = "";
+
+    [Parameter] public EventCallback OnPlayAgain { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Guests see the results ad for a few seconds before they can start the next game.
+        if (!Session.IsRanked)
+        {
+            countdown = 5;
+            timer = new Timer(_ => InvokeAsync(() =>
+            {
+                if (--countdown <= 0)
+                {
+                    timer?.Dispose();
+                }
+
+                StateHasChanged();
+            }), null, 1000, 1000);
+        }
+    }
+
+    public void Dispose() => timer?.Dispose();
+}

@@ -1,0 +1,15 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.vspscc
+Thumbs.db
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
