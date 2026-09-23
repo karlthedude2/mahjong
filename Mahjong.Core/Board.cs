@@ -47,6 +47,9 @@ namespace Mahjong.Core
             return tile != null && tiles.TryGetValue(tile.Position, out var found) && found == tile;
         }
 
+        /// <summary>The tile with this <see cref="Tile.Id"/> if it's still on the board.</summary>
+        public Tile FindTile(int id) => tiles.Values.FirstOrDefault(t => t.Id == id);
+
         public Tile At(Position position)
         {
             tiles.TryGetValue(position, out var tile);

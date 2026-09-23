@@ -167,7 +167,7 @@
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(125, 23);
             this.label11.TabIndex = 48;
-            this.label11.Text = "Final Bonus:";
+            this.label11.Text = "Time Bonus:";
             // 
             // label2
             // 
@@ -176,7 +176,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(125, 23);
             this.label2.TabIndex = 47;
-            this.label2.Text = "Shuffle Bonus:";
+            this.label2.Text = "No Shuffle:";
             // 
             // lstHighScores
             // 
@@ -224,7 +224,7 @@
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(128, 23);
             this.label9.TabIndex = 43;
-            this.label9.Text = "Bonus Received:";
+            this.label9.Text = "Bonus Points:";
             // 
             // label8
             // 
@@ -233,7 +233,7 @@
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(128, 23);
             this.label8.TabIndex = 42;
-            this.label8.Text = "Times Received:";
+            this.label8.Text = "Bonuses Earned:";
             // 
             // lblFinalBonus
             // 
@@ -252,7 +252,7 @@
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(125, 23);
             this.label10.TabIndex = 40;
-            this.label10.Text = "Minute Bonus:";
+            this.label10.Text = "Quick Finish:";
             // 
             // lblSpeedBonusTilesCollected
             // 
@@ -281,7 +281,7 @@
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(125, 23);
             this.label7.TabIndex = 37;
-            this.label7.Text = "Tiles Collected:";
+            this.label7.Text = "Tiles (of 20):";
             // 
             // label6
             // 

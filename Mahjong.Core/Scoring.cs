@@ -1,22 +1,26 @@
-using System.Collections.Generic;
-
 namespace Mahjong.Core
 {
     /// <summary>Time-driven state. It keeps running through undo and redo.</summary>
     public sealed class GameClock
     {
-        public const int SuperBonusWindow = 30;
+        /// <summary>Length of the bonus clock: finishing inside it earns the end-of-game bonuses.</summary>
+        public const int BonusClockLength = 300;
+
+        /// <summary>Length of each speed-bonus window.</summary>
+        public const int SpeedWindowLength = 30;
+
+        public const int QuickFinishBonusStart = 5000;
 
         public int Seconds { get; private set; }
 
-        /// <summary>Counts down from 5 minutes. What's left pays out along the way and at the end.</summary>
-        public int BonusSeconds { get; private set; } = 300;
+        /// <summary>Counts down from 5 minutes. Pace bonuses and the time bonus pay out what's left.</summary>
+        public int BonusClockSeconds { get; private set; } = BonusClockLength;
 
-        /// <summary>Counts down the current speed-bonus window.</summary>
-        public int SuperBonusSeconds { get; private set; } = SuperBonusWindow;
+        /// <summary>Seconds left in the current speed-bonus window.</summary>
+        public int SpeedWindowSeconds { get; private set; } = SpeedWindowLength;
 
-        /// <summary>Paid at the end of a fast game; shrinks once the game passes about 2.5 minutes.</summary>
-        public int MinuteBonus { get; private set; } = 5000;
+        /// <summary>Paid for finishing fast; shrinks in steps once the game passes 2:40.</summary>
+        public int QuickFinishBonus { get; private set; } = QuickFinishBonusStart;
 
         public string ClockText
         {
@@ -34,25 +38,25 @@ namespace Mahjong.Core
         {
             Seconds++;
 
-            if (BonusSeconds > 0)
+            if (BonusClockSeconds > 0)
             {
-                BonusSeconds--;
+                BonusClockSeconds--;
             }
 
-            MinuteBonus -= MinuteBonusPenalty(Seconds);
+            QuickFinishBonus -= QuickFinishPenalty(Seconds);
 
-            if (--SuperBonusSeconds == 0)
+            if (--SpeedWindowSeconds == 0)
             {
-                ResetSuperBonus();
+                ResetSpeedWindow();
                 return true;
             }
 
             return false;
         }
 
-        internal void ResetSuperBonus() => SuperBonusSeconds = SuperBonusWindow;
+        internal void ResetSpeedWindow() => SpeedWindowSeconds = SpeedWindowLength;
 
-        private static int MinuteBonusPenalty(int seconds)
+        private static int QuickFinishPenalty(int seconds)
         {
             switch (seconds)
             {
@@ -74,89 +78,172 @@ namespace Mahjong.Core
         }
     }
 
-    /// <summary>Everything that undo and redo restore.</summary>
+    /// <summary>
+    /// The running score and every part it's made of. This is what undo and redo restore.
+    /// <see cref="Score"/> always equals the sum of the parts.
+    /// </summary>
     public sealed class ScoreCard
     {
+        public const int NoShuffleBonusStart = 3000;
+
         public int Score { get; internal set; }
 
-        /// <summary>Tiles removed since the last every-20-tiles time bonus.</summary>
-        public int TilesTowardTimeBonus { get; internal set; }
+        /// <summary>Points from the tiles themselves.</summary>
+        public int TilePoints { get; internal set; }
+
+        /// <summary>Tiles removed since the last pace bonus (one is paid every 20 tiles).</summary>
+        public int TilesTowardPaceBonus { get; internal set; }
+
+        /// <summary>Total of all pace bonuses: each pays the seconds left on the bonus clock.</summary>
+        public int PaceBonusTotal { get; internal set; }
 
         /// <summary>Tiles removed in the current speed-bonus window.</summary>
-        public int SuperBonusTilesRemoved { get; internal set; }
+        public int SpeedWindowTiles { get; internal set; }
 
-        public int SuperBonusScore { get; internal set; }
-        public int SuperBonusQuantity { get; internal set; }
-        public List<string> SuperBonusHistory { get; private set; } = new List<string>();
-        public int ShuffleBonus { get; internal set; } = 3000;
+        /// <summary>How many speed bonuses were earned (20 tiles inside one window).</summary>
+        public int SpeedBonusCount { get; internal set; }
 
-        internal ScoreCard Clone()
-        {
-            var copy = (ScoreCard)MemberwiseClone();
-            copy.SuperBonusHistory = new List<string>(SuperBonusHistory);
-            return copy;
-        }
+        public int SpeedBonusTotal { get; internal set; }
+
+        /// <summary>Paid at the end for not shuffling; each shuffle costs 1000.</summary>
+        public int NoShuffleBonus { get; internal set; } = NoShuffleBonusStart;
+
+        /// <summary>Set once the game is finished: the end-of-game bonuses that were paid.</summary>
+        public FinalBonuses Final { get; internal set; }
+
+        public ScoreBreakdown Breakdown => new ScoreBreakdown(
+            TilePoints,
+            SpeedBonusCount,
+            SpeedBonusTotal,
+            PaceBonusTotal,
+            Final?.TimeBonus ?? 0,
+            Final?.QuickFinishBonus ?? 0,
+            Final?.NoShuffleBonus ?? 0,
+            Score);
+
+        internal ScoreCard Clone() => (ScoreCard)MemberwiseClone();
     }
 
+    /// <summary>The end-of-game bonuses, all zero if the game took longer than the bonus clock.</summary>
+    public sealed class FinalBonuses
+    {
+        public FinalBonuses(int timeBonus, int quickFinishBonus, int noShuffleBonus)
+        {
+            TimeBonus = timeBonus;
+            QuickFinishBonus = quickFinishBonus;
+            NoShuffleBonus = noShuffleBonus;
+        }
+
+        public int TimeBonus { get; }
+        public int QuickFinishBonus { get; }
+        public int NoShuffleBonus { get; }
+        public int Total => TimeBonus + QuickFinishBonus + NoShuffleBonus;
+    }
+
+    /// <summary>A score split into the parts a player can understand.</summary>
+    public sealed class ScoreBreakdown
+    {
+        public ScoreBreakdown(int tilePoints, int speedBonusCount, int speedBonusTotal, int paceBonusTotal,
+            int timeBonus, int quickFinishBonus, int noShuffleBonus, int total)
+        {
+            TilePoints = tilePoints;
+            SpeedBonusCount = speedBonusCount;
+            SpeedBonusTotal = speedBonusTotal;
+            PaceBonusTotal = paceBonusTotal;
+            TimeBonus = timeBonus;
+            QuickFinishBonus = quickFinishBonus;
+            NoShuffleBonus = noShuffleBonus;
+            Total = total;
+        }
+
+        public int TilePoints { get; }
+        public int SpeedBonusCount { get; }
+        public int SpeedBonusTotal { get; }
+        public int PaceBonusTotal { get; }
+        public int TimeBonus { get; }
+        public int QuickFinishBonus { get; }
+        public int NoShuffleBonus { get; }
+        public int Total { get; }
+    }
+
+    /// <summary>
+    /// The scoring rules:
+    /// <list type="bullet">
+    /// <item>Each tile is worth its face value.</item>
+    /// <item>Pace bonus: every 20 tiles adds the seconds left on the 5-minute bonus clock.</item>
+    /// <item>Speed bonus: 20 tiles inside one 30-second window adds 100 x the seconds left in it.</item>
+    /// <item>At the end, if the bonus clock hasn't run out: time bonus (seconds left x 30),
+    /// quick-finish bonus, and no-shuffle bonus.</item>
+    /// </list>
+    /// </summary>
     public sealed class Scoring
     {
         public const int TilesPerBonus = 20;
-        public const int FinalBonusPerSecond = 30;
+        public const int SpeedBonusPerSecond = 100;
+        public const int TimeBonusPerSecond = 30;
+        public const int ShufflePenalty = 1000;
 
         public GameClock Clock { get; } = new GameClock();
 
         public ScoreCard Card { get; private set; } = new ScoreCard();
 
-        /// <summary>The end-of-game bonus is only paid if the game finishes before the bonus clock runs out.</summary>
-        public bool EarnsFinalBonus => Clock.BonusSeconds > 0;
+        /// <summary>The end-of-game bonuses are only paid if the game finishes before the bonus clock runs out.</summary>
+        public bool EarnsFinalBonus => Clock.BonusClockSeconds > 0;
 
-        public int FinalTimeBonus => Clock.BonusSeconds * FinalBonusPerSecond;
+        /// <summary>What the time bonus would be if the game finished now.</summary>
+        public int TimeBonusNow => Clock.BonusClockSeconds * TimeBonusPerSecond;
 
         internal void Tick()
         {
             if (Clock.Tick())
             {
-                Card.SuperBonusTilesRemoved = 0;
+                Card.SpeedWindowTiles = 0;
             }
         }
 
         internal void TileRemoved(TileFace face)
         {
+            Card.TilePoints += face.Value;
             Card.Score += face.Value;
 
-            if (++Card.TilesTowardTimeBonus == TilesPerBonus)
+            if (++Card.TilesTowardPaceBonus == TilesPerBonus)
             {
-                Card.Score += Clock.BonusSeconds;
-                Card.TilesTowardTimeBonus = 0;
+                Card.PaceBonusTotal += Clock.BonusClockSeconds;
+                Card.Score += Clock.BonusClockSeconds;
+                Card.TilesTowardPaceBonus = 0;
             }
 
-            if (Clock.SuperBonusSeconds > 0 && ++Card.SuperBonusTilesRemoved == TilesPerBonus)
+            if (Clock.SpeedWindowSeconds > 0 && ++Card.SpeedWindowTiles == TilesPerBonus)
             {
-                int bonus = 100 * Clock.SuperBonusSeconds;
+                int bonus = SpeedBonusPerSecond * Clock.SpeedWindowSeconds;
+                Card.SpeedBonusTotal += bonus;
                 Card.Score += bonus;
-                Card.SuperBonusScore += bonus;
-                Card.SuperBonusQuantity++;
-                Card.SuperBonusHistory.Add($"{Card.SuperBonusHistory.Count + 1}  {bonus}");
+                Card.SpeedBonusCount++;
 
-                Clock.ResetSuperBonus();
-                Card.SuperBonusTilesRemoved = 0;
+                Clock.ResetSpeedWindow();
+                Card.SpeedWindowTiles = 0;
             }
         }
 
         internal void Shuffled()
         {
-            if (Card.ShuffleBonus > 0)
+            if (Card.NoShuffleBonus > 0)
             {
-                Card.ShuffleBonus -= 1000;
+                Card.NoShuffleBonus -= ShufflePenalty;
             }
         }
 
         internal void ApplyFinalBonus()
         {
-            if (EarnsFinalBonus)
+            if (Card.Final != null)
             {
-                Card.Score += FinalTimeBonus + Card.ShuffleBonus + Clock.MinuteBonus;
+                return;
             }
+
+            Card.Final = EarnsFinalBonus
+                ? new FinalBonuses(TimeBonusNow, Clock.QuickFinishBonus, Card.NoShuffleBonus)
+                : new FinalBonuses(0, 0, 0);
+            Card.Score += Card.Final.Total;
         }
 
         internal ScoreCard Snapshot() => Card.Clone();

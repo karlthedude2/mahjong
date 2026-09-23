@@ -37,7 +37,7 @@ namespace Mahjong.Core.Tests
 
             Assert.True(game.Undo());
             Assert.Equal(0, game.Scoring.Card.Score);
-            Assert.Equal(0, game.Scoring.Card.TilesTowardTimeBonus);
+            Assert.Equal(0, game.Scoring.Card.TilesTowardPaceBonus);
             Assert.Equal(144, game.Board.Count);
             Assert.True(game.Board.Contains(a) && game.Board.Contains(b));
 
@@ -85,11 +85,11 @@ namespace Mahjong.Core.Tests
 
                 var countsAfter = game.Board.Tiles.GroupBy(t => t.Face.Name).ToDictionary(g => g.Key, g => g.Count());
                 Assert.Equal(countsBefore.OrderBy(kv => kv.Key), countsAfter.OrderBy(kv => kv.Key));
-                Assert.Equal(2000, game.Scoring.Card.ShuffleBonus);
+                Assert.Equal(2000, game.Scoring.Card.NoShuffleBonus);
 
                 game.Undo();
                 Assert.All(game.Board.Tiles, t => Assert.Equal(facesBefore[t], t.Face.Name));
-                Assert.Equal(3000, game.Scoring.Card.ShuffleBonus);
+                Assert.Equal(3000, game.Scoring.Card.NoShuffleBonus);
 
                 game.Redo();
                 LayoutTests.Solve(game);
@@ -98,7 +98,7 @@ namespace Mahjong.Core.Tests
         }
 
         [Fact]
-        public void SuperBonusIsPaidForTwentyTilesInsideTheWindow()
+        public void SpeedBonusIsPaidForTwentyTilesInsideTheWindow()
         {
             var game = NewGame();
             for (int i = 0; i < 10; i++)
@@ -107,13 +107,13 @@ namespace Mahjong.Core.Tests
                 game.TryRemovePair(a, b);
             }
 
-            Assert.Equal(1, game.Scoring.Card.SuperBonusQuantity);
-            Assert.Equal(3000, game.Scoring.Card.SuperBonusScore);
+            Assert.Equal(1, game.Scoring.Card.SpeedBonusCount);
+            Assert.Equal(3000, game.Scoring.Card.SpeedBonusTotal);
 
             game.Undo();
-            Assert.Equal(0, game.Scoring.Card.SuperBonusQuantity);
+            Assert.Equal(0, game.Scoring.Card.SpeedBonusCount);
             game.Redo();
-            Assert.Equal(1, game.Scoring.Card.SuperBonusQuantity);
+            Assert.Equal(1, game.Scoring.Card.SpeedBonusCount);
         }
 
         [Fact]

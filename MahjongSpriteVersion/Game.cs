@@ -144,17 +144,6 @@ namespace MahjongSpriteVersion
                 (Surface.Height - bounds.Height * scale) / 2 - bounds.Top * scale);
         }
 
-        private IEnumerable<Tile> InDrawOrder()
-        {
-            // Each tile image overlaps its right and lower neighbours' space only with its side and
-            // bottom edges, so a tile must be drawn after the tiles to its left and above it.
-            // Sorting by row alone gets half-row offsets wrong: a tile half a row higher but to the
-            // right would be drawn first and have its face covered. X + Y orders every overlapping
-            // neighbour correctly, including the half-tile offsets.
-            return Current.Board.Tiles
-                .OrderBy(t => t.Position.Z)
-                .ThenBy(t => t.Position.X + t.Position.Y)
-                .ThenBy(t => t.Position.X);
-        }
+        private IEnumerable<Tile> InDrawOrder() => BoardGeometry.InDrawOrder(Current.Board.Tiles);
     }
 }

@@ -128,11 +128,11 @@ namespace MahjongSpriteVersion
         private void UpdateScoreLabels()
         {
             var card = game.Scoring.Card;
-            lblBonusTotal.Text = card.SuperBonusScore.ToString();
-            lblBonusQty.Text = card.SuperBonusQuantity.ToString();
+            lblBonusTotal.Text = card.SpeedBonusTotal.ToString();
+            lblBonusQty.Text = card.SpeedBonusCount.ToString();
             lblScore.Text = card.Score.ToString();
-            lblSpeedBonusTimeLeft.Text = game.Scoring.Clock.SuperBonusSeconds.ToString();
-            lblSpeedBonusTilesCollected.Text = card.SuperBonusTilesRemoved.ToString();
+            lblSpeedBonusTimeLeft.Text = game.Scoring.Clock.SpeedWindowSeconds.ToString();
+            lblSpeedBonusTilesCollected.Text = card.SpeedWindowTiles.ToString();
         }
 
         private void ShowHighScores(HighScore selected = null)
@@ -174,18 +174,15 @@ namespace MahjongSpriteVersion
             timer.Stop();
             gameOver = true;
 
-            var scoring = game.Scoring;
-            if (scoring.EarnsFinalBonus)
-            {
-                lblMinuteBonus.Text = scoring.Clock.MinuteBonus.ToString();
-                lblShuffleBonus.Text = scoring.Card.ShuffleBonus.ToString();
-                lblFinalBonus.Text = scoring.FinalTimeBonus.ToString();
-            }
-
             game.Current.Finish();
-            lblScore.Text = scoring.Card.Score.ToString();
 
-            var newScore = game.HighScoreManager.AddScore(scoring.Card.Score, SelectedLayout.Name, PlayerName);
+            var card = game.Scoring.Card;
+            lblMinuteBonus.Text = card.Final.QuickFinishBonus.ToString();
+            lblShuffleBonus.Text = card.Final.NoShuffleBonus.ToString();
+            lblFinalBonus.Text = card.Final.TimeBonus.ToString();
+            lblScore.Text = card.Score.ToString();
+
+            var newScore = game.HighScoreManager.AddScore(card.Score, SelectedLayout.Name, PlayerName);
             ShowHighScores(newScore);
 
             MessageBox.Show("You Win!!");
