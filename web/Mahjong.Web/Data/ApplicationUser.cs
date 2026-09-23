@@ -14,8 +14,9 @@ public class ApplicationUser : IdentityUser
     [MaxLength(32)]
     public string PreferredTileSet { get; set; } = "classic";
 
+    /// <summary>The chosen page background, or empty for the site default.</summary>
     [MaxLength(32)]
-    public string PreferredBackground { get; set; } = "dragon-mountains";
+    public string PreferredBackground { get; set; } = "";
 
     public int GamesPlayed { get; set; }
 

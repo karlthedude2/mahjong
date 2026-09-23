@@ -38,7 +38,12 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
             if (profile != null)
             {
                 TileSet = TileSets.Find(profile.PreferredTileSet);
-                Background = Backgrounds.Find(profile.PreferredBackground);
+
+                // An empty profile value means they haven't chosen yet, so keep this browser's choice.
+                if (!string.IsNullOrEmpty(profile.PreferredBackground))
+                {
+                    Background = Backgrounds.Find(profile.PreferredBackground);
+                }
             }
         }
 

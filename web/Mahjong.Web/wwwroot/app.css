@@ -14,7 +14,7 @@ html, body {
 
 /* The player's chosen background (see Backgrounds.cs); set early by a script in App.razor. */
 body {
-    background: #3b2414 var(--page-background, url("backgrounds/dragon-mountains.svg")) center / cover fixed no-repeat;
+    background: #3b2414 var(--page-background, url("backgrounds/dragon-valley.jpg")) center / cover fixed no-repeat;
 }
 
 /* Ordinary pages (account, leaderboards, stats) sit on a readable card over the background. */

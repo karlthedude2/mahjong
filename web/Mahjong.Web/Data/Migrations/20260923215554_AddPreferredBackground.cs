@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -16,7 +16,7 @@ namespace Mahjong.Web.Data.Migrations
                 type: "nvarchar(32)",
                 maxLength: 32,
                 nullable: false,
-                defaultValue: "dragon-mountains");
+                defaultValue: "");
         }
 
         /// <inheritdoc />

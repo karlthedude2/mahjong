@@ -169,7 +169,7 @@ public sealed class GameApiTests : IAsyncLifetime
         var after = await client.GetFromJsonAsync<PlayerProfile>("api/me");
         var rejected = await client.PutAsJsonAsync("api/me", new UpdateProfileRequest(null, null, "../../etc/passwd"));
 
-        Assert.Equal("dragon-mountains", before!.PreferredBackground);
+        Assert.Equal("", before!.PreferredBackground); // not chosen yet: the site default
         Assert.Equal(HttpStatusCode.NoContent, saved.StatusCode);
         Assert.Equal(("simple", "jade-silk"), (after!.PreferredTileSet, after.PreferredBackground));
         Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);

@@ -13,12 +13,13 @@ public sealed record BackgroundInfo(string Id, string Name)
 /// </summary>
 public static class Backgrounds
 {
+    public static readonly BackgroundInfo DragonValley = new("dragon-valley", "Dragon Valley") { Url = "backgrounds/dragon-valley.jpg" };
     public static readonly BackgroundInfo DragonMountains = new("dragon-mountains", "Dragon Mountains");
     public static readonly BackgroundInfo JadeSilk = new("jade-silk", "Jade Silk");
 
-    public static IReadOnlyList<BackgroundInfo> All { get; } = [DragonMountains, JadeSilk];
+    public static IReadOnlyList<BackgroundInfo> All { get; } = [DragonValley, DragonMountains, JadeSilk];
 
-    public static BackgroundInfo Default => DragonMountains;
+    public static BackgroundInfo Default => DragonValley;
 
     public static BackgroundInfo Find(string? id) => All.FirstOrDefault(b => b.Id == id) ?? Default;
 }
