@@ -1,0 +1,95 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+
+@* Layout, tile set and background in one place. Nothing changes until OK. *@
+<div class="settings-backdrop" @onclick="CancelAsync">
+    <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title"
+         @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
+        <header>
+            <h2 id="settings-title">Game settings</h2>
+            <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAsync"></button>
+        </header>
+
+        <section>
+            <h3>Layout</h3>
+            <PreviewStrip @ref="layoutStrip" Label="Layout" Items="layoutItems" @bind-SelectedId="layoutName" />
+        </section>
+
+        <section>
+            <h3><label for="tile-set">Tiles</label></h3>
+            <select id="tile-set" class="form-select" @bind="tileSetId">
+                @foreach (var set in TileSets.All)
+                {
+                    <option value="@set.Id">@set.Name</option>
+                }
+            </select>
+        </section>
+
+        <section>
+            <h3>Background</h3>
+            <PreviewStrip Label="Background" Items="backgroundItems" @bind-SelectedId="backgroundId" />
+        </section>
+
+        <footer>
+            <button type="button" class="btn btn-light" @onclick="CancelAsync">Cancel</button>
+            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">OK</button>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private PreviewStrip? layoutStrip;
+    private IReadOnlyList<PreviewItem> layoutItems = [];
+    private IReadOnlyList<PreviewItem> backgroundItems = [];
+    private string? layoutName;
+    private string tileSetId = TileSets.Default.Id;
+    private string backgroundId = Backgrounds.Default.Id;
+
+    [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
+
+    /// <summary>The layout of the game on the board, badged "Playing now".</summary>
+    [Parameter] public string? PlayingLayoutName { get; set; }
+
+    /// <summary>The layout to start selected: the one queued for the next game, if any.</summary>
+    [Parameter] public string? LayoutName { get; set; }
+
+    [Parameter] public string? TileSetId { get; set; }
+
+    [Parameter] public string? BackgroundId { get; set; }
+
+    [Parameter] public EventCallback<SettingsChoice> OnApply { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    protected override void OnInitialized()
+    {
+        layoutItems = Layouts
+            .Select(l => new PreviewItem(l.Name, l.Name, LayoutPreviews.Url(l.Name), l.Name == PlayingLayoutName ? "Playing now" : null))
+            .ToList();
+        backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, b.Name, b.Url)).ToList();
+
+        layoutName = LayoutName ?? PlayingLayoutName;
+        tileSetId = TileSets.Find(TileSetId).Id;
+        backgroundId = Backgrounds.Find(BackgroundId).Id;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && layoutStrip != null)
+        {
+            await layoutStrip.FocusSelectedAsync();
+        }
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await CancelAsync();
+        }
+    }
+
+    private Task CancelAsync() => OnCancel.InvokeAsync();
+
+    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId));
+}
