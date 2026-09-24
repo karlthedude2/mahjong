@@ -23,6 +23,13 @@ $ErrorActionPreference = "Stop"
 $account = az account show | ConvertFrom-Json
 Write-Host "Subscription: $($account.name) ($($account.id))"
 
+# Each family of Azure services must be switched on ("registered") once per subscription. The
+# deploy identity can't do this itself, because it only has access to the resource group.
+foreach ($namespace in "Microsoft.Web", "Microsoft.Sql", "Microsoft.Communication") {
+    Write-Host "Registering $namespace (if needed)..."
+    az provider register --namespace $namespace --wait --output none
+}
+
 Write-Host "Creating resource group $ResourceGroup in $Location..."
 az group create --name $ResourceGroup --location $Location --output none
 

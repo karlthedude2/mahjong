@@ -26,9 +26,9 @@ jobs:
       name: production
       url: https://${{ vars.APP_NAME }}.azurewebsites.net
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -46,7 +46,7 @@ jobs:
           dotnet ef migrations bundle --project web/Mahjong.Web --configuration Release \
             --self-contained --target-runtime linux-x64 --output ${{ runner.temp }}/efbundle
 
-      - uses: azure/login@v2
+      - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}

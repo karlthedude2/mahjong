@@ -47,8 +47,9 @@ subscription's free databases to share one region. If you already have a free Az
 use its region: in the Azure portal, open that database and read **Location** on its Overview
 page, then pass the short name (for example `westus2` for "West US 2").
 
-It creates the resource group and an app registration that trusts this repository, and gives it
-Contributor on the resource group. When it finishes, it prints the values to add to GitHub.
+It switches on the Azure service families the site uses (web apps, SQL and email), creates the
+resource group and an app registration that trusts this repository, and gives it Contributor on
+the resource group. When it finishes, it prints the values to add to GitHub.
 
 ### 2. GitHub settings
 
