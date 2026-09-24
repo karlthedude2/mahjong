@@ -74,12 +74,14 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
         string? error = Verify(game, record, now, out var replay);
 
         game.FinishedUtc = now;
-        game.RecordJson = record == null ? null : JsonSerializer.Serialize(record);
+        string? recordJson = record == null ? null : JsonSerializer.Serialize(record);
 
         if (error != null)
         {
-            // A rejected game can't be resubmitted.
-            game.Status = GameOutcome.Lost;
+            // A rejected game can't be resubmitted. Its moves are kept for 30 days, to look into
+            // if the player reports a problem.
+            game.Status = GameOutcome.Rejected;
+            game.RecordJson = recordJson;
             await db.SaveChangesAsync();
             logger.LogWarning("Rejected game {GameId} from {UserId}: {Error}", gameId, userId, error);
             return new(GameActionOutcome.Invalid, Error: error);
@@ -98,6 +100,9 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
                 rank = await AddToLeaderboardAsync(game, user, replay.ElapsedSeconds);
             }
         }
+
+        // The moves are the proof behind a leaderboard score; other games only need their result.
+        game.RecordJson = rank != null ? recordJson : null;
 
         await db.SaveChangesAsync();
         return new(GameActionOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank));
@@ -219,8 +224,16 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
         // Ties keep the earlier score ahead, so a new entry goes after equal scores.
         int index = top.Count(s => s.Score >= entry.Score);
-        // The new entry is in, so anything past 19 of the old list drops off.
-        db.HighScores.RemoveRange(top.Skip(LeaderboardSize - 1));
+        // The new entry is in, so anything past 19 of the old list drops off, along with the
+        // stored moves behind it.
+        var dropped = top.Skip(LeaderboardSize - 1).ToList();
+        db.HighScores.RemoveRange(dropped);
+        var droppedGameIds = dropped.Select(s => s.GameId).ToList();
+        foreach (var droppedGame in await db.Games.Where(g => droppedGameIds.Contains(g.Id)).ToListAsync())
+        {
+            droppedGame.RecordJson = null;
+        }
+
         return index + 1;
     }
 }

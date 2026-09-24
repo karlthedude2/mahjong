@@ -70,6 +70,8 @@ builder.Services.Configure<AdsOptions>(config.GetSection(AdsOptions.Section));
 builder.Services.Configure<GameOptions>(config.GetSection(GameOptions.Section));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<GameRecordCleanup>();
+builder.Services.AddHostedService<GameRecordCleanupService>();
 
 builder.Services.AddRateLimiter(options =>
 {

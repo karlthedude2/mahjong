@@ -205,6 +205,9 @@ Also register `https://localhost:7015/signin-google` as a redirect URI.
 - The server replays those moves with the same rules code (`Mahjong.Core`) and rejects any
   impossible move.
 - The score is computed by the server; any score the browser claims is ignored.
+- The moves are kept only as proof behind leaderboard scores (deleted when a score drops off), and
+  for rejected games for 30 days, in case a player reports a problem. A daily clean-up inside the
+  site deletes the rest, so the database stays small.
 - The game clock must match the real time played, within 30 seconds. Pausing works for everyone:
   the browser tells the server when a ranked game is paused and resumed, and the server times the
   pause itself, so paused time is left out without trusting the browser. The board is hidden
