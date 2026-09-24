@@ -1,21 +1,50 @@
 // Browser helpers used by BrowserInterop.cs.
 
+// Sounds are decoded once with the Web Audio API and then played from memory, which starts
+// them almost instantly (an <audio> element has to reload the file each time it's copied).
+let audioContext = null;
 const sounds = new Map();
 
-export function playSound(url) {
+function context() {
+    audioContext ??= new (window.AudioContext || window.webkitAudioContext)();
+    return audioContext;
+}
+
+function load(url) {
+    let sound = sounds.get(url);
+    if (!sound) {
+        sound = fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(data => context().decodeAudioData(data))
+            .catch(() => null);
+        sounds.set(url, sound);
+    }
+    return sound;
+}
+
+export function preloadSound(url) {
+    load(url);
+}
+
+export async function playSound(url) {
     // Muted with the speaker button in the header.
     if (getSetting("sound") === "off") {
         return;
     }
 
-    let audio = sounds.get(url);
-    if (!audio) {
-        audio = new Audio(url);
-        sounds.set(url, audio);
+    const audio = context();
+    if (audio.state === "suspended") {
+        // Browsers start audio suspended until the page has been clicked.
+        audio.resume();
     }
-    // Clone so quick clicks can overlap instead of cutting each other off.
-    const instance = audio.cloneNode();
-    instance.play().catch(() => { /* autoplay blocked until the first user gesture */ });
+
+    const buffer = await load(url);
+    if (buffer) {
+        const source = audio.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audio.destination);
+        source.start();
+    }
 }
 
 export function getSetting(key) {

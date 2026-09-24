@@ -83,6 +83,13 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
             return;
         }
 
+        // Feedback first, so the click sounds immediately (starting a ranked game's clock
+        // waits for the server). Clicking the selected tile again just deselects it, silently.
+        if (Selected != tile)
+        {
+            await effects.OnClickedAsync(tile);
+        }
+
         if (!await StartClockAsync())
         {
             return;
@@ -93,7 +100,6 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         if (Selected == null)
         {
             Selected = tile;
-            await effects.OnSelectedAsync(tile);
         }
         else if (Selected == tile)
         {
@@ -109,7 +115,6 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         else
         {
             Selected = tile;
-            await effects.OnSelectedAsync(tile);
         }
 
         Changed?.Invoke();
@@ -163,6 +168,9 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
 
         Changed?.Invoke();
     }
+
+    /// <summary>Loads the tile effects' sounds ahead of the first click.</summary>
+    public ValueTask PreloadEffectsAsync() => effects.PreloadAsync();
 
     public void Dispose() => StopClock();
 

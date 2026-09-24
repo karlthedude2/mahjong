@@ -119,6 +119,7 @@
     protected override async Task OnInitializedAsync()
     {
         Session.Changed += OnSessionChanged;
+        await Session.PreloadEffectsAsync();
 
         var auth = await AuthState.GetAuthenticationStateAsync();
         signedIn = auth.User.Identity?.IsAuthenticated == true;
