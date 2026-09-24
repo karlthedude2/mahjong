@@ -14,6 +14,13 @@ public static partial class ApiEndpoints
 
     public static void MapMahjongApi(this IEndpointRouteBuilder app)
     {
+        // ads.txt names who may sell ads on this site; AdSense checks it. Built from Ads:ClientId
+        // ("ca-pub-123..." becomes "pub-123..."); f08c47fec0942fa0 is Google's fixed seller ID.
+        app.MapGet("/ads.txt", (IOptions<AdsOptions> ads) =>
+            ads.Value.ClientId is { Length: > 0 } clientId
+                ? Results.Text($"google.com, {clientId.Replace("ca-pub-", "pub-")}, DIRECT, f08c47fec0942fa0\n", "text/plain")
+                : Results.NotFound());
+
         var api = app.MapGroup("/api");
 
         api.MapGet("/client-config", (IOptions<AdsOptions> ads, IOptions<GameOptions> game) =>
