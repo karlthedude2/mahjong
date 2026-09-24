@@ -82,6 +82,9 @@ jobs:
         with:
           app-name: ${{ vars.APP_NAME }}
           package: ${{ runner.temp }}/web
+          # The publish output holds two *.runtimeconfig.json files (server and WebAssembly
+          # client), so App Service can't guess which one to run; name it explicitly.
+          startup-command: dotnet Mahjong.Web.dll
 
       # The free plan sleeps when idle, so give it a few minutes to wake up.
       - name: Smoke test
