@@ -88,7 +88,35 @@ Ads are optional too (see step 5). Each of these is its own variable: `ADS_CLIEN
 
 ### 3. Sign-in providers
 
-Create an OAuth app with each provider. The redirect URIs are:
+Create an OAuth app with each provider. Each provider needs its **redirect URI**: where it sends
+players back after they sign in. Add the live one, and the local ones if you want to test on your PC
+(`https://localhost:7015/signin-<provider>` and `http://localhost:5011/signin-<provider>`).
+
+#### Google, step by step
+
+Google's console moves things around from time to time, so labels may differ slightly.
+
+1. **Project:** at [console.cloud.google.com](https://console.cloud.google.com), use the project
+   picker at the top left to create a project (for example "Mahjong"), then select it.
+2. **Sign-in screen:** open [Google Auth Platform](https://console.cloud.google.com/auth/overview)
+   and click **Get started**.
+   - App name: what players see, e.g. "Mahjong".
+   - User support email and contact email: yours.
+   - Audience: **External**.
+3. **Client:** in Google Auth Platform, open [**Clients**](https://console.cloud.google.com/auth/clients)
+   and click **+ Create client**. This replaced the older "Create credentials > OAuth client ID".
+   - Application type: **Web application**.
+   - Authorized redirect URIs: `https://<APP_NAME>.azurewebsites.net/signin-google`, plus the local
+     ones above if you want them.
+4. **Keys:** click **Create**, then copy the **Client ID** and **Client secret** (or click
+   **Download JSON**). The secret may not be shown again; you can create a new one if it's lost.
+5. **Go public:** under **Audience**, click **Publish app**. Until then, only test users you list
+   can sign in. The site asks only for name and email, so no Google review is needed.
+6. **Add the keys:** add the GitHub secrets `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then run
+   **Deploy Azure infrastructure** again. For local testing, use `dotnet user-secrets` (see
+   *Running locally*).
+
+#### All providers
 
 | Provider | Where | Redirect URI |
 |---|---|---|
