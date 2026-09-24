@@ -12,6 +12,12 @@ param location string = resourceGroup().location
 @allowed([ 'F1', 'B1', 'B2', 'S1', 'P0v3' ])
 param appServiceSku string = 'F1'
 
+@description('''Database tier. Free is the Azure SQL free offer (serverless, monthly allowance, pauses when
+the allowance runs out). Basic, S0-S3 are fixed-price tiers that never pause. Moving off Free is
+one-way; the infra workflow switches the free offer off first.''')
+@allowed([ 'Free', 'Basic', 'S0', 'S1', 'S2', 'S3' ])
+param databaseTier string = 'Free'
+
 param sqlAdminLogin string
 
 @secure()
@@ -41,6 +47,26 @@ param adsResultsSlot string = ''
 var isFree = appServiceSku == 'F1'
 var databaseName = 'mahjong'
 
+var isFreeDatabase = databaseTier == 'Free'
+var databaseSku = isFreeDatabase
+  ? { name: 'GP_S_Gen5_2', tier: 'GeneralPurpose', family: 'Gen5', capacity: 2 }
+  : databaseTier == 'Basic' ? { name: 'Basic', tier: 'Basic' } : { name: databaseTier, tier: 'Standard' }
+
+// Free offer: 100,000 vCore-seconds and 32 GB a month; when the monthly allowance runs out the
+// database pauses until the next month instead of billing. Basic holds up to 2 GB, Standard 250 GB.
+var databaseProperties = isFreeDatabase
+  ? {
+      useFreeLimit: true
+      freeLimitExhaustionBehavior: 'AutoPause'
+      autoPauseDelay: 60
+      minCapacity: json('0.5')
+      maxSizeBytes: 34359738368
+    }
+  : {
+      useFreeLimit: false
+      maxSizeBytes: databaseTier == 'Basic' ? 2147483648 : 268435456000
+    }
+
 // ---------- Database ----------
 
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
@@ -68,21 +94,8 @@ resource database 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
   parent: sqlServer
   name: databaseName
   location: location
-  sku: {
-    name: 'GP_S_Gen5_2'
-    tier: 'GeneralPurpose'
-    family: 'Gen5'
-    capacity: 2
-  }
-  properties: {
-    // Azure SQL free offer: 100,000 vCore-seconds and 32 GB a month. When the monthly allowance
-    // runs out the database pauses until the next month instead of billing.
-    useFreeLimit: true
-    freeLimitExhaustionBehavior: 'AutoPause'
-    autoPauseDelay: 60
-    minCapacity: json('0.5')
-    maxSizeBytes: 34359738368
-  }
+  sku: databaseSku
+  properties: databaseProperties
 }
 
 // ---------- Email ----------
@@ -181,3 +194,4 @@ output webAppUrl string = 'https://${webApp.properties.defaultHostName}'
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output sqlDatabaseName string = database.name
+output databaseTier string = databaseTier
