@@ -140,6 +140,9 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: 'DOTNETCORE|10.0'
+      // Two *.runtimeconfig.json files are published (server and WebAssembly client), so the
+      // platform can't guess the entry point; without this it serves its default page.
+      appCommandLine: 'dotnet Mahjong.Web.dll'
       alwaysOn: !isFree
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
