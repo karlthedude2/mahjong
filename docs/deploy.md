@@ -52,8 +52,10 @@ Contributor on the resource group. When it finishes, it prints the values to add
 
 ### 2. GitHub settings
 
-In **Settings > Environments**, create an environment named `production`. Add yourself as a
-required reviewer if you want to approve each deploy.
+In **Settings > Environments**, the `production` environment is created automatically the first
+time the deploy workflow runs; you can also create it yourself. It belongs to this repository only,
+so an environment with the same name in another repository doesn't matter. Optionally, open it and
+add yourself under **Required reviewers** to approve each deploy.
 
 In **Settings > Secrets and variables > Actions**
 (`https://github.com/<owner>/<repo>/settings/secrets/actions`), add each of the following as its own
@@ -74,12 +76,15 @@ Sign-in providers are optional. Each one switches on once its keys are set (see 
 
 | Secret | Provider |
 |---|---|
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google |
-| `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | Microsoft |
-| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Facebook |
+| `GOOGLE_CLIENT_ID` | Google |
+| `GOOGLE_CLIENT_SECRET` | Google |
+| `MICROSOFT_CLIENT_ID` | Microsoft |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft |
+| `FACEBOOK_APP_ID` | Facebook |
+| `FACEBOOK_APP_SECRET` | Facebook |
 
-Ads are optional too (see step 5). Set these as variables: `ADS_CLIENT_ID`, `ADS_RAIL_SLOT`,
-`ADS_BANNER_SLOT` and `ADS_RESULTS_SLOT`.
+Ads are optional too (see step 5). Each of these is its own variable: `ADS_CLIENT_ID`,
+`ADS_RAIL_SLOT`, `ADS_BANNER_SLOT` and `ADS_RESULTS_SLOT`.
 
 ### 3. Sign-in providers
 
