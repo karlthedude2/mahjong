@@ -37,6 +37,9 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
     /// <summary>Whether the hidden Test layout may be played (default on, so tests can use the small layout).</summary>
     public bool ShowHiddenLayouts { get; init; } = true;
 
+    /// <summary>The site's main domain, if the test needs one (other addresses redirect to it).</summary>
+    public string? CanonicalHost { get; init; }
+
     public HttpClient ClientFor(string? userId)
     {
         var client = CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
@@ -66,6 +69,7 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("Game:ShowHiddenLayouts", ShowHiddenLayouts.ToString());
+        builder.UseSetting("Site:CanonicalHost", CanonicalHost ?? "");
         builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
 
         builder.ConfigureTestServices(services =>

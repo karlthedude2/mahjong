@@ -152,6 +152,25 @@ Facebook needs business verification before people outside your developer accoun
 Run the infrastructure workflow again whenever you change a secret or variable. That's how new
 values reach the web app's settings.
 
+### Custom domain (optional)
+
+A custom domain needs a paid hosting plan (`B1` or above). The site currently uses **mahjong.haus**.
+
+1. **Buy the domain.** Cloudflare Registrar sells domains at cost and includes free DNS.
+2. **Add it to the web app:** in the Azure portal, open the web app, then **Custom domains → Add
+   custom domain**. Azure lists the DNS records to create.
+3. **Create the DNS records** at your DNS provider. In Cloudflare, create one A record per IP
+   address Azure lists (all with the name `@`), plus the `asuid` TXT record. Set each one to
+   **DNS only** (grey cloud): Azure's free certificate can't be issued or renewed through
+   Cloudflare's proxy.
+4. **Validate and add** the domain in Azure, then **Add binding** with a new **App Service Managed
+   Certificate** (free, renewed automatically) and **SNI SSL**. The certificate takes a few minutes.
+5. **Make it the main address:** set the GitHub variable `SITE_HOST` to the domain (for example
+   `mahjong.haus`) and run **Deploy Azure infrastructure**. Every other address, including
+   `<APP_NAME>.azurewebsites.net`, then redirects to it. The health check is not redirected.
+6. **Update sign-in providers:** add `https://<domain>/signin-google` (and the Microsoft and
+   Facebook equivalents) as redirect URIs.
+
 ### 5. Google AdSense
 
 1. Apply at [adsense.google.com](https://adsense.google.com) once the site is live. Google
