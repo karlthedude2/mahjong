@@ -28,7 +28,12 @@ public sealed record BreakdownDto(
         b.TimeBonus, b.QuickFinishBonus, b.NoShuffleBonus, b.Total);
 }
 
-public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, DateTime AchievedUtc);
+/// <summary>A leaderboard row. Seconds is how long the game took (0 for scores recorded before times were kept).</summary>
+public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, int Seconds, DateTime AchievedUtc)
+{
+    /// <summary>The time as m:ss (or h:mm:ss), or an empty string if it wasn't recorded.</summary>
+    public string TimeText => Seconds <= 0 ? "" : TimeSpan.FromSeconds(Seconds).ToString(Seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
+}
 
 public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon);
 

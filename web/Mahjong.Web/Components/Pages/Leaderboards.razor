@@ -28,7 +28,7 @@ else
 {
     <table class="table table-sm">
         <thead>
-            <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end">Date</th></tr>
+            <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th><th scope="col" class="text-end">Date</th></tr>
         </thead>
         <tbody>
             @foreach (var entry in entries)
@@ -37,6 +37,7 @@ else
                     <td>@entry.Rank</td>
                     <td>@entry.DisplayName</td>
                     <td class="text-end">@entry.Score.ToString("N0")</td>
+                    <td class="text-end">@entry.TimeText</td>
                     <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
                 </tr>
             }
