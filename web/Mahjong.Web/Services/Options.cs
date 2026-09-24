@@ -18,6 +18,15 @@ public sealed class AdsOptions
     public string? ResultsSlot { get; set; }
 }
 
+/// <summary>Cloudflare Web Analytics settings ("Analytics" section). Off until the token is set.</summary>
+public sealed class AnalyticsOptions
+{
+    public const string Section = "Analytics";
+
+    /// <summary>The site token from Cloudflare (Web Analytics, JS snippet's "token" value).</summary>
+    public string? CloudflareToken { get; set; }
+}
+
 /// <summary>Azure Communication Services email settings ("Email" section).</summary>
 public sealed class EmailOptions
 {
