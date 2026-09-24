@@ -16,9 +16,9 @@ jobs:
     name: Web + rules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -31,7 +31,7 @@ jobs:
       - name: Publish web app
         run: dotnet publish web/Mahjong.Web --configuration Release --output ${{ runner.temp }}/web
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: web
           path: ${{ runner.temp }}/web
@@ -41,18 +41,18 @@ jobs:
     # The WinForms game targets .NET Framework 4.8, which only builds on Windows.
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
-      - uses: microsoft/setup-msbuild@v2
+      - uses: microsoft/setup-msbuild@v3
 
       - name: Build
         run: msbuild MahjongSpriteVersion/MahjongSpriteVersion.csproj -restore -p:Configuration=Release -verbosity:minimal
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: desktop
           path: MahjongSpriteVersion/bin/Release/

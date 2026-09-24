@@ -20,6 +20,8 @@ Mahjong solitaire for Windows (WinForms, .NET Framework 4.8) and the web (Blazor
 
 See [docs/deploy.md](docs/deploy.md) for running the web version locally and for deploying to Azure (CI/CD with GitHub Actions).
 
+Picking the project back up? [docs/project-notes.md](docs/project-notes.md) records what has been built, the key decisions, the current status, and what's left to do.
+
 ## Adding a layout
 
 Create a `.layout` text file:

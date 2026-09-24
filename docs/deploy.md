@@ -17,10 +17,14 @@ the database and deploys on every push to `main`.
   - The app sleeps when idle, so the first visit after a quiet spell takes a few seconds.
   - No custom domain, so the site lives at `https://<APP_NAME>.azurewebsites.net`.
   - No staging slot.
+  - A subscription can have several free plans (currently up to 10 per region), so this can sit
+    alongside other free apps you run.
 - **Azure SQL free offer.**
-  - 100,000 vCore-seconds and 32 GB a month, free.
+  - Up to **10 free databases per subscription**, each with its own monthly allowance of
+    100,000 vCore-seconds and 32 GB.
   - If the allowance runs out, the database pauses until next month instead of charging you.
-  - **Each subscription gets one free database.**
+  - **All free databases in a subscription must be in the same region.** If you already have one,
+    deploy to that region (see step 1).
 - **Email.** Pay per message, fractions of a cent each.
 
 To upgrade, run `infra.yml` and pick `B1` (about $13/month; always on, health checks) or `S1`
@@ -38,20 +42,33 @@ To upgrade, run `infra.yml` and pick `B1` (about $13/month; always on, health ch
 ./infra/bootstrap.ps1 -AppName mahjong-karl -Location eastus
 ```
 
-It creates the resource group and an app registration that trusts this repository, and gives it
-Contributor on the resource group. When it finishes, it prints the values to add to GitHub.
+Choose `-Location` carefully. Everything is created in that region, and Azure requires all of a
+subscription's free databases to share one region. If you already have a free Azure SQL database,
+use its region: in the Azure portal, open that database and read **Location** on its Overview
+page, then pass the short name (for example `westus2` for "West US 2").
+
+It switches on the Azure service families the site uses (web apps, SQL and email), creates the
+resource group and an app registration that trusts this repository, and gives it Contributor on
+the resource group. When it finishes, it prints the values to add to GitHub.
 
 ### 2. GitHub settings
 
-In **Settings > Environments**, create an environment named `production`. Add yourself as a
-required reviewer if you want to approve each deploy.
+In **Settings > Environments**, the `production` environment is created automatically the first
+time the deploy workflow runs; you can also create it yourself. It belongs to this repository only,
+so an environment with the same name in another repository doesn't matter. Optionally, open it and
+add yourself under **Required reviewers** to approve each deploy.
 
-In **Settings > Secrets and variables > Actions**, add the following.
+In **Settings > Secrets and variables > Actions**
+(`https://github.com/<owner>/<repo>/settings/secrets/actions`), add each of the following as its own
+entry. Secrets go on the **Secrets** tab with **New repository secret**; variables go on the
+**Variables** tab with **New repository variable**.
 
 | Kind | Name | Value |
 |---|---|---|
-| Secret | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Printed by `bootstrap.ps1` |
-| Secret | `SQL_ADMIN_PASSWORD` | A strong password (Azure requires 3 of: upper, lower, digit, symbol) |
+| Secret | `AZURE_CLIENT_ID` | Printed by `bootstrap.ps1` |
+| Secret | `AZURE_TENANT_ID` | Printed by `bootstrap.ps1` |
+| Secret | `AZURE_SUBSCRIPTION_ID` | Printed by `bootstrap.ps1` |
+| Secret | `SQL_ADMIN_PASSWORD` | A strong password you choose (Azure requires 3 of: upper, lower, digit, symbol) |
 | Variable | `APP_NAME` | The app name you chose |
 | Variable | `AZURE_RESOURCE_GROUP` | Printed by `bootstrap.ps1` (`rg-<APP_NAME>`) |
 | Variable | `SQL_ADMIN_LOGIN` | e.g. `mahjongadmin` |
@@ -60,16 +77,47 @@ Sign-in providers are optional. Each one switches on once its keys are set (see 
 
 | Secret | Provider |
 |---|---|
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google |
-| `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` | Microsoft |
-| `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET` | Facebook |
+| `GOOGLE_CLIENT_ID` | Google |
+| `GOOGLE_CLIENT_SECRET` | Google |
+| `MICROSOFT_CLIENT_ID` | Microsoft |
+| `MICROSOFT_CLIENT_SECRET` | Microsoft |
+| `FACEBOOK_APP_ID` | Facebook |
+| `FACEBOOK_APP_SECRET` | Facebook |
 
-Ads are optional too (see step 5). Set these as variables: `ADS_CLIENT_ID`, `ADS_RAIL_SLOT`,
-`ADS_BANNER_SLOT` and `ADS_RESULTS_SLOT`.
+Ads are optional too (see step 5). Each of these is its own variable: `ADS_CLIENT_ID`,
+`ADS_RAIL_SLOT`, `ADS_BANNER_SLOT` and `ADS_RESULTS_SLOT`.
 
 ### 3. Sign-in providers
 
-Create an OAuth app with each provider. The redirect URIs are:
+Create an OAuth app with each provider. Each provider needs its **redirect URI**: where it sends
+players back after they sign in. Add the live one, and the local ones if you want to test on your PC
+(`https://localhost:7015/signin-<provider>` and `http://localhost:5011/signin-<provider>`).
+
+#### Google, step by step
+
+Google's console moves things around from time to time, so labels may differ slightly.
+
+1. **Project:** at [console.cloud.google.com](https://console.cloud.google.com), use the project
+   picker at the top left to create a project (for example "Mahjong"), then select it.
+2. **Sign-in screen:** open [Google Auth Platform](https://console.cloud.google.com/auth/overview)
+   and click **Get started**.
+   - App name: what players see, e.g. "Mahjong".
+   - User support email and contact email: yours.
+   - Audience: **External**.
+3. **Client:** in Google Auth Platform, open [**Clients**](https://console.cloud.google.com/auth/clients)
+   and click **+ Create client**. This replaced the older "Create credentials > OAuth client ID".
+   - Application type: **Web application**.
+   - Authorized redirect URIs: `https://<APP_NAME>.azurewebsites.net/signin-google`, plus the local
+     ones above if you want them.
+4. **Keys:** click **Create**, then copy the **Client ID** and **Client secret** (or click
+   **Download JSON**). The secret may not be shown again; you can create a new one if it's lost.
+5. **Go public:** under **Audience**, click **Publish app**. Until then, only test users you list
+   can sign in. The site asks only for name and email, so no Google review is needed.
+6. **Add the keys:** add the GitHub secrets `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then run
+   **Deploy Azure infrastructure** again. For local testing, use `dotnet user-secrets` (see
+   *Running locally*).
+
+#### All providers
 
 | Provider | Where | Redirect URI |
 |---|---|---|
