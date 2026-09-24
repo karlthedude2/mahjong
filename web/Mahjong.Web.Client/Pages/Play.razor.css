@@ -38,8 +38,11 @@
     gap: 0.4rem;
 }
 
-.toolbar .form-select {
-    width: auto;
+.layout-name {
+    margin-left: 0.4rem;
+    color: #fff;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 .notice {
@@ -52,6 +55,15 @@
 
 .notice.warning {
     background: #fff3cd;
+}
+
+.notice.info {
+    background: #dbeafe;
+}
+
+.notice .btn-link {
+    padding: 0 0.4rem;
+    vertical-align: baseline;
 }
 
 .play-table {

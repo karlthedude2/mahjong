@@ -22,24 +22,7 @@
 
     <section class="game">
         <div class="toolbar">
-            <select class="form-select form-select-sm" aria-label="Layout" value="@currentLayout?.Name" @onchange="OnLayoutChanged">
-                @foreach (var l in layouts)
-                {
-                    <option value="@l.Name">@l.Name</option>
-                }
-            </select>
-            <select class="form-select form-select-sm" aria-label="Tile set" value="@Preferences.TileSet.Id" @onchange="OnTileSetChanged">
-                @foreach (var set in TileSets.All)
-                {
-                    <option value="@set.Id">@set.Name</option>
-                }
-            </select>
-            <select class="form-select form-select-sm" aria-label="Background" value="@Preferences.Background.Id" @onchange="OnBackgroundChanged">
-                @foreach (var background in Backgrounds.All)
-                {
-                    <option value="@background.Id">@background.Name</option>
-                }
-            </select>
+            <button class="btn btn-sm btn-light" @onclick="() => showSettings = true" title="Layout, tiles and background">&#9881; Settings</button>
             <button class="btn btn-sm btn-light" @onclick="NewGameAsync">New game</button>
             <button class="btn btn-sm btn-light" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)" title="Redeals the remaining tiles. Costs 1,000 of the no-shuffle bonus.">Shuffle</button>
             <button class="btn btn-sm btn-light" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)">Undo</button>
@@ -47,11 +30,21 @@
             <button class="btn btn-sm btn-light" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)">
                 @(Session.State == SessionState.Paused ? "Resume" : "Pause")
             </button>
+            <span class="layout-name">@currentLayout?.Name</span>
         </div>
 
         @if (!signedIn)
         {
             <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
+        }
+
+        @if (pendingLayout != null)
+        {
+            <div class="notice info">
+                Your next game will use the <strong>@pendingLayout.Name</strong> layout.
+                <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
+                <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">Keep @currentLayout?.Name</button>
+            </div>
         }
 
         @if (error != null)
@@ -105,6 +98,13 @@
     <ResultsDialog Session="Session" Config="config" LayoutName="@currentLayout.Name" OnPlayAgain="NewGameAsync" />
 }
 
+@if (showSettings)
+{
+    <SettingsDialog Layouts="layouts" PlayingLayoutName="@currentLayout?.Name" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
+                    TileSetId="@Preferences.TileSet.Id" BackgroundId="@Preferences.Background.Id"
+                    OnApply="ApplySettingsAsync" OnCancel="() => showSettings = false" />
+}
+
 @code {
     private const string DefaultLayoutName = "Twin Peaks";
 
@@ -112,6 +112,9 @@
     private ClientConfig? config;
     private IReadOnlyList<LayoutDefinition> layouts = LayoutCatalog.Visible;
     private LayoutDefinition? currentLayout;
+    // A layout chosen mid-game, kept for the next game so the current one isn't interrupted.
+    private LayoutDefinition? pendingLayout;
+    private bool showSettings;
     private string? error;
 
     private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
@@ -135,8 +138,17 @@
         await NewGameAsync();
     }
 
+    // A game counts as under way once the first tile is clicked (that starts the clock).
+    private bool GameUnderWay => Session.Game != null && Session.State != SessionState.Won && Session.ClockStarted;
+
     private async Task NewGameAsync()
     {
+        if (pendingLayout != null)
+        {
+            currentLayout = pendingLayout;
+            pendingLayout = null;
+        }
+
         error = null;
         try
         {
@@ -150,16 +162,42 @@
         }
     }
 
-    private async Task OnLayoutChanged(ChangeEventArgs e)
+    // Tiles and background change straight away; a new layout waits for the next game if one is under way.
+    private async Task ApplySettingsAsync(SettingsChoice choice)
     {
-        currentLayout = layouts.First(l => l.Name == (string?)e.Value);
-        await Preferences.SetLastLayoutAsync(currentLayout.Name);
-        await NewGameAsync();
+        showSettings = false;
+
+        if (choice.TileSetId != Preferences.TileSet.Id)
+        {
+            await Preferences.SetTileSetAsync(TileSets.Find(choice.TileSetId));
+        }
+
+        if (choice.BackgroundId != Preferences.Background.Id)
+        {
+            await Preferences.SetBackgroundAsync(Backgrounds.Find(choice.BackgroundId));
+        }
+
+        var layout = layouts.FirstOrDefault(l => l.Name == choice.LayoutName);
+        if (layout is null || layout == (pendingLayout ?? currentLayout))
+        {
+            return;
+        }
+
+        await Preferences.SetLastLayoutAsync(layout.Name);
+        if (layout == currentLayout)
+        {
+            pendingLayout = null;
+        }
+        else if (GameUnderWay)
+        {
+            pendingLayout = layout;
+        }
+        else
+        {
+            pendingLayout = layout;
+            await NewGameAsync();
+        }
     }
-
-    private async Task OnTileSetChanged(ChangeEventArgs e) => await Preferences.SetTileSetAsync(TileSets.Find((string?)e.Value));
-
-    private async Task OnBackgroundChanged(ChangeEventArgs e) => await Preferences.SetBackgroundAsync(Backgrounds.Find((string?)e.Value));
 
     private void OnSessionChanged() => InvokeAsync(StateHasChanged);
 
