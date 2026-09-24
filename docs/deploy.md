@@ -55,12 +55,17 @@ Contributor on the resource group. When it finishes, it prints the values to add
 In **Settings > Environments**, create an environment named `production`. Add yourself as a
 required reviewer if you want to approve each deploy.
 
-In **Settings > Secrets and variables > Actions**, add the following.
+In **Settings > Secrets and variables > Actions**
+(`https://github.com/<owner>/<repo>/settings/secrets/actions`), add each of the following as its own
+entry. Secrets go on the **Secrets** tab with **New repository secret**; variables go on the
+**Variables** tab with **New repository variable**.
 
 | Kind | Name | Value |
 |---|---|---|
-| Secret | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | Printed by `bootstrap.ps1` |
-| Secret | `SQL_ADMIN_PASSWORD` | A strong password (Azure requires 3 of: upper, lower, digit, symbol) |
+| Secret | `AZURE_CLIENT_ID` | Printed by `bootstrap.ps1` |
+| Secret | `AZURE_TENANT_ID` | Printed by `bootstrap.ps1` |
+| Secret | `AZURE_SUBSCRIPTION_ID` | Printed by `bootstrap.ps1` |
+| Secret | `SQL_ADMIN_PASSWORD` | A strong password you choose (Azure requires 3 of: upper, lower, digit, symbol) |
 | Variable | `APP_NAME` | The app name you chose |
 | Variable | `AZURE_RESOURCE_GROUP` | Printed by `bootstrap.ps1` (`rg-<APP_NAME>`) |
 | Variable | `SQL_ADMIN_LOGIN` | e.g. `mahjongadmin` |
