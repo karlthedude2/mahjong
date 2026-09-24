@@ -242,7 +242,8 @@ public sealed class GameApiTests : IAsyncLifetime
         int stored = await app.WithDbAsync(db => db.HighScores.CountAsync(s => s.LayoutName == TestLayout));
 
         Assert.Equal(GameService.LeaderboardSize, stored);
-        Assert.Equal(scores.OrderByDescending(s => s).Take(GameService.LeaderboardSize), board!.Select(e => e.Score));
+        Assert.NotNull(board);
+        Assert.Equal(scores.OrderByDescending(s => s).Take(GameService.LeaderboardSize), board.Select(e => e.Score));
         Assert.Equal(Enumerable.Range(1, GameService.LeaderboardSize), board.Select(e => e.Rank));
     }
 

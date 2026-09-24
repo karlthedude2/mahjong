@@ -79,12 +79,12 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
 
             services.AddAuthentication(options =>
                 {
-                    options.DefaultScheme = TestAuthHandler.Scheme;
-                    options.DefaultAuthenticateScheme = TestAuthHandler.Scheme;
-                    options.DefaultChallengeScheme = TestAuthHandler.Scheme;
-                    options.DefaultForbidScheme = TestAuthHandler.Scheme;
+                    options.DefaultScheme = TestAuthHandler.SchemeName;
+                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+                    options.DefaultForbidScheme = TestAuthHandler.SchemeName;
                 })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Scheme, _ => { });
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
         });
     }
 
@@ -105,7 +105,7 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
     private sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
         : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
     {
-        public const string Scheme = "Test";
+        public const string SchemeName = "Test";
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -114,8 +114,8 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
                 return Task.FromResult(AuthenticateResult.NoResult());
             }
 
-            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId!), new Claim(ClaimTypes.Name, userId!)], Scheme);
-            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme)));
+            var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId!), new Claim(ClaimTypes.Name, userId!)], SchemeName);
+            return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName)));
         }
     }
 }
