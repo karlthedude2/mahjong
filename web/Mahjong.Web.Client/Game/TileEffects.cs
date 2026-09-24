@@ -8,8 +8,13 @@ namespace Mahjong.Web.Client.Game;
 /// </summary>
 public interface ITileEffects
 {
-    ValueTask OnSelectedAsync(Tile tile);
+    /// <summary>Called once when the game page opens, to load sounds (and later, other assets).</summary>
+    ValueTask PreloadAsync();
 
+    /// <summary>Called as soon as a free tile is clicked, before anything else happens.</summary>
+    ValueTask OnClickedAsync(Tile tile);
+
+    /// <summary>Called after a matching pair has been removed.</summary>
     ValueTask OnPairRemovedAsync(Tile first, Tile second);
 }
 
@@ -18,9 +23,10 @@ public sealed class SoundTileEffects(BrowserInterop browser) : ITileEffects
 {
     private const string ClickSound = "sounds/click.wav";
 
-    public ValueTask OnSelectedAsync(Tile tile) => PlayAsync();
+    public ValueTask PreloadAsync() => browser.PreloadSoundAsync(ClickSound);
 
-    public ValueTask OnPairRemovedAsync(Tile first, Tile second) => PlayAsync();
+    public ValueTask OnClickedAsync(Tile tile) => browser.PlaySoundAsync(ClickSound);
 
-    private ValueTask PlayAsync() => browser.PlaySoundAsync(ClickSound);
+    // The click already sounded; a matched pair has no extra effect yet.
+    public ValueTask OnPairRemovedAsync(Tile first, Tile second) => ValueTask.CompletedTask;
 }

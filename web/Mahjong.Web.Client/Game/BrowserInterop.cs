@@ -9,6 +9,8 @@ public sealed class BrowserInterop(IJSRuntime js) : IAsyncDisposable
     private readonly Lazy<Task<IJSObjectReference>> module =
         new(() => js.InvokeAsync<IJSObjectReference>("import", "./js/mahjong.js").AsTask());
 
+    public async ValueTask PreloadSoundAsync(string url) => await (await module.Value).InvokeVoidAsync("preloadSound", url);
+
     public async ValueTask PlaySoundAsync(string url) => await (await module.Value).InvokeVoidAsync("playSound", url);
 
     public async ValueTask<string?> GetSettingAsync(string key) =>
