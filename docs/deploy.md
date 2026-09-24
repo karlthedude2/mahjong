@@ -171,6 +171,17 @@ A custom domain needs a paid hosting plan (`B1` or above). The site currently us
 6. **Update sign-in providers:** add `https://<domain>/signin-google` (and the Microsoft and
    Facebook equivalents) as redirect URIs.
 
+### Visitor statistics (optional): Cloudflare Web Analytics
+
+Free, cookie-free visit counts (already described in the privacy policy).
+
+1. In the Cloudflare dashboard, open **Analytics & Logs → Web Analytics → Add a site**, enter the
+   domain (for example `mahjong.haus`) and choose the **JavaScript snippet** option. (Automatic
+   setup needs Cloudflare's proxy, which this site doesn't use.)
+2. Copy the `token` value from the snippet, e.g. `{"token": "0123abcd..."}`.
+3. Set the GitHub variable `CLOUDFLARE_ANALYTICS_TOKEN` to it, then run **Deploy Azure infrastructure**.
+   The site adds Cloudflare's script to every page; statistics appear in the dashboard within minutes.
+
 ### 5. Google AdSense
 
 1. Apply at [adsense.google.com](https://adsense.google.com) once the site is live. Google

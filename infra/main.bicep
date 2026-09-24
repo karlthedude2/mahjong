@@ -42,6 +42,9 @@ param facebookAppSecret string = ''
 @description('The main domain for the site (e.g. mahjong.haus). Other addresses redirect to it. Empty: no redirect.')
 param canonicalHost string = ''
 
+@description('Cloudflare Web Analytics site token. Empty: analytics off.')
+param cloudflareAnalyticsToken string = ''
+
 param adsClientId string = ''
 param adsRailSlot string = ''
 param adsBannerSlot string = ''
@@ -184,6 +187,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'Email__ConnectionString', value: communication.listKeys().primaryConnectionString }
         { name: 'Email__SenderAddress', value: 'DoNotReply@${emailDomain.properties.mailFromSenderDomain}' }
         { name: 'Site__CanonicalHost', value: canonicalHost }
+        { name: 'Analytics__CloudflareToken', value: cloudflareAnalyticsToken }
         { name: 'Ads__ClientId', value: adsClientId }
         { name: 'Ads__RailSlot', value: adsRailSlot }
         { name: 'Ads__BannerSlot', value: adsBannerSlot }

@@ -67,6 +67,7 @@ else
 }
 
 builder.Services.Configure<AdsOptions>(config.GetSection(AdsOptions.Section));
+builder.Services.Configure<AnalyticsOptions>(config.GetSection(AnalyticsOptions.Section));
 builder.Services.Configure<GameOptions>(config.GetSection(GameOptions.Section));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<GameService>();

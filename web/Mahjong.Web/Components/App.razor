@@ -1,6 +1,7 @@
 @using Mahjong.Web.Services
 @using Microsoft.Extensions.Options
 @inject IOptions<AdsOptions> Ads
+@inject IOptions<AnalyticsOptions> Analytics
 
 <!DOCTYPE html>
 <html lang="en">
@@ -45,6 +46,11 @@
 
 <body>
     <Routes />
+    @if (!string.IsNullOrEmpty(Analytics.Value.CloudflareToken))
+    {
+        @* Cloudflare Web Analytics: cookie-free visit counts (see the privacy policy). *@
+        <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="@($"{{\"token\": \"{Analytics.Value.CloudflareToken}\"}}")"></script>
+    }
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script>
         // The speaker button in the header: flips the saved sound setting.
