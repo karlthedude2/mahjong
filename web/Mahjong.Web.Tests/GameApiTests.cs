@@ -61,7 +61,10 @@ public sealed class GameApiTests : IAsyncLifetime
         Assert.Equal(1, profile.GamesWon);
 
         var board = await client.GetFromJsonAsync<List<LeaderboardEntry>>($"api/leaderboards/{TestLayout}");
-        Assert.Equal("Alice", Assert.Single(board!).DisplayName);
+        var entry = Assert.Single(board!);
+        Assert.Equal("Alice", entry.DisplayName);
+        Assert.Equal(game.Scoring.Clock.Seconds, entry.Seconds); // 12 moves, 2 seconds each
+        Assert.Equal("0:24", entry.TimeText);
     }
 
     [Fact]

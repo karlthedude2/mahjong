@@ -95,7 +95,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             if (user != null)
             {
                 user.GamesWon++;
-                rank = await AddToLeaderboardAsync(game, user);
+                rank = await AddToLeaderboardAsync(game, user, replay.ElapsedSeconds);
             }
         }
 
@@ -138,7 +138,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             .Take(LeaderboardSize)
             .ToListAsync();
 
-        return top.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.AchievedUtc)).ToList();
+        return top.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc)).ToList();
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     }
 
     /// <summary>Adds the score if it makes the top 20, trims the list, and returns the new rank.</summary>
-    private async Task<int?> AddToLeaderboardAsync(GameEntity game, ApplicationUser user)
+    private async Task<int?> AddToLeaderboardAsync(GameEntity game, ApplicationUser user, int seconds)
     {
         var top = await db.HighScores
             .Where(s => s.LayoutName == game.LayoutName)
@@ -211,6 +211,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             UserId = user.Id,
             DisplayName = string.IsNullOrWhiteSpace(user.DisplayName) ? "Player" : user.DisplayName,
             Score = game.Score!.Value,
+            Seconds = seconds,
             AchievedUtc = game.FinishedUtc!.Value,
             GameId = game.Id,
         };

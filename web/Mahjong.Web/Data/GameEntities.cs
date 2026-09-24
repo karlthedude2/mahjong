@@ -69,6 +69,9 @@ public class HighScoreEntity
 
     public int Score { get; set; }
 
+    /// <summary>How long the game took, in game-clock seconds (paused time excluded), as verified by the server.</summary>
+    public int Seconds { get; set; }
+
     public DateTime AchievedUtc { get; set; }
 
     public Guid GameId { get; set; }
