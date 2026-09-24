@@ -24,7 +24,7 @@ jobs:
     # Add required reviewers to this environment in GitHub to approve each deploy.
     environment:
       name: production
-      url: https://${{ vars.APP_NAME }}.azurewebsites.net
+      url: https://${{ vars.SITE_HOST || format('{0}.azurewebsites.net', vars.APP_NAME) }}
     steps:
       - uses: actions/checkout@v7
 

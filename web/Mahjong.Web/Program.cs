@@ -105,6 +105,7 @@ app.UseWhen(
     context => !context.Request.Path.StartsWithSegments("/api"),
     site => site.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 app.UseHttpsRedirection();
+RedirectToCanonicalHost(app, config["Site:CanonicalHost"]);
 app.UseRateLimiter();
 app.UseAntiforgery();
 
@@ -118,6 +119,29 @@ app.MapMahjongApi();
 app.MapHealthChecks("/healthz");
 
 app.Run();
+
+// Sends visitors on any other address (e.g. the azurewebsites.net one) to the site's main domain,
+// keeping the path. The health check is left alone so monitoring and the deploy smoke test work.
+static void RedirectToCanonicalHost(WebApplication app, string? canonicalHost)
+{
+    if (string.IsNullOrWhiteSpace(canonicalHost))
+    {
+        return;
+    }
+
+    app.Use(async (context, next) =>
+    {
+        var request = context.Request;
+        if (!request.Host.Host.Equals(canonicalHost, StringComparison.OrdinalIgnoreCase)
+            && !request.Path.StartsWithSegments("/healthz"))
+        {
+            context.Response.Redirect($"https://{canonicalHost}{request.PathBase}{request.Path}{request.QueryString}", permanent: true);
+            return;
+        }
+
+        await next();
+    });
+}
 
 static void AddExternalLogins(AuthenticationBuilder authentication, IConfiguration config)
 {

@@ -65,6 +65,8 @@ line per tile. Files are built into the program and discovered automatically.
   the first move. Pause hides the board and works for ranked games too.
 - **Ads:** Google AdSense slots, which show placeholders until configured.
 - **Deployment:** Azure App Service and Azure SQL, set up by Bicep and deployed by GitHub Actions.
+  Live at **https://mahjong.haus** (a Cloudflare-registered domain with a free Azure certificate);
+  the `SITE_HOST` variable makes other addresses redirect there.
 
 ## How the pieces fit
 

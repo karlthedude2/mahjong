@@ -6,6 +6,7 @@ name: Deploy Azure infrastructure
 # The hosting plan and database tier come from repository variables, so they stay put between runs:
 #   APP_SERVICE_SKU: F1 (free), B1, B2, S1 or P0v3            (default F1)
 #   DATABASE_TIER:   Free (free offer), Basic, S0, S1, S2, S3  (default Free)
+#   SITE_HOST:       the custom domain (e.g. mahjong.haus); other addresses redirect to it (optional)
 on:
   workflow_dispatch:
     inputs:
@@ -68,6 +69,7 @@ jobs:
               appName="${{ vars.APP_NAME }}" \
               appServiceSku="$APP_SERVICE_SKU" \
               databaseTier="$DATABASE_TIER" \
+              canonicalHost="${{ vars.SITE_HOST }}" \
               sqlAdminLogin="${{ vars.SQL_ADMIN_LOGIN }}" \
               sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
               googleClientId="${{ secrets.GOOGLE_CLIENT_ID }}" \
