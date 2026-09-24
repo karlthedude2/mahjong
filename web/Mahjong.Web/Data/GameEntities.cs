@@ -6,7 +6,10 @@ public enum GameOutcome
 {
     InProgress,
     Won,
-    Lost
+    Lost,
+
+    /// <summary>The submitted moves failed the server's check (impossible moves or a faked clock).</summary>
+    Rejected
 }
 
 /// <summary>A game started by a signed-in player. The seed is chosen by the server.</summary>
@@ -49,7 +52,10 @@ public class GameEntity
     /// <summary>The score the server computed by replaying the game.</summary>
     public int? Score { get; set; }
 
-    /// <summary>The submitted moves, kept for auditing.</summary>
+    /// <summary>
+    /// The submitted moves, kept only where they're worth auditing: while the game is on a
+    /// leaderboard, and for 30 days after a game is rejected (see <c>GameRecordCleanup</c>).
+    /// </summary>
     public string? RecordJson { get; set; }
 }
 

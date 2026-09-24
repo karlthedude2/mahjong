@@ -103,6 +103,10 @@ line per tile. Files are built into the program and discovered automatically.
   5. The game clock must match the real time played, within 30 seconds.
 
   Seeds are kept below 2^53 so they survive JavaScript numbers.
+
+  Move lists are kept only for games on a leaderboard, and for rejected games (status `Rejected`)
+  for 30 days; everything else keeps just its result. `GameRecordCleanup` runs daily inside the
+  site. This keeps the database small enough for the Basic tier's 2 GB.
 - **Pauses are timed by the server.** Pause and resume are sent to the server, which records the
   times from its own clock and leaves paused time out of the clock check. A ranked game starts out
   paused, and the first move resumes it, which is how the clock can wait for the first move. A

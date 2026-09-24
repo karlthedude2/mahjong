@@ -62,6 +62,12 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
         return await query(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
     }
 
+    public async Task<int> RunRecordCleanupAsync()
+    {
+        using var scope = Services.CreateScope();
+        return await scope.ServiceProvider.GetRequiredService<Mahjong.Web.Services.GameRecordCleanup>().RunAsync();
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -76,6 +82,10 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Time);
+
+            // The tests run the cleanup directly instead of on a timer.
+            var cleanupService = services.Single(d => d.ImplementationType == typeof(Mahjong.Web.Services.GameRecordCleanupService));
+            services.Remove(cleanupService);
 
             services.AddAuthentication(options =>
                 {

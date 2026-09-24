@@ -85,6 +85,11 @@ public sealed class GameApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, first.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
         Assert.Equal(0, (await client.GetFromJsonAsync<PlayerProfile>("api/me"))!.GamesWon);
+
+        // Rejected games keep their moves (for 30 days) so a complaint can be looked into.
+        var stored = await app.WithDbAsync(db => db.Games.SingleAsync(g => g.Id == started.GameId));
+        Assert.Equal(GameOutcome.Rejected, stored.Status);
+        Assert.NotNull(stored.RecordJson);
     }
 
     [Fact]
@@ -195,6 +200,34 @@ public sealed class GameApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task RejectedGamesLoseTheirMovesAfterThirtyDays()
+    {
+        var client = app.ClientFor("alice");
+
+        var winner = await StartAsync(client);
+        await FinishAsync(client, winner.GameId, Play(winner.Seed, secondsPerMove: 1).Record!);
+
+        var cheat = await StartAsync(client);
+        await FinishAsync(client, cheat.GameId, new GameRecord
+        {
+            LayoutName = TestLayout,
+            Seed = cheat.Seed,
+            Moves = [new RecordedMove { Kind = RecordedMoveKind.Remove, Second = 0, TileA = 0, TileB = 0 }],
+        });
+
+        Task<string?> MovesOf(Guid id) => app.WithDbAsync(async db => (await db.Games.FindAsync(id))!.RecordJson);
+
+        Assert.Equal(0, await app.RunRecordCleanupAsync()); // too recent: nothing to clear
+        Assert.NotNull(await MovesOf(cheat.GameId));
+
+        app.Time.Advance(TimeSpan.FromDays(31));
+        Assert.Equal(1, await app.RunRecordCleanupAsync());
+
+        Assert.Null(await MovesOf(cheat.GameId));
+        Assert.NotNull(await MovesOf(winner.GameId)); // still on the leaderboard
+    }
+
+    [Fact]
     public async Task PlayersCannotFinishSomeoneElsesGame()
     {
         var started = await StartAsync(app.ClientFor("alice"));
@@ -246,6 +279,12 @@ public sealed class GameApiTests : IAsyncLifetime
 
         Assert.Equal(GameService.LeaderboardSize, stored);
         Assert.NotNull(board);
+
+        // Only the games still on the leaderboard keep their moves.
+        var withMoves = await app.WithDbAsync(db => db.Games.Where(g => g.RecordJson != null).Select(g => g.Id).ToListAsync());
+        var onBoard = await app.WithDbAsync(db => db.HighScores.Select(s => s.GameId).ToListAsync());
+        Assert.Equal(onBoard.OrderBy(id => id), withMoves.OrderBy(id => id));
+
         Assert.Equal(scores.OrderByDescending(s => s).Take(GameService.LeaderboardSize), board.Select(e => e.Score));
         Assert.Equal(Enumerable.Range(1, GameService.LeaderboardSize), board.Select(e => e.Rank));
     }
