@@ -27,8 +27,25 @@ the database and deploys on every push to `main`.
     deploy to that region (see step 1).
 - **Email.** Pay per message, fractions of a cent each.
 
-To upgrade, run `infra.yml` and pick `B1` (about $13/month; always on, health checks) or `S1`
-(adds staging slots and autoscale).
+### Changing the hosting plan or database tier
+
+Both are GitHub repository variables (**Settings > Secrets and variables > Actions > Variables**),
+so the choice sticks between runs:
+
+| Variable | Values | Default |
+|---|---|---|
+| `APP_SERVICE_SKU` | `F1` (free), `B1` (about $12/month, always on), `B2`, `S1` (autoscale), `P0v3` | `F1` |
+| `DATABASE_TIER` | `Free` (free offer), `Basic` (about $5/month, 2 GB), `S0` (about $15/month, 250 GB), `S1`, `S2`, `S3` | `Free` |
+
+Set or change the variable, then run **Deploy Azure infrastructure**. Tick **Preview only** first
+to see what would change without changing anything. The site and its data stay in place; a tier
+change takes a few minutes, with a brief moment of reconnecting.
+
+Moving the database off `Free` is one-way: Azure doesn't allow a database to return to the free
+offer. The workflow switches the free offer off for you the first time you choose a paid tier.
+
+For a site with real traffic, use at least `B1` and `Basic`: the free plan stops serving after
+165 MB of downloads a day, and the free database pauses when its monthly allowance runs out.
 
 ## One-time setup
 

@@ -1,19 +1,28 @@
 name: Deploy Azure infrastructure
 
-# Run by hand after changing infra/main.bicep or any sign-in/ad setting. Deploys are
-# incremental, so running it again only applies what changed.
+# Run by hand after changing infra/main.bicep, a sign-in or ad setting, or the hosting plan or
+# database tier. Deploys are incremental, so running it again only applies what changed.
+#
+# The hosting plan and database tier come from repository variables, so they stay put between runs:
+#   APP_SERVICE_SKU: F1 (free), B1, B2, S1 or P0v3            (default F1)
+#   DATABASE_TIER:   Free (free offer), Basic, S0, S1, S2, S3  (default Free)
 on:
   workflow_dispatch:
     inputs:
-      appServiceSku:
-        description: App Service plan (F1 is free)
-        type: choice
-        options: [ F1, B1, B2, S1, P0v3 ]
-        default: F1
+      preview:
+        description: Preview only (show what would change, change nothing)
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
   contents: read
+
+env:
+  APP_SERVICE_SKU: ${{ vars.APP_SERVICE_SKU || 'F1' }}
+  DATABASE_TIER: ${{ vars.DATABASE_TIER || 'Free' }}
+  RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+  SQL_SERVER: ${{ vars.APP_NAME }}-sql
 
 jobs:
   infra:
@@ -28,14 +37,37 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Settings
+        run: echo "Hosting plan $APP_SERVICE_SKU, database tier $DATABASE_TIER, preview ${{ inputs.preview }}"
+
+      # Azure only lets a free offer database change tier after the free offer is switched off.
+      # That's one-way, so it's only done when a paid tier is chosen, and never in preview.
+      - name: Leave the database free offer (only when moving to a paid tier)
+        run: |
+          uses_free=$(az sql db show -g "$RESOURCE_GROUP" -s "$SQL_SERVER" -n mahjong --query useFreeLimit -o tsv 2>/dev/null || echo "none")
+          if [ "$DATABASE_TIER" != "Free" ] && [ "$uses_free" = "true" ]; then
+            if [ "${{ inputs.preview }}" = "true" ]; then
+              echo "::notice::A real run would switch the database off the free offer (one-way) before moving it to $DATABASE_TIER."
+            else
+              echo "Switching the database off the free offer so it can move to $DATABASE_TIER (this can't be undone)."
+              az sql db update -g "$RESOURCE_GROUP" -s "$SQL_SERVER" -n mahjong --use-free-limit false --output none
+            fi
+          elif [ "$DATABASE_TIER" = "Free" ] && [ "$uses_free" = "false" ]; then
+            echo "::error::The database has already left the free offer, and Azure can't put it back. Set the DATABASE_TIER variable to Basic, S0, S1, S2 or S3."
+            exit 1
+          fi
+
       - name: Deploy Bicep
         run: |
-          az deployment group create \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+          command=create
+          if [ "${{ inputs.preview }}" = "true" ]; then command=what-if; fi
+          az deployment group $command \
+            --resource-group "$RESOURCE_GROUP" \
             --template-file infra/main.bicep \
             --parameters \
               appName="${{ vars.APP_NAME }}" \
-              appServiceSku="${{ inputs.appServiceSku }}" \
+              appServiceSku="$APP_SERVICE_SKU" \
+              databaseTier="$DATABASE_TIER" \
               sqlAdminLogin="${{ vars.SQL_ADMIN_LOGIN }}" \
               sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
               googleClientId="${{ secrets.GOOGLE_CLIENT_ID }}" \
@@ -47,5 +79,4 @@ jobs:
               adsClientId="${{ vars.ADS_CLIENT_ID }}" \
               adsRailSlot="${{ vars.ADS_RAIL_SLOT }}" \
               adsBannerSlot="${{ vars.ADS_BANNER_SLOT }}" \
-              adsResultsSlot="${{ vars.ADS_RESULTS_SLOT }}" \
-            --query properties.outputs --output json
+              adsResultsSlot="${{ vars.ADS_RESULTS_SLOT }}"
