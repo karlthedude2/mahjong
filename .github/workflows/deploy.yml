@@ -52,6 +52,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Visitors see a "back soon" page from here until the new version is healthy. The site shows it
+      # while /home/site/maintenance.on exists (and ignores the file after 30 minutes, so a failed
+      # run can't leave it down). The file is written through the site's Kudu file API.
+      - name: Show maintenance page
+        id: maintenance
+        run: |
+          for attempt in 1 2 3; do
+            if az rest --method put --resource "https://management.azure.com/"                 --uri "https://${{ vars.APP_NAME }}.scm.azurewebsites.net/api/vfs/site/maintenance.on"                 --headers "If-Match=*" "Content-Type=text/plain" --body "deploy ${{ github.run_id }}" --output none; then
+              sleep 5   # the site checks for the file every few seconds
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::Couldn't turn on the maintenance page; deploying anyway."
+
       # The database only accepts Azure services, so let this runner in just for the migration.
       - name: Open database firewall for this runner
         id: firewall
@@ -98,4 +113,17 @@ jobs:
             sleep 15
           done
           echo "The site did not report healthy at $url"
+          exit 1
+
+      # Runs even if an earlier step failed, so the site isn't left on the maintenance page.
+      - name: Hide maintenance page
+        if: always() && steps.maintenance.outcome == 'success'
+        run: |
+          for attempt in $(seq 1 6); do
+            if az rest --method delete --resource "https://management.azure.com/"                 --uri "https://${{ vars.APP_NAME }}.scm.azurewebsites.net/api/vfs/site/maintenance.on"                 --headers "If-Match=*" --output none; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::Couldn't remove the maintenance flag; the site will ignore it after 30 minutes."
           exit 1

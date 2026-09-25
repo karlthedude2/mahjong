@@ -203,6 +203,32 @@ How the ads are placed:
   ordinary ad unit inside the page's own dialog, next to the score breakdown, and the dialog can
   always be used normally.
 
+## Maintenance page during deploys
+
+Each deploy shows visitors a "We'll be right back" page from just before the database migration
+until the new version reports healthy (usually a minute or two). It works like this:
+
+- The **Deploy web app** workflow creates `/home/site/maintenance.on` on the web app's shared
+  storage (through the Kudu file API) and deletes it at the end, even if the deploy fails.
+- While that file exists, every page answers `503` with the maintenance page (which reloads
+  itself every 30 seconds) and the API answers `503`. `/healthz`, the logo and the favicon keep
+  working, so the deploy can check the new version.
+- A flag file older than 30 minutes is ignored, so a failed run can't leave the site down.
+- Players already in a game keep playing; only new page loads and server calls (for example,
+  saving a signed-in game's score) are held off during the window.
+
+To switch it on or off by hand (for example, for database work):
+
+```bash
+# on
+az rest --method put --resource https://management.azure.com/ --headers "If-Match=*"   --uri "https://<APP_NAME>.scm.azurewebsites.net/api/vfs/site/maintenance.on" --body on
+# off
+az rest --method delete --resource https://management.azure.com/ --headers "If-Match=*"   --uri "https://<APP_NAME>.scm.azurewebsites.net/api/vfs/site/maintenance.on"
+```
+
+(In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front.) Remember the 30-minute limit: for
+longer work, run the "on" command again to refresh the file.
+
 ## Running locally
 
 The web projects target .NET 10, which needs the .NET 10 SDK and Visual Studio 2026 (or VS Code,
