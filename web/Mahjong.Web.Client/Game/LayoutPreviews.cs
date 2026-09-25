@@ -24,4 +24,4 @@ public static partial class LayoutPreviews
 public sealed record PreviewItem(string Id, string Name, string ImageUrl, string? Badge = null);
 
 /// <summary>What the player chose in the settings dialog.</summary>
-public sealed record SettingsChoice(string LayoutName, string TileSetId, string BackgroundId);
+public sealed record SettingsChoice(string LayoutName, string TileSetId, string BackgroundId, bool SkipSettings);

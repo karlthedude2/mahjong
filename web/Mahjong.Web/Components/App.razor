@@ -65,6 +65,16 @@
             } catch (err) { }
             window.mahjongApplySettings();
         });
+        // The settings gear: on the game page, open its dialog in place (the capture phase gets
+        // here before Blazor's link handling); anywhere else it's a link to the game page.
+        document.addEventListener("click", function (e) {
+            var gear = e.target.closest && e.target.closest("[data-open-settings]");
+            if (gear && window.mahjongOpenSettings) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.mahjongOpenSettings();
+            }
+        }, true);
         // Page changes inside the site redraw the header, so reapply the settings afterwards.
         document.addEventListener("DOMContentLoaded", window.mahjongApplySettings);
         if (window.Blazor) {

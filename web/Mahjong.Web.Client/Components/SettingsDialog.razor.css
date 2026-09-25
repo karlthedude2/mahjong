@@ -66,3 +66,27 @@ h3 label {
         padding: 1rem;
     }
 }
+
+.switch-row {
+    padding-top: 0.75rem;
+    border-top: 1px solid #eadfca;
+}
+
+.form-switch .form-check-input {
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+.form-switch .form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(184, 50, 31, 0.25);
+}
+
+.hint {
+    margin: 0.25rem 0 0;
+    color: #6b5a44;
+    font-size: 0.85rem;
+}

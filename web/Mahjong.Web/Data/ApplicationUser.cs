@@ -18,6 +18,9 @@ public class ApplicationUser : IdentityUser
     [MaxLength(32)]
     public string PreferredBackground { get; set; } = "";
 
+    /// <summary>True if the player turned off the settings dialog that opens for each new game.</summary>
+    public bool SkipSettingsOnNewGame { get; set; }
+
     public int GamesPlayed { get; set; }
 
     public int GamesWon { get; set; }

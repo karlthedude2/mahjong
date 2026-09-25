@@ -21,6 +21,10 @@ public sealed class BrowserInterop(IJSRuntime js) : IAsyncDisposable
 
     public async ValueTask SetBackgroundAsync(string url) => await (await module.Value).InvokeVoidAsync("setBackground", url);
 
+    /// <summary>Lets the header's gear open the game page's settings (null when the page goes away).</summary>
+    public async ValueTask SetSettingsOpenerAsync(object? dotnetReference) =>
+        await (await module.Value).InvokeVoidAsync("setSettingsOpener", dotnetReference);
+
     public async ValueTask PushAdAsync(ElementReference slot) => await (await module.Value).InvokeVoidAsync("pushAd", slot);
 
     public async ValueTask DisposeAsync()

@@ -66,9 +66,10 @@ public sealed record ReplayInfo(
     bool CanPlay,
     IReadOnlyList<LeaderboardEntry> Entries);
 
-public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon);
+public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon, bool SkipSettingsOnNewGame = false);
 
-public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground);
+/// <summary>Changes to the player's profile; null fields are left as they are.</summary>
+public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null);
 
 /// <summary>Settings the browser needs from the server's configuration.</summary>
 public sealed record ClientConfig(string? AdsClientId, string? AdSlotRail, string? AdSlotBanner, string? AdSlotResults, bool ShowHiddenLayouts);

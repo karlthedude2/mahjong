@@ -11,6 +11,7 @@
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
 @inject GuestClaims GuestClaims
+@inject BrowserInterop Browser
 
 <PageTitle>Mahjong</PageTitle>
 
@@ -24,8 +25,7 @@
 
     <section class="game">
         <div class="toolbar">
-            <button class="btn btn-sm btn-light" @onclick="() => showSettings = true" title="Layout, tiles and background">&#9881; Settings</button>
-            <button class="btn btn-sm btn-light" @onclick="NewGameAsync">New game</button>
+            <button class="btn btn-sm btn-light" @onclick="RequestNewGameAsync">New game</button>
             <button class="btn btn-sm btn-light" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)" title="Redeals the remaining tiles. Costs 1,000 of the no-shuffle bonus.">Shuffle</button>
             <button class="btn btn-sm btn-light" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)">Undo</button>
             <button class="btn btn-sm btn-light" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)">Redo</button>
@@ -132,9 +132,10 @@
 
 @if (showSettings)
 {
-    <SettingsDialog Layouts="layouts" PlayingLayoutName="@PlayingLayout?.Name" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
+    <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
                     TileSetId="@Preferences.TileSet.Id" BackgroundId="@Preferences.Background.Id"
-                    OnApply="ApplySettingsAsync" OnCancel="() => showSettings = false" />
+                    SkipSettings="Preferences.SkipSettings" ForNewGame="settingsForNewGame"
+                    OnApply="ApplySettingsAsync" OnCancel="CancelSettingsAsync" />
 }
 
 @code {
@@ -147,6 +148,9 @@
     // A layout chosen mid-game, kept for the next game so the current one isn't interrupted.
     private LayoutDefinition? pendingLayout;
     private bool showSettings;
+    // The dialog is open to pick settings for a new game, which is dealt when it closes.
+    private bool settingsForNewGame;
+    private DotNetObjectReference<Play>? selfReference;
     private string? error;
     // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
     private ReplayInfo? replay;
@@ -156,6 +160,10 @@
 
     [SupplyParameterFromQuery(Name = "replay")]
     public Guid? ReplayId { get; set; }
+
+    // ?settings=1: the header's gear, clicked on another page.
+    [SupplyParameterFromQuery(Name = "settings")]
+    public string? SettingsRequested { get; set; }
 
     // The layout on the board: the replay's, or the player's own choice.
     private LayoutDefinition? PlayingLayout => replay != null ? replayLayout : currentLayout;
@@ -197,10 +205,61 @@
             error = "That deal couldn't be found, so here's a new game instead.";
         }
 
-        await NewGameAsync();
+        // Guests always start by choosing their settings; signed-in players unless they've turned that off.
+        if (!signedIn || !Preferences.SkipSettings)
+        {
+            settingsForNewGame = true;
+            showSettings = true;
+        }
+        else
+        {
+            await NewGameAsync();
+            if (SettingsRequested != null)
+            {
+                showSettings = true;
+            }
+        }
+
+        if (SettingsRequested != null)
+        {
+            Navigation.NavigateTo("", replace: true);
+        }
     }
 
-    private Task PlayAgainAsync() => replay != null ? PlayReplayAsync() : NewGameAsync();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            selfReference = DotNetObjectReference.Create(this);
+            await Browser.SetSettingsOpenerAsync(selfReference);
+        }
+    }
+
+    /// <summary>The header's settings gear, while this page is showing.</summary>
+    [JSInvokable]
+    public Task OpenSettings()
+    {
+        settingsForNewGame = false;
+        showSettings = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    // New game (and Play again): choose settings first, unless the player has turned that off.
+    private async Task RequestNewGameAsync()
+    {
+        if (Preferences.SkipSettings)
+        {
+            await NewGameAsync();
+        }
+        else
+        {
+            settingsForNewGame = true;
+            showSettings = true;
+        }
+    }
+
+    private Task PlayAgainAsync() => replay != null ? PlayReplayAsync() : RequestNewGameAsync();
 
     // Deals the replayed game's tiles. Signed-in players' replays are verified and ranked on the
     // deal's replay list; once the original drops off the leaderboard, replays are just for fun.
@@ -271,6 +330,11 @@
     {
         showSettings = false;
 
+        if (choice.SkipSettings != Preferences.SkipSettings)
+        {
+            await Preferences.SetSkipSettingsAsync(choice.SkipSettings);
+        }
+
         if (choice.TileSetId != Preferences.TileSet.Id)
         {
             await Preferences.SetTileSetAsync(TileSets.Find(choice.TileSetId));
@@ -282,6 +346,21 @@
         }
 
         var layout = layouts.FirstOrDefault(l => l.Name == choice.LayoutName);
+        if (settingsForNewGame)
+        {
+            // Settings for a new game: deal it with the chosen layout.
+            settingsForNewGame = false;
+            if (layout != null)
+            {
+                currentLayout = layout;
+                pendingLayout = null;
+                await Preferences.SetLastLayoutAsync(layout.Name);
+            }
+
+            await NewGameAsync();
+            return;
+        }
+
         if (layout is null || layout == (pendingLayout ?? currentLayout))
         {
             return;
@@ -303,11 +382,25 @@
         }
     }
 
+    // Cancel keeps the game on the board; if there isn't one yet (the dialog opened as the page
+    // loaded), deal one with the current settings.
+    private async Task CancelSettingsAsync()
+    {
+        showSettings = false;
+        settingsForNewGame = false;
+        if (Session.Game == null)
+        {
+            await NewGameAsync();
+        }
+    }
+
     private void OnSessionChanged() => InvokeAsync(StateHasChanged);
 
     public void Dispose()
     {
         Session.Changed -= OnSessionChanged;
         Session.Dispose();
+        _ = Browser.SetSettingsOpenerAsync(null).AsTask();
+        selfReference?.Dispose();
     }
 }
