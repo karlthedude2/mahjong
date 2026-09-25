@@ -10,13 +10,13 @@
         <img class="logo" src="logo.png" alt="" width="92" height="92" />
         <span class="brand-name">Mahjong Haus</span>
     </a>
-    <NavLink class="icon-link" href="" Match="NavLinkMatch.All" aria-label="Play" data-tip="Play">
+    @* New game and Settings act in place on the game page (see App.razor); elsewhere they're links to it. *@
+    <a class="icon-link" href="" data-play-action="new-game" aria-label="New game" data-tip="New game">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5.5" y="3" width="13" height="18" rx="2.5" />
-            <circle cx="12" cy="9" r="2.2" />
-            <circle cx="12" cy="15.5" r="2.2" />
+            <path d="M12 8.5v7M8.5 12h7" />
         </svg>
-    </NavLink>
+    </a>
     <NavLink class="icon-link" href="leaderboards" aria-label="Leaderboards" data-tip="Leaderboards">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
@@ -28,7 +28,7 @@
     <span class="spacer"></span>
 
     <div class="right">
-        <a class="icon-link" href="?settings=1" data-open-settings aria-label="Settings" data-tip="Settings">
+        <a class="icon-link" href="?settings=1" data-play-action="settings" aria-label="Settings" data-tip="Settings">
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />

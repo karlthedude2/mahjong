@@ -33,17 +33,13 @@
     min-height: 0;
 }
 
-.toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.layout-name {
-    margin-left: 0.4rem;
+/* The layout's name, centered above the board. */
+.layout-title {
+    text-align: center;
     color: #fff;
-    font-weight: 600;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.2;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
@@ -76,9 +72,100 @@
     gap: 1rem;
 }
 
+/* The board with its controls centered underneath. */
+.board-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 0;
+}
+
 .board-area {
+    flex: 1;
+    align-self: stretch;
     min-height: 0;
     position: relative;
+}
+
+/* A see-through bar with fully rounded ends. */
+.game-controls {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(20, 12, 6, 0.55);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.game-controls button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+.game-controls button:hover:not(:disabled),
+.game-controls button:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.game-controls button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.game-controls svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.game-controls svg .solid {
+    fill: currentColor;
+}
+
+/* Tooltips (the data-tip text) above the buttons, on hover and keyboard focus. */
+.game-controls button[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 0.45rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    padding: 0.25rem 0.55rem;
+    border-radius: 0.35rem;
+    background: rgba(20, 12, 6, 0.95);
+    color: #fff;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.game-controls button[data-tip]:hover::after,
+.game-controls button[data-tip]:focus-visible::after {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .game-controls button[data-tip]:hover::after {
+        opacity: 0;
+    }
 }
 
 .paused,
@@ -123,6 +210,7 @@
     }
 
     .board-area {
-        height: 70vh;
+        flex: none;
+        height: 65vh;
     }
 }

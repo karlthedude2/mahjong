@@ -75,10 +75,10 @@ export function pushAd(slot) {
     }
 }
 
-// The header's settings gear is a plain link (to /?settings=1). While the game page is showing,
-// App.razor's script calls this instead, so the dialog opens without reloading the game.
-export function setSettingsOpener(dotnet) {
-    window.mahjongOpenSettings = dotnet ? () => dotnet.invokeMethodAsync("OpenSettings") : undefined;
+// The header's New game and Settings are plain links to the game page. While the game page is
+// showing, App.razor's script hands their clicks to it instead, so nothing reloads.
+export function setPlayActions(dotnet) {
+    window.mahjongPlayAction = dotnet ? action => dotnet.invokeMethodAsync("OnHeaderAction", action) : undefined;
 }
 
 // Background images are applied through a CSS variable; App.razor applies the saved one on load.
