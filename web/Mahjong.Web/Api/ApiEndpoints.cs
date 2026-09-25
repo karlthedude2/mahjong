@@ -57,7 +57,7 @@ public static partial class ApiEndpoints
             var user = await users.GetUserAsync(principal);
             return user is null
                 ? Results.Unauthorized()
-                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.PreferredBackground, user.GamesPlayed, user.GamesWon));
+                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.PreferredBackground, user.GamesPlayed, user.GamesWon, user.SkipSettingsOnNewGame));
         });
 
         me.MapPut("/", async (UpdateProfileRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
@@ -97,6 +97,11 @@ public static partial class ApiEndpoints
                 }
 
                 user.PreferredBackground = background;
+            }
+
+            if (request.SkipSettingsOnNewGame is { } skipSettings)
+            {
+                user.SkipSettingsOnNewGame = skipSettings;
             }
 
             await users.UpdateAsync(user);

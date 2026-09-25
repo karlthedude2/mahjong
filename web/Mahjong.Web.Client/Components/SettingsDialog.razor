@@ -30,9 +30,17 @@
             <PreviewStrip Label="Background" Items="backgroundItems" @bind-SelectedId="backgroundId" />
         </section>
 
+        <section class="switch-row">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="skip-settings" @bind="skipSettings" />
+                <label class="form-check-label" for="skip-settings">Don't show settings for every new game</label>
+            </div>
+            <p class="hint">You can always change these with the settings gear in the header.</p>
+        </section>
+
         <footer>
             <button type="button" class="btn btn-light" @onclick="CancelAsync">Cancel</button>
-            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">OK</button>
+            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">@(ForNewGame ? "Start game" : "OK")</button>
         </footer>
     </div>
 </div>
@@ -44,6 +52,7 @@
     private string? layoutName;
     private string tileSetId = TileSets.Default.Id;
     private string backgroundId = Backgrounds.Default.Id;
+    private bool skipSettings;
 
     [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
 
@@ -57,6 +66,11 @@
 
     [Parameter] public string? BackgroundId { get; set; }
 
+    [Parameter] public bool SkipSettings { get; set; }
+
+    /// <summary>True when the dialog opens before a new game is dealt (OK reads "Start game").</summary>
+    [Parameter] public bool ForNewGame { get; set; }
+
     [Parameter] public EventCallback<SettingsChoice> OnApply { get; set; }
 
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -68,9 +82,10 @@
             .ToList();
         backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, b.Name, b.Url)).ToList();
 
-        layoutName = LayoutName ?? PlayingLayoutName;
+        layoutName = LayoutName ?? PlayingLayoutName ?? Layouts.FirstOrDefault()?.Name;
         tileSetId = TileSets.Find(TileSetId).Id;
         backgroundId = Backgrounds.Find(BackgroundId).Id;
+        skipSettings = SkipSettings;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -91,5 +106,5 @@
 
     private Task CancelAsync() => OnCancel.InvokeAsync();
 
-    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId));
+    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId, skipSettings));
 }
