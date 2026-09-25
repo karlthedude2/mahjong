@@ -65,14 +65,14 @@
             } catch (err) { }
             window.mahjongApplySettings();
         });
-        // The settings gear: on the game page, open its dialog in place (the capture phase gets
-        // here before Blazor's link handling); anywhere else it's a link to the game page.
+        // The header's New game and Settings: on the game page, act in place (the capture phase
+        // gets here before Blazor's link handling); anywhere else they're links to the game page.
         document.addEventListener("click", function (e) {
-            var gear = e.target.closest && e.target.closest("[data-open-settings]");
-            if (gear && window.mahjongOpenSettings) {
+            var button = e.target.closest && e.target.closest("[data-play-action]");
+            if (button && window.mahjongPlayAction) {
                 e.preventDefault();
                 e.stopPropagation();
-                window.mahjongOpenSettings();
+                window.mahjongPlayAction(button.getAttribute("data-play-action"));
             }
         }, true);
         // Page changes inside the site redraw the header, so reapply the settings afterwards.
