@@ -24,71 +24,73 @@
     }
 
     <section class="game">
-        <div class="layout-title">@PlayingLayout?.Name</div>
+        @* The board column (title, messages, board and its controls) beside the score panel,
+           which reaches up to the site header. *@
+        <div class="play-table">
+            <div class="board-column">
+                <div class="layout-title">@PlayingLayout?.Name</div>
 
-        @if (!signedIn)
-        {
-            <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
-        }
-
-        @if (claimed != null)
-        {
-            <div class="notice info">
-                Your guest win on @claimed.Layout (@claimed.Score.ToString("N0")) has been saved to your account.
-                @if (claimed.Rank is { } claimedRank)
-                {
-                    <span>You're <strong>#@claimedRank</strong> on the <a href="leaderboards?layout=@Uri.EscapeDataString(claimed.Layout)">@claimed.Layout leaderboard</a>!</span>
-                }
-                else if (claimed.ReplayRank is { } claimedReplayRank)
-                {
-                    <span>You're <strong>#@claimedReplayRank</strong> on that deal's <a href="replays/@claimed.ReplayOf">replay list</a>!</span>
-                }
-                <button class="btn btn-link btn-sm" @onclick="() => claimed = null">OK</button>
-            </div>
-        }
-
-        @if (replay != null)
-        {
-            <div class="notice info">
-                Replaying <strong>@replay.OriginalPlayer</strong>'s @replay.Layout deal. Score to beat:
-                <strong>@replay.OriginalScore.ToString("N0")</strong>. Replays go on this deal's own list, never the main leaderboard.
                 @if (!signedIn)
                 {
-                    <span><a href="Account/Login">Sign in</a> to get your score on the list.</span>
+                    <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
                 }
-                <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">See replay scores</a>
-                <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Back to normal play</button>
-            </div>
-        }
 
-        @if (pendingLayout != null)
-        {
-            <div class="notice info">
-                Your next game will use the <strong>@pendingLayout.Name</strong> layout.
-                <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
-                <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">Keep @currentLayout?.Name</button>
-            </div>
-        }
+                @if (claimed != null)
+                {
+                    <div class="notice info">
+                        Your guest win on @claimed.Layout (@claimed.Score.ToString("N0")) has been saved to your account.
+                        @if (claimed.Rank is { } claimedRank)
+                        {
+                            <span>You're <strong>#@claimedRank</strong> on the <a href="leaderboards?layout=@Uri.EscapeDataString(claimed.Layout)">@claimed.Layout leaderboard</a>!</span>
+                        }
+                        else if (claimed.ReplayRank is { } claimedReplayRank)
+                        {
+                            <span>You're <strong>#@claimedReplayRank</strong> on that deal's <a href="replays/@claimed.ReplayOf">replay list</a>!</span>
+                        }
+                        <button class="btn btn-link btn-sm" @onclick="() => claimed = null">OK</button>
+                    </div>
+                }
 
-        @if (error != null)
-        {
-            <div class="notice warning">@error</div>
-        }
+                @if (replay != null)
+                {
+                    <div class="notice info">
+                        Replaying <strong>@replay.OriginalPlayer</strong>'s @replay.Layout deal. Score to beat:
+                        <strong>@replay.OriginalScore.ToString("N0")</strong>. Replays go on this deal's own list, never the main leaderboard.
+                        @if (!signedIn)
+                        {
+                            <span><a href="Account/Login">Sign in</a> to get your score on the list.</span>
+                        }
+                        <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">See replay scores</a>
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Back to normal play</button>
+                    </div>
+                }
 
-        @if (Session.Message != null)
-        {
-            <div class="notice warning">@Session.Message</div>
-        }
+                @if (pendingLayout != null)
+                {
+                    <div class="notice info">
+                        Your next game will use the <strong>@pendingLayout.Name</strong> layout.
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
+                        <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">Keep @currentLayout?.Name</button>
+                    </div>
+                }
 
-        @if (Session.State == SessionState.NoMovesLeft)
-        {
-            <div class="notice warning">No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.</div>
-        }
+                @if (error != null)
+                {
+                    <div class="notice warning">@error</div>
+                }
 
-        <div class="play-table">
-            @if (Session.Game is { } game)
-            {
-                <div class="board-column">
+                @if (Session.Message != null)
+                {
+                    <div class="notice warning">@Session.Message</div>
+                }
+
+                @if (Session.State == SessionState.NoMovesLeft)
+                {
+                    <div class="notice warning">No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.</div>
+                }
+
+                @if (Session.Game is { } game)
+                {
                     <div class="board-area">
                         @if (Session.State == SessionState.Paused)
                         {
@@ -137,12 +139,16 @@
                             </button>
                         }
                     </div>
-                </div>
-                <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
-            }
-            else
+                }
+                else
+                {
+                    <div class="loading">Dealing&hellip;</div>
+                }
+            </div>
+
+            @if (Session.Game is { } scored)
             {
-                <div class="loading">Dealing&hellip;</div>
+                <ScorePanel Game="scored" ClockStarted="Session.ClockStarted" />
             }
         </div>
     </section>
