@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Azure.Communication.Email;
@@ -7,6 +8,7 @@ using Mahjong.Web.Components.Account;
 using Mahjong.Web.Data;
 using Mahjong.Web.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -119,7 +121,18 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 app.MapMahjongApi();
-app.MapHealthChecks("/healthz");
+// The health check names the running build (X-App-Version, e.g. "1.0.0+<commit>"), so the
+// deploy can wait for the new version rather than the old one that keeps serving while it starts.
+var appVersion = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
+app.MapHealthChecks("/healthz", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.Headers["X-App-Version"] = appVersion;
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync(report.Status.ToString());
+    },
+});
 
 app.Run();
 
