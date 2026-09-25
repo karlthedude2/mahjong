@@ -7,7 +7,11 @@
 <PageTitle>Leaderboards</PageTitle>
 
 <h1>Leaderboards</h1>
-<p>The top @GameService.LeaderboardSize verified scores for each layout. <a href="Account/Login">Sign in</a> and play to get on the board.</p>
+<p>
+    The top @GameService.LeaderboardSize verified scores for each layout. <a href="Account/Login">Sign in</a> and play to get on the board.
+    Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on
+    that deal's own list, so the original first-play score always stays here.
+</p>
 
 <form method="get" class="d-flex gap-2 align-items-center mb-3">
     <label for="layout" class="form-label mb-0">Layout</label>
@@ -28,7 +32,7 @@ else
 {
     <table class="table table-sm">
         <thead>
-            <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th><th scope="col" class="text-end">Date</th></tr>
+            <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th><th scope="col" class="text-end">Date</th><th scope="col" class="text-end" title="Play the same deal and try to beat it. Replays are ranked on their own list.">Replay</th></tr>
         </thead>
         <tbody>
             @foreach (var entry in entries)
@@ -39,6 +43,11 @@ else
                     <td class="text-end">@entry.Score.ToString("N0")</td>
                     <td class="text-end">@entry.TimeText</td>
                     <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
+                    <td class="text-end text-nowrap">
+                        <a href="?replay=@entry.GameId" title="Play this exact deal">Play this deal</a>
+                        &middot;
+                        <a href="replays/@entry.GameId" title="Best replay scores on this deal">Replays (@entry.ReplayCount)</a>
+                    </td>
                 </tr>
             }
         </tbody>

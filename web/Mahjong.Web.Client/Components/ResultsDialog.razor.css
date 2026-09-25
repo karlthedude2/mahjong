@@ -66,6 +66,13 @@ h2 {
     margin: 1rem 0;
 }
 
+.replay-compare {
+    margin: 1rem 0 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: #dbeafe;
+}
+
 .error {
     color: #a4161a;
 }

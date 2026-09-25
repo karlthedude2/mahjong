@@ -43,29 +43,37 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
     /// <summary>A problem to show the player (e.g. a pause that couldn't reach the server), or null.</summary>
     public string? Message { get; private set; }
 
+    /// <summary>The leaderboard deal this game replays, or null for a normal game.</summary>
+    public ReplayInfo? Replay { get; private set; }
+
     /// <summary>The server's result for a finished ranked game (null for guests or if it failed).</summary>
     public FinishGameResponse? Result { get; private set; }
 
     public bool SubmittingResult { get; private set; }
 
-    public async Task StartAsync(LayoutDefinition layout, bool ranked)
+    /// <summary>
+    /// Deals a new game. With a replay, it's that leaderboard game's deal: a ranked replay goes on
+    /// the deal's replay list; a guest's replay deals the same tiles locally.
+    /// </summary>
+    public async Task StartAsync(LayoutDefinition layout, bool ranked, ReplayInfo? replay = null)
     {
         StopClock();
         serverGameId = null;
         Result = null;
         Selected = null;
         Message = null;
+        Replay = replay;
 
         long seed;
         if (ranked)
         {
-            var started = await api.StartGameAsync(layout.Name);
+            var started = await api.StartGameAsync(layout.Name, replay?.OriginalGameId);
             serverGameId = started.GameId;
             seed = started.Seed;
         }
         else
         {
-            seed = Random.Shared.NextInt64();
+            seed = replay?.Seed ?? Random.Shared.NextInt64();
         }
 
         Game = new MahjongGame(layout, seed);

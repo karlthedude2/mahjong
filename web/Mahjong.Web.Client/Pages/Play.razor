@@ -9,6 +9,7 @@
 @inject PlayerPreferences Preferences
 @inject GameApi Api
 @inject AuthenticationStateProvider AuthState
+@inject NavigationManager Navigation
 
 <PageTitle>Mahjong</PageTitle>
 
@@ -30,12 +31,26 @@
             <button class="btn btn-sm btn-light" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)">
                 @(Session.State == SessionState.Paused ? "Resume" : "Pause")
             </button>
-            <span class="layout-name">@currentLayout?.Name</span>
+            <span class="layout-name">@PlayingLayout?.Name</span>
         </div>
 
         @if (!signedIn)
         {
             <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
+        }
+
+        @if (replay != null)
+        {
+            <div class="notice info">
+                Replaying <strong>@replay.OriginalPlayer</strong>'s @replay.Layout deal. Score to beat:
+                <strong>@replay.OriginalScore.ToString("N0")</strong>. Replays go on this deal's own list, never the main leaderboard.
+                @if (!signedIn)
+                {
+                    <span><a href="Account/Login">Sign in</a> to get your score on the list.</span>
+                }
+                <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">See replay scores</a>
+                <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Back to normal play</button>
+            </div>
         }
 
         @if (pendingLayout != null)
@@ -93,14 +108,14 @@
     </aside>
 </div>
 
-@if (Session.State == SessionState.Won && currentLayout != null)
+@if (Session.State == SessionState.Won && PlayingLayout != null)
 {
-    <ResultsDialog Session="Session" Config="config" LayoutName="@currentLayout.Name" OnPlayAgain="NewGameAsync" />
+    <ResultsDialog Session="Session" Config="config" LayoutName="@PlayingLayout.Name" OnPlayAgain="PlayAgainAsync" />
 }
 
 @if (showSettings)
 {
-    <SettingsDialog Layouts="layouts" PlayingLayoutName="@currentLayout?.Name" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
+    <SettingsDialog Layouts="layouts" PlayingLayoutName="@PlayingLayout?.Name" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
                     TileSetId="@Preferences.TileSet.Id" BackgroundId="@Preferences.Background.Id"
                     OnApply="ApplySettingsAsync" OnCancel="() => showSettings = false" />
 }
@@ -116,6 +131,15 @@
     private LayoutDefinition? pendingLayout;
     private bool showSettings;
     private string? error;
+    // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
+    private ReplayInfo? replay;
+    private LayoutDefinition? replayLayout;
+
+    [SupplyParameterFromQuery(Name = "replay")]
+    public Guid? ReplayId { get; set; }
+
+    // The layout on the board: the replay's, or the player's own choice.
+    private LayoutDefinition? PlayingLayout => replay != null ? replayLayout : currentLayout;
 
     private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
 
@@ -135,7 +159,47 @@
             ?? layouts.FirstOrDefault(l => l.Name == DefaultLayoutName)
             ?? layouts[0];
 
+        if (ReplayId is { } replayId)
+        {
+            var info = await Api.GetReplayAsync(replayId);
+            if (info != null && LayoutCatalog.Find(info.Layout) is { } layout)
+            {
+                replay = info;
+                replayLayout = layout;
+                await PlayReplayAsync();
+                return;
+            }
+
+            error = "That deal couldn't be found, so here's a new game instead.";
+        }
+
         await NewGameAsync();
+    }
+
+    private Task PlayAgainAsync() => replay != null ? PlayReplayAsync() : NewGameAsync();
+
+    // Deals the replayed game's tiles. Signed-in players' replays are verified and ranked on the
+    // deal's replay list; once the original drops off the leaderboard, replays are just for fun.
+    private async Task PlayReplayAsync()
+    {
+        error = null;
+        bool ranked = signedIn && replay!.CanPlay;
+        try
+        {
+            await Session.StartAsync(replayLayout!, ranked, replay);
+        }
+        catch (HttpRequestException e)
+        {
+            error = e.StatusCode == System.Net.HttpStatusCode.NotFound
+                ? "This deal is no longer on the leaderboard, so this replay won't be saved."
+                : "Couldn't reach the server, so this game won't be saved.";
+            await Session.StartAsync(replayLayout!, ranked: false, replay);
+        }
+
+        if (signedIn && !replay!.CanPlay && error == null)
+        {
+            error = "This deal is no longer on the leaderboard, so this replay won't be saved.";
+        }
     }
 
     // A game counts as under way once the first tile is clicked (that starts the clock).
@@ -143,6 +207,14 @@
 
     private async Task NewGameAsync()
     {
+        if (replay != null)
+        {
+            // Leaving a replay: back to normal play, and drop ?replay= so a reload doesn't return to it.
+            replay = null;
+            replayLayout = null;
+            Navigation.NavigateTo("", replace: true);
+        }
+
         if (pendingLayout != null)
         {
             currentLayout = pendingLayout;
@@ -188,7 +260,7 @@
         {
             pendingLayout = null;
         }
-        else if (GameUnderWay)
+        else if (GameUnderWay || replay != null)
         {
             pendingLayout = layout;
         }

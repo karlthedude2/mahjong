@@ -1,0 +1,91 @@
+@page "/replays/{GameId:guid}"
+@using Mahjong.Web.Client.Api
+@using Mahjong.Web.Services
+@inject GameService Games
+
+<PageTitle>@(info == null ? "Replays" : $"{info.OriginalPlayer}'s {info.Layout} deal") - Mahjong Haus</PageTitle>
+
+@if (info == null)
+{
+    <h1>Replays</h1>
+    <p>This deal couldn't be found. It may never have been on a leaderboard. <a href="leaderboards">Back to the leaderboards</a></p>
+}
+else
+{
+    <h1>@info.OriginalPlayer's @info.Layout deal</h1>
+    <p>
+        Everyone who replays this deal gets exactly the same tiles. Replays are ranked here, one best score per
+        player. The original was a first play, so it stays on the <a href="leaderboards?layout=@Uri.EscapeDataString(info.Layout)">@info.Layout leaderboard</a>
+        whatever happens below.
+    </p>
+
+    <div class="original card mb-3">
+        <div class="card-body">
+            <div class="small text-uppercase text-muted">Original score (first play)</div>
+            <div class="d-flex flex-wrap align-items-baseline gap-3">
+                <span class="fs-3 fw-bold">@info.OriginalScore.ToString("N0")</span>
+                <span>@info.OriginalPlayer</span>
+                @if (OriginalTime != "")
+                {
+                    <span class="text-muted">@OriginalTime</span>
+                }
+                <span class="text-muted">@info.OriginalAchievedUtc.ToString("d MMM yyyy")</span>
+            </div>
+        </div>
+    </div>
+
+    @if (info.CanPlay)
+    {
+        <p><a class="btn btn-primary" href="?replay=@info.OriginalGameId">Play this deal</a></p>
+    }
+    else
+    {
+        <p class="text-muted">This deal has dropped off the leaderboard, so it's closed to new replays.</p>
+    }
+
+    <h2 class="h4">Replay scores</h2>
+    @if (info.Entries.Count == 0)
+    {
+        <p>No replays yet. Be the first to try this deal.</p>
+    }
+    else
+    {
+        <table class="table table-sm">
+            <thead>
+                <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th><th scope="col" class="text-end">Date</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in info.Entries)
+                {
+                    <tr>
+                        <td>@entry.Rank</td>
+                        <td>
+                            @entry.DisplayName
+                            @if (entry.Score > info.OriginalScore)
+                            {
+                                <span class="badge bg-success ms-1">Beat the original</span>
+                            }
+                        </td>
+                        <td class="text-end">@entry.Score.ToString("N0")</td>
+                        <td class="text-end">@entry.TimeText</td>
+                        <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private ReplayInfo? info;
+
+    [Parameter]
+    public Guid GameId { get; set; }
+
+    private string OriginalTime => info == null ? "" : new LeaderboardEntry(0, "", 0, info.OriginalSeconds, default).TimeText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        info = await Games.GetReplayInfoAsync(GameId);
+    }
+}
