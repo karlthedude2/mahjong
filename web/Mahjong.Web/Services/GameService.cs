@@ -18,11 +18,25 @@ public enum GameActionOutcome
 
 public sealed record FinishResult(GameActionOutcome Outcome, FinishGameResponse? Response = null, string? Error = null);
 
+public sealed record ClaimResult(GameActionOutcome Outcome, ClaimGameResponse? Response = null, string? Error = null);
+
+/// <summary>Who is playing: a signed-in player, or a guest holding the game's token.</summary>
+public readonly record struct Player(string? UserId, string? GuestToken)
+{
+    public static Player Account(string userId) => new(userId, null);
+
+    public static Player Guest(string? token) => new(null, token);
+
+    public bool IsGuest => UserId == null;
+}
+
 /// <summary>
 /// Starts ranked games and verifies finished ones. The server picks the seed, replays the
 /// submitted moves with <see cref="GameReplayer"/>, and only ever stores its own score.
 /// A game can also replay a leaderboard game's deal (same layout and seed); replays are ranked on
 /// that deal's own replay list and never touch the leaderboard.
+/// Guests' games are started, timed and verified the same way, then held for a day: if the guest
+/// signs in, they can claim a win, which is scored as if they'd been signed in all along.
 /// </summary>
 public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILogger<GameService> logger)
 {
@@ -34,7 +48,10 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     /// </summary>
     public static readonly TimeSpan ClockTolerance = TimeSpan.FromSeconds(30);
 
-    public async Task<StartGameResponse?> StartAsync(string userId, string layoutName, bool allowHiddenLayouts)
+    /// <summary>How long a guest has to sign in and claim a win (and when unclaimed guest games are deleted).</summary>
+    public static readonly TimeSpan GuestClaimWindow = TimeSpan.FromDays(1);
+
+    public async Task<StartGameResponse?> StartAsync(Player player, string layoutName, bool allowHiddenLayouts)
     {
         var layout = LayoutCatalog.Find(layoutName);
         if (layout == null || (layout.Hidden && !allowHiddenLayouts))
@@ -42,26 +59,28 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return null;
         }
 
-        return await AddGameAsync(userId, layout.Name, NewSeed(), replayOf: null);
+        return await AddGameAsync(player, layout.Name, NewSeed(), replayOf: null);
     }
 
     /// <summary>
     /// Starts a replay of a leaderboard game's deal. Returns null unless that game is on a
     /// leaderboard now (once it drops off, its replay list stays viewable but closes to new plays).
     /// </summary>
-    public async Task<StartGameResponse?> StartReplayAsync(string userId, Guid originalGameId)
+    public async Task<StartGameResponse?> StartReplayAsync(Player player, Guid originalGameId)
     {
         var original = await OriginalOnLeaderboardAsync(originalGameId);
-        return original == null ? null : await AddGameAsync(userId, original.LayoutName, original.Seed, original.Id);
+        return original == null ? null : await AddGameAsync(player, original.LayoutName, original.Seed, original.Id);
     }
 
-    private async Task<StartGameResponse> AddGameAsync(string userId, string layoutName, long seed, Guid? replayOf)
+    private async Task<StartGameResponse> AddGameAsync(Player player, string layoutName, long seed, Guid? replayOf)
     {
+        string? guestToken = player.IsGuest ? NewGuestToken() : null;
         var now = time.GetUtcNow().UtcDateTime;
         var game = new GameEntity
         {
             Id = Guid.NewGuid(),
-            UserId = userId,
+            UserId = player.UserId ?? "",
+            GuestTokenHash = guestToken == null ? null : Hash(guestToken),
             LayoutName = layoutName,
             Seed = seed,
             ReplayOfGameId = replayOf,
@@ -73,16 +92,20 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             PausedAtUtc = now,
         };
         db.Games.Add(game);
-        await db.Users.Where(u => u.Id == userId)
-            .ExecuteUpdateAsync(u => u.SetProperty(x => x.GamesPlayed, x => x.GamesPlayed + 1));
+        if (player.UserId is { } userId)
+        {
+            await db.Users.Where(u => u.Id == userId)
+                .ExecuteUpdateAsync(u => u.SetProperty(x => x.GamesPlayed, x => x.GamesPlayed + 1));
+        }
+
         await db.SaveChangesAsync();
 
-        return new StartGameResponse(game.Id, game.Seed);
+        return new StartGameResponse(game.Id, game.Seed, guestToken);
     }
 
-    public async Task<FinishResult> FinishAsync(string userId, Guid gameId, GameRecord? record)
+    public async Task<FinishResult> FinishAsync(Player player, Guid gameId, GameRecord? record)
     {
-        var (game, problem) = await FindOwnGameInProgressAsync(userId, gameId);
+        var (game, problem) = await FindOwnGameInProgressAsync(player, gameId);
         if (game == null)
         {
             return new(problem);
@@ -101,7 +124,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             game.Status = GameOutcome.Rejected;
             game.RecordJson = recordJson;
             await db.SaveChangesAsync();
-            logger.LogWarning("Rejected game {GameId} from {UserId}: {Error}", gameId, userId, error);
+            logger.LogWarning("Rejected game {GameId} from {UserId}: {Error}", gameId, player.UserId ?? "a guest", error);
             return new(GameActionOutcome.Invalid, Error: error);
         }
 
@@ -111,25 +134,26 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
         int? rank = null;
         int? replayRank = null;
+        bool heldForClaim = false;
         if (replay.Complete)
         {
-            var user = await db.Users.FindAsync(userId);
-            if (user != null)
+            if (player.UserId is { } userId)
             {
-                user.GamesWon++;
-                if (game.ReplayOfGameId is { } originalGameId)
+                if (await db.Users.FindAsync(userId) is { } user)
                 {
-                    replayRank = await AddToReplayListAsync(game, user, originalGameId, replay.ElapsedSeconds);
+                    user.GamesWon++;
+                    (rank, replayRank) = await RankWinAsync(game, user);
                 }
-                else
-                {
-                    rank = await AddToLeaderboardAsync(game, user, replay.ElapsedSeconds);
-                }
+            }
+            else
+            {
+                // A guest's win waits (with its moves) for them to sign in and claim it.
+                heldForClaim = true;
             }
         }
 
         // The moves are the proof behind a listed score; other games only need their result.
-        game.RecordJson = rank != null || replayRank != null ? recordJson : null;
+        game.RecordJson = rank != null || replayRank != null || heldForClaim ? recordJson : null;
 
         await db.SaveChangesAsync();
         return new(GameActionOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank, replayRank));
@@ -139,9 +163,9 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     /// Pauses or resumes a ranked game. The server times pauses itself, so paused time is
     /// left out of the clock check without trusting the browser. Repeating a call is harmless.
     /// </summary>
-    public async Task<GameActionOutcome> SetPausedAsync(string userId, Guid gameId, bool paused)
+    public async Task<GameActionOutcome> SetPausedAsync(Player player, Guid gameId, bool paused)
     {
-        var (game, problem) = await FindOwnGameInProgressAsync(userId, gameId);
+        var (game, problem) = await FindOwnGameInProgressAsync(player, gameId);
         if (game == null)
         {
             return problem;
@@ -249,7 +273,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
         return null;
     }
 
-    private async Task<(GameEntity? Game, GameActionOutcome Problem)> FindOwnGameInProgressAsync(string userId, Guid gameId)
+    private async Task<(GameEntity? Game, GameActionOutcome Problem)> FindOwnGameInProgressAsync(Player player, Guid gameId)
     {
         var game = await db.Games.FindAsync(gameId);
         if (game == null)
@@ -257,7 +281,10 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return (null, GameActionOutcome.NotFound);
         }
 
-        if (game.UserId != userId)
+        bool owns = player.UserId is { } userId
+            ? game.UserId == userId
+            : game.UserId == "" && TokenMatches(player.GuestToken, game.GuestTokenHash);
+        if (!owns)
         {
             return (null, GameActionOutcome.Forbidden);
         }
@@ -269,6 +296,75 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
         return (game, GameActionOutcome.Ok);
     }
+
+    /// <summary>
+    /// Gives a guest's verified win to the player who has just signed in, and ranks it as if they'd
+    /// been signed in when they played. Only the browser that played it (holding its token) can
+    /// claim it, only once, and only within <see cref="GuestClaimWindow"/>.
+    /// </summary>
+    public async Task<ClaimResult> ClaimAsync(string userId, Guid gameId, string? guestToken)
+    {
+        var game = await db.Games.FindAsync(gameId);
+        if (game == null)
+        {
+            return new(GameActionOutcome.NotFound);
+        }
+
+        if (game.UserId == userId)
+        {
+            return new(GameActionOutcome.AlreadyFinished, Error: "This game has already been saved.");
+        }
+
+        if (game.UserId != "" || !TokenMatches(guestToken, game.GuestTokenHash))
+        {
+            return new(GameActionOutcome.Forbidden);
+        }
+
+        if (game.Status != GameOutcome.Won)
+        {
+            return new(GameActionOutcome.Invalid, Error: "Only won games can be saved.");
+        }
+
+        if (time.GetUtcNow().UtcDateTime - game.FinishedUtc > GuestClaimWindow)
+        {
+            return new(GameActionOutcome.Invalid, Error: "This game is too old to save.");
+        }
+
+        if (await db.Users.FindAsync(userId) is not { } user)
+        {
+            return new(GameActionOutcome.NotFound);
+        }
+
+        game.UserId = userId;
+        game.GuestTokenHash = null;
+        user.GamesPlayed++;
+        user.GamesWon++;
+        var (rank, replayRank) = await RankWinAsync(game, user);
+        if (rank == null && replayRank == null)
+        {
+            game.RecordJson = null;
+        }
+
+        await db.SaveChangesAsync();
+        return new(GameActionOutcome.Ok, new ClaimGameResponse(game.LayoutName, game.Score!.Value, rank, replayRank, game.ReplayOfGameId));
+    }
+
+    /// <summary>Puts a verified win on its leaderboard, or on its deal's replay list if it's a replay.</summary>
+    private async Task<(int? Rank, int? ReplayRank)> RankWinAsync(GameEntity game, ApplicationUser user)
+    {
+        int seconds = game.Seconds ?? 0;
+        return game.ReplayOfGameId is { } originalGameId
+            ? (null, await AddToReplayListAsync(game, user, originalGameId, seconds))
+            : (await AddToLeaderboardAsync(game, user, seconds), null);
+    }
+
+    private static string NewGuestToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+    private static string Hash(string token) => Convert.ToHexString(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+
+    private static bool TokenMatches(string? token, string? hash) =>
+        !string.IsNullOrEmpty(token) && hash != null
+        && CryptographicOperations.FixedTimeEquals(System.Text.Encoding.ASCII.GetBytes(Hash(token)), System.Text.Encoding.ASCII.GetBytes(hash));
 
     /// <summary>The original game if it's on a leaderboard now; only those deals can be replayed.</summary>
     private async Task<GameEntity?> OriginalOnLeaderboardAsync(Guid gameId) =>

@@ -10,6 +10,7 @@
 @inject GameApi Api
 @inject AuthenticationStateProvider AuthState
 @inject NavigationManager Navigation
+@inject GuestClaims GuestClaims
 
 <PageTitle>Mahjong</PageTitle>
 
@@ -37,6 +38,22 @@
         @if (!signedIn)
         {
             <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
+        }
+
+        @if (claimed != null)
+        {
+            <div class="notice info">
+                Your guest win on @claimed.Layout (@claimed.Score.ToString("N0")) has been saved to your account.
+                @if (claimed.Rank is { } claimedRank)
+                {
+                    <span>You're <strong>#@claimedRank</strong> on the <a href="leaderboards?layout=@Uri.EscapeDataString(claimed.Layout)">@claimed.Layout leaderboard</a>!</span>
+                }
+                else if (claimed.ReplayRank is { } claimedReplayRank)
+                {
+                    <span>You're <strong>#@claimedReplayRank</strong> on that deal's <a href="replays/@claimed.ReplayOf">replay list</a>!</span>
+                }
+                <button class="btn btn-link btn-sm" @onclick="() => claimed = null">OK</button>
+            </div>
         }
 
         @if (replay != null)
@@ -134,6 +151,8 @@
     // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
     private ReplayInfo? replay;
     private LayoutDefinition? replayLayout;
+    // A guest win saved to the account after signing in, to tell the player about.
+    private ClaimGameResponse? claimed;
 
     [SupplyParameterFromQuery(Name = "replay")]
     public Guid? ReplayId { get; set; }
@@ -155,6 +174,11 @@
         layouts = config.ShowHiddenLayouts ? LayoutCatalog.All : LayoutCatalog.Visible;
 
         await Preferences.LoadAsync(signedIn);
+        if (signedIn)
+        {
+            claimed = await GuestClaims.ClaimPendingAsync();
+        }
+
         currentLayout = layouts.FirstOrDefault(l => l.Name == Preferences.LastLayout)
             ?? layouts.FirstOrDefault(l => l.Name == DefaultLayoutName)
             ?? layouts[0];
@@ -183,17 +207,21 @@
     private async Task PlayReplayAsync()
     {
         error = null;
-        bool ranked = signedIn && replay!.CanPlay;
+        var mode = !replay!.CanPlay ? GameMode.Offline : signedIn ? GameMode.SignedIn : GameMode.Guest;
         try
         {
-            await Session.StartAsync(replayLayout!, ranked, replay);
+            await Session.StartAsync(replayLayout!, mode, replay);
         }
         catch (HttpRequestException e)
         {
-            error = e.StatusCode == System.Net.HttpStatusCode.NotFound
-                ? "This deal is no longer on the leaderboard, so this replay won't be saved."
-                : "Couldn't reach the server, so this game won't be saved.";
-            await Session.StartAsync(replayLayout!, ranked: false, replay);
+            if (signedIn)
+            {
+                error = e.StatusCode == System.Net.HttpStatusCode.NotFound
+                    ? "This deal is no longer on the leaderboard, so this replay won't be saved."
+                    : "Couldn't reach the server, so this game won't be saved.";
+            }
+
+            await Session.StartAsync(replayLayout!, GameMode.Offline, replay);
         }
 
         if (signedIn && !replay!.CanPlay && error == null)
@@ -224,13 +252,17 @@
         error = null;
         try
         {
-            await Session.StartAsync(currentLayout!, ranked: signedIn);
+            await Session.StartAsync(currentLayout!, signedIn ? GameMode.SignedIn : GameMode.Guest);
         }
         catch (HttpRequestException)
         {
-            // If the server can't start a ranked game, still let them play.
-            error = "Couldn't reach the server, so this game won't be saved.";
-            await Session.StartAsync(currentLayout!, ranked: false);
+            // If the server can't start the game, still let them play (it just can't be saved).
+            if (signedIn)
+            {
+                error = "Couldn't reach the server, so this game won't be saved.";
+            }
+
+            await Session.StartAsync(currentLayout!, GameMode.Offline);
         }
     }
 

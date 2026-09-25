@@ -5,21 +5,30 @@ namespace Mahjong.Web.Services;
 
 /// <summary>
 /// Deletes stored moves that are no longer worth keeping. Moves stay only for games on a
-/// leaderboard or a replay list, and for rejected games until they're 30 days old.
+/// leaderboard or a replay list, and for rejected games until they're 30 days old. Guests' games
+/// that weren't claimed within a day are deleted altogether.
 /// </summary>
 public sealed class GameRecordCleanup(ApplicationDbContext db, TimeProvider time)
 {
     public static readonly TimeSpan RejectedRetention = TimeSpan.FromDays(30);
 
-    /// <summary>Returns how many games had their moves deleted.</summary>
-    public Task<int> RunAsync(CancellationToken cancellationToken = default)
+    /// <summary>Returns how many games had their moves (or, for unclaimed guest games, everything) deleted.</summary>
+    public async Task<int> RunAsync(CancellationToken cancellationToken = default)
     {
-        var cutoff = time.GetUtcNow().UtcDateTime - RejectedRetention;
+        var now = time.GetUtcNow().UtcDateTime;
+        var guestCutoff = now - GameService.GuestClaimWindow;
+        int deleted = await db.Games
+            .Where(g => g.UserId == "" && g.StartedUtc < guestCutoff)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        var cutoff = now - RejectedRetention;
         var onLeaderboard = db.HighScores.Select(s => s.GameId);
         var onReplayList = db.ReplayScores.Select(s => s.GameId);
 
-        return db.Games
+        // Guests' wins keep their moves until claimed (or deleted above).
+        return deleted + await db.Games
             .Where(g => g.RecordJson != null
+                && g.UserId != ""
                 && !onLeaderboard.Contains(g.Id)
                 && !onReplayList.Contains(g.Id)
                 && (g.Status != GameOutcome.Rejected || g.FinishedUtc < cutoff))

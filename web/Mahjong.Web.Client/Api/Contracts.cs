@@ -7,7 +7,8 @@ namespace Mahjong.Web.Client.Api;
 /// <summary>Starts a ranked game. With ReplayOf, the game replays that leaderboard game's deal.</summary>
 public sealed record StartGameRequest(string Layout, Guid? ReplayOf = null);
 
-public sealed record StartGameResponse(Guid GameId, long Seed);
+/// <summary>A started game. Guest games also get a token that proves which browser is playing.</summary>
+public sealed record StartGameResponse(Guid GameId, long Seed, string? GuestToken = null);
 
 public sealed record FinishGameRequest(GameRecord Record);
 
@@ -16,6 +17,12 @@ public sealed record FinishGameRequest(GameRecord Record);
 /// place on the layout's leaderboard; ReplayRank the place on a replayed deal's replay list.
 /// </summary>
 public sealed record FinishGameResponse(bool Won, int Score, BreakdownDto Breakdown, int? Rank, int? ReplayRank = null);
+
+/// <summary>Claims a guest's verified win for the player who has just signed in.</summary>
+public sealed record ClaimGameRequest(string GuestToken);
+
+/// <summary>Where a claimed guest win landed: Rank on the leaderboard, or ReplayRank on a replay list.</summary>
+public sealed record ClaimGameResponse(string Layout, int Score, int? Rank, int? ReplayRank, Guid? ReplayOf);
 
 public sealed record BreakdownDto(
     int TilePoints,
