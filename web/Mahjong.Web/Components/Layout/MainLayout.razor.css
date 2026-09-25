@@ -1,8 +1,12 @@
+/* margin-top: auto keeps the footer at the bottom of the window when the page is short. */
 .site-footer {
     display: flex;
+    align-items: center;
     justify-content: center;
     gap: 1rem;
-    padding: 0.4rem 1rem;
+    height: var(--footer-height);
+    margin-top: auto;
+    padding: 0 1rem;
     font-size: 0.8rem;
     color: rgba(255, 255, 255, 0.85);
     background: rgba(20, 12, 6, 0.7);

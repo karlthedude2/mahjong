@@ -29,7 +29,7 @@
                 document.querySelectorAll(".sound-toggle").forEach(function (button) {
                     var label = muted ? "Turn sound on" : "Mute sound";
                     button.setAttribute("aria-label", label);
-                    button.title = label;
+                    button.setAttribute("data-tip", label);
                     button.setAttribute("aria-pressed", muted ? "true" : "false");
                 });
             } catch (e) { }

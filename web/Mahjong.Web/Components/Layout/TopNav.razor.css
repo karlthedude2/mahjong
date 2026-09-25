@@ -13,7 +13,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    margin-right: 1rem;
+    margin-right: 0.75rem;
     color: #fff;
     font-size: 1.25rem;
     font-weight: 700;
@@ -31,37 +31,111 @@
     flex: 1;
 }
 
-.top-nav ::deep .nav-link,
-.top-nav button.nav-link {
-    padding: 0.35rem 0.7rem;
-    border: 0;
-    border-radius: 0.4rem;
-    background: none;
-    color: rgba(255, 255, 255, 0.85);
-    text-decoration: none;
-}
-
-.top-nav ::deep .nav-link:hover,
-.top-nav button.nav-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.top-nav ::deep .nav-link.active {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.18);
-}
-
-.top-nav ::deep .nav-link.register {
-    background: var(--accent);
-    color: #fff;
+.right {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 form {
     margin: 0;
 }
 
+/* Round icon buttons: links (NavLink renders <a>, hence ::deep) and buttons alike. */
+.top-nav ::deep .icon-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.top-nav ::deep .icon-link:hover,
+.top-nav ::deep .icon-link:focus-visible {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.top-nav ::deep .icon-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.top-nav ::deep .icon-link.register {
+    background: var(--accent);
+    color: #fff;
+}
+
+.top-nav ::deep .icon-link.register:hover {
+    background: #9c2a19;
+}
+
+.top-nav ::deep .icon-link svg {
+    width: 1.4rem;
+    height: 1.4rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.top-nav ::deep .icon-link .speaker {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* Tooltips: the data-tip text in a small label under the icon. */
+.top-nav ::deep .icon-link[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    padding: 0.25rem 0.55rem;
+    border-radius: 0.35rem;
+    background: rgba(20, 12, 6, 0.95);
+    color: #fff;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+/* Icons at the right edge line their tooltips up with the edge, so they stay on screen. */
+.right ::deep .icon-link[data-tip]::after {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+
+.top-nav ::deep .icon-link[data-tip]:hover::after,
+.top-nav ::deep .icon-link[data-tip]:focus-visible::after {
+    opacity: 1;
+}
+
+/* Touch screens have no hover: a tap navigates, so there's no tooltip to leave stuck on screen. */
+@media (hover: none) {
+    .top-nav ::deep .icon-link[data-tip]:hover::after {
+        opacity: 0;
+    }
+}
+
 @media (max-width: 640px) {
+    .top-nav {
+        padding: 0 0.5rem;
+    }
+
     .brand {
         margin-right: 0.25rem;
     }
@@ -69,37 +143,4 @@ form {
     .brand-name {
         display: none;
     }
-}
-
-.sound-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    margin-right: 0.5rem;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: none;
-    color: rgba(255, 255, 255, 0.85);
-    cursor: pointer;
-}
-
-.sound-toggle:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.sound-toggle svg {
-    width: 1.4rem;
-    height: 1.4rem;
-    fill: currentColor;
-}
-
-.sound-toggle .wave {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
 }
