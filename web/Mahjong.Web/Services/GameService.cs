@@ -21,6 +21,8 @@ public sealed record FinishResult(GameActionOutcome Outcome, FinishGameResponse?
 /// <summary>
 /// Starts ranked games and verifies finished ones. The server picks the seed, replays the
 /// submitted moves with <see cref="GameReplayer"/>, and only ever stores its own score.
+/// A game can also replay a leaderboard game's deal (same layout and seed); replays are ranked on
+/// that deal's own replay list and never touch the leaderboard.
 /// </summary>
 public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILogger<GameService> logger)
 {
@@ -40,13 +42,29 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return null;
         }
 
+        return await AddGameAsync(userId, layout.Name, NewSeed(), replayOf: null);
+    }
+
+    /// <summary>
+    /// Starts a replay of a leaderboard game's deal. Returns null unless that game is on a
+    /// leaderboard now (once it drops off, its replay list stays viewable but closes to new plays).
+    /// </summary>
+    public async Task<StartGameResponse?> StartReplayAsync(string userId, Guid originalGameId)
+    {
+        var original = await OriginalOnLeaderboardAsync(originalGameId);
+        return original == null ? null : await AddGameAsync(userId, original.LayoutName, original.Seed, original.Id);
+    }
+
+    private async Task<StartGameResponse> AddGameAsync(string userId, string layoutName, long seed, Guid? replayOf)
+    {
         var now = time.GetUtcNow().UtcDateTime;
         var game = new GameEntity
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            LayoutName = layout.Name,
-            Seed = NewSeed(),
+            LayoutName = layoutName,
+            Seed = seed,
+            ReplayOfGameId = replayOf,
             StartedUtc = now,
             Status = GameOutcome.InProgress,
 
@@ -89,23 +107,32 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
         game.Status = replay!.Complete ? GameOutcome.Won : GameOutcome.Lost;
         game.Score = replay.Score;
+        game.Seconds = replay.ElapsedSeconds;
 
         int? rank = null;
+        int? replayRank = null;
         if (replay.Complete)
         {
             var user = await db.Users.FindAsync(userId);
             if (user != null)
             {
                 user.GamesWon++;
-                rank = await AddToLeaderboardAsync(game, user, replay.ElapsedSeconds);
+                if (game.ReplayOfGameId is { } originalGameId)
+                {
+                    replayRank = await AddToReplayListAsync(game, user, originalGameId, replay.ElapsedSeconds);
+                }
+                else
+                {
+                    rank = await AddToLeaderboardAsync(game, user, replay.ElapsedSeconds);
+                }
             }
         }
 
-        // The moves are the proof behind a leaderboard score; other games only need their result.
-        game.RecordJson = rank != null ? recordJson : null;
+        // The moves are the proof behind a listed score; other games only need their result.
+        game.RecordJson = rank != null || replayRank != null ? recordJson : null;
 
         await db.SaveChangesAsync();
-        return new(GameActionOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank));
+        return new(GameActionOutcome.Ok, new FinishGameResponse(replay.Complete, replay.Score, BreakdownDto.From(replay.Breakdown), rank, replayRank));
     }
 
     /// <summary>
@@ -143,7 +170,53 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             .Take(LeaderboardSize)
             .ToListAsync();
 
-        return top.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc)).ToList();
+        var gameIds = top.Select(s => s.GameId).ToList();
+        var replayCounts = await db.ReplayScores
+            .Where(r => gameIds.Contains(r.OriginalGameId))
+            .GroupBy(r => r.OriginalGameId)
+            .Select(g => new { GameId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.GameId, g => g.Count);
+
+        return top.Select((s, i) => new LeaderboardEntry(
+            i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId, replayCounts.GetValueOrDefault(s.GameId))).ToList();
+    }
+
+    /// <summary>
+    /// A leaderboard game's deal and its replay list, or null if the game has never been on a
+    /// leaderboard (or has dropped off with nobody having replayed it).
+    /// </summary>
+    public async Task<ReplayInfo?> GetReplayInfoAsync(Guid originalGameId)
+    {
+        var original = await db.Games.FindAsync(originalGameId);
+        if (original?.Score is not { } originalScore || original.FinishedUtc is not { } finished)
+        {
+            return null;
+        }
+
+        var onLeaderboard = await db.HighScores.FirstOrDefaultAsync(s => s.GameId == originalGameId);
+        var replays = await db.ReplayScores
+            .Where(s => s.OriginalGameId == originalGameId)
+            .OrderByDescending(s => s.Score).ThenBy(s => s.AchievedUtc)
+            .Take(LeaderboardSize)
+            .ToListAsync();
+        if (onLeaderboard == null && replays.Count == 0)
+        {
+            return null;
+        }
+
+        string? player = onLeaderboard?.DisplayName
+            ?? await db.Users.Where(u => u.Id == original.UserId).Select(u => u.DisplayName).FirstOrDefaultAsync();
+
+        return new ReplayInfo(
+            original.Id,
+            original.LayoutName,
+            original.Seed,
+            string.IsNullOrWhiteSpace(player) ? "Player" : player,
+            originalScore,
+            onLeaderboard?.Seconds ?? original.Seconds ?? 0,
+            finished,
+            CanPlay: onLeaderboard != null,
+            replays.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId)).ToList());
     }
 
     /// <summary>
@@ -195,6 +268,60 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
         }
 
         return (game, GameActionOutcome.Ok);
+    }
+
+    /// <summary>The original game if it's on a leaderboard now; only those deals can be replayed.</summary>
+    private async Task<GameEntity?> OriginalOnLeaderboardAsync(Guid gameId) =>
+        await db.HighScores.AnyAsync(s => s.GameId == gameId) ? await db.Games.FindAsync(gameId) : null;
+
+    /// <summary>
+    /// Puts a replay on its deal's replay list if it's the player's best there and makes the top 20.
+    /// Returns the new rank, or null if the list didn't change.
+    /// </summary>
+    private async Task<int?> AddToReplayListAsync(GameEntity game, ApplicationUser user, Guid originalGameId, int seconds)
+    {
+        var list = await db.ReplayScores
+            .Where(s => s.OriginalGameId == originalGameId)
+            .OrderByDescending(s => s.Score).ThenBy(s => s.AchievedUtc)
+            .ToListAsync();
+        int score = game.Score!.Value;
+
+        // Each player is listed once, with their best replay.
+        var entry = list.FirstOrDefault(s => s.UserId == user.Id);
+        if (entry != null ? score <= entry.Score : list.Count >= LeaderboardSize && score <= list[LeaderboardSize - 1].Score)
+        {
+            return null;
+        }
+
+        var noLongerProof = new List<Guid>();
+        if (entry == null)
+        {
+            entry = new ReplayScoreEntity { OriginalGameId = originalGameId, UserId = user.Id };
+            db.ReplayScores.Add(entry);
+            list.Add(entry);
+        }
+        else
+        {
+            noLongerProof.Add(entry.GameId);
+        }
+
+        entry.DisplayName = string.IsNullOrWhiteSpace(user.DisplayName) ? "Player" : user.DisplayName;
+        entry.Score = score;
+        entry.Seconds = seconds;
+        entry.AchievedUtc = game.FinishedUtc!.Value;
+        entry.GameId = game.Id;
+
+        // Ties keep the earlier score ahead; anything past the top 20 drops off.
+        var ordered = list.OrderByDescending(s => s.Score).ThenBy(s => s.AchievedUtc).ToList();
+        var dropped = ordered.Skip(LeaderboardSize).ToList();
+        db.ReplayScores.RemoveRange(dropped);
+        noLongerProof.AddRange(dropped.Select(s => s.GameId));
+        foreach (var oldGame in await db.Games.Where(g => noLongerProof.Contains(g.Id)).ToListAsync())
+        {
+            oldGame.RecordJson = null;
+        }
+
+        return ordered.IndexOf(entry) + 1;
     }
 
     /// <summary>Adds the score if it makes the top 20, trims the list, and returns the new rank.</summary>

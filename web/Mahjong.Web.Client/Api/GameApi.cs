@@ -2,7 +2,10 @@ using System.Net.Http.Json;
 
 namespace Mahjong.Web.Client.Api;
 
-/// <summary>Calls to the server API. Only used for signed-in players; guests play entirely offline.</summary>
+/// <summary>
+/// Calls to the server API. Game calls are only for signed-in players (guests play offline); the
+/// client config and replay deals are public.
+/// </summary>
 public sealed class GameApi(HttpClient http)
 {
     private ClientConfig? config;
@@ -13,9 +16,10 @@ public sealed class GameApi(HttpClient http)
             ?? new ClientConfig(null, null, null, null, false);
     }
 
-    public async Task<StartGameResponse> StartGameAsync(string layout)
+    /// <summary>Starts a ranked game; with replayOf, a replay of that leaderboard game's deal.</summary>
+    public async Task<StartGameResponse> StartGameAsync(string layout, Guid? replayOf = null)
     {
-        var response = await http.PostAsJsonAsync("api/games", new StartGameRequest(layout));
+        var response = await http.PostAsJsonAsync("api/games", new StartGameRequest(layout, replayOf));
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<StartGameResponse>())!;
     }
@@ -37,6 +41,20 @@ public sealed class GameApi(HttpClient http)
         catch (HttpRequestException)
         {
             return false;
+        }
+    }
+
+    /// <summary>A leaderboard game's deal and replay list, or null if it can't be found.</summary>
+    public async Task<ReplayInfo?> GetReplayAsync(Guid originalGameId)
+    {
+        try
+        {
+            var response = await http.GetAsync($"api/replays/{originalGameId}");
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ReplayInfo>() : null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
         }
     }
 

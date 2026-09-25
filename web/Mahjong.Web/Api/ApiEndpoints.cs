@@ -29,10 +29,19 @@ public static partial class ApiEndpoints
         api.MapGet("/leaderboards/{layout}", async (string layout, GameService games) =>
             Results.Ok(await games.GetLeaderboardAsync(layout)));
 
+        api.MapGet("/replays/{gameId:guid}", async (Guid gameId, GameService games) =>
+            await games.GetReplayInfoAsync(gameId) is { } info ? Results.Ok(info) : Results.NotFound());
+
         var games = api.MapGroup("/games").RequireAuthorization().RequireRateLimiting(GamesRateLimit);
 
         games.MapPost("/", async (StartGameRequest request, ClaimsPrincipal user, GameService service, IOptions<GameOptions> options) =>
         {
+            if (request.ReplayOf is { } originalGameId)
+            {
+                var replay = await service.StartReplayAsync(UserId(user), originalGameId);
+                return replay is null ? Results.NotFound("This deal is no longer on the leaderboard.") : Results.Ok(replay);
+            }
+
             var started = await service.StartAsync(UserId(user), request.Layout, options.Value.ShowHiddenLayouts);
             return started is null ? Results.BadRequest($"Unknown layout \"{request.Layout}\".") : Results.Ok(started);
         });

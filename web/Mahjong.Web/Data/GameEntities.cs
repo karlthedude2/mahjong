@@ -25,6 +25,9 @@ public class GameEntity
 
     public long Seed { get; set; }
 
+    /// <summary>For a replay, the leaderboard game whose deal (layout and seed) this game replays.</summary>
+    public Guid? ReplayOfGameId { get; set; }
+
     public DateTime StartedUtc { get; set; }
 
     public DateTime? FinishedUtc { get; set; }
@@ -52,9 +55,12 @@ public class GameEntity
     /// <summary>The score the server computed by replaying the game.</summary>
     public int? Score { get; set; }
 
+    /// <summary>How long the game took by the game clock (paused time excluded), once verified.</summary>
+    public int? Seconds { get; set; }
+
     /// <summary>
     /// The submitted moves, kept only where they're worth auditing: while the game is on a
-    /// leaderboard, and for 30 days after a game is rejected (see <c>GameRecordCleanup</c>).
+    /// leaderboard or a replay list, and for 30 days after a game is rejected (see <c>GameRecordCleanup</c>).
     /// </summary>
     public string? RecordJson { get; set; }
 }
@@ -80,5 +86,32 @@ public class HighScoreEntity
 
     public DateTime AchievedUtc { get; set; }
 
+    public Guid GameId { get; set; }
+}
+
+/// <summary>
+/// A player's best score replaying a leaderboard game's deal. Kept apart from the leaderboard:
+/// a replay can beat the original, but the original (a first play) never changes.
+/// </summary>
+public class ReplayScoreEntity
+{
+    public int Id { get; set; }
+
+    /// <summary>The leaderboard game whose deal was replayed.</summary>
+    public Guid OriginalGameId { get; set; }
+
+    [MaxLength(450)]
+    public string UserId { get; set; } = "";
+
+    [MaxLength(ApplicationUser.DisplayNameMaxLength)]
+    public string DisplayName { get; set; } = "";
+
+    public int Score { get; set; }
+
+    public int Seconds { get; set; }
+
+    public DateTime AchievedUtc { get; set; }
+
+    /// <summary>The replay game that set this score.</summary>
     public Guid GameId { get; set; }
 }

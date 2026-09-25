@@ -5,7 +5,7 @@ namespace Mahjong.Web.Services;
 
 /// <summary>
 /// Deletes stored moves that are no longer worth keeping. Moves stay only for games on a
-/// leaderboard, and for rejected games until they're 30 days old.
+/// leaderboard or a replay list, and for rejected games until they're 30 days old.
 /// </summary>
 public sealed class GameRecordCleanup(ApplicationDbContext db, TimeProvider time)
 {
@@ -16,10 +16,12 @@ public sealed class GameRecordCleanup(ApplicationDbContext db, TimeProvider time
     {
         var cutoff = time.GetUtcNow().UtcDateTime - RejectedRetention;
         var onLeaderboard = db.HighScores.Select(s => s.GameId);
+        var onReplayList = db.ReplayScores.Select(s => s.GameId);
 
         return db.Games
             .Where(g => g.RecordJson != null
                 && !onLeaderboard.Contains(g.Id)
+                && !onReplayList.Contains(g.Id)
                 && (g.Status != GameOutcome.Rejected || g.FinishedUtc < cutoff))
             .ExecuteUpdateAsync(s => s.SetProperty(g => g.RecordJson, (string?)null), cancellationToken);
     }

@@ -37,12 +37,34 @@
             </tfoot>
         </table>
 
+        @if (Session.Replay is { } replay)
+        {
+            <p class="replay-compare">
+                @if (breakdown.Total > replay.OriginalScore)
+                {
+                    <span>You beat <strong>@replay.OriginalPlayer</strong>'s original score of @replay.OriginalScore.ToString("N0")!</span>
+                }
+                else
+                {
+                    <span><strong>@replay.OriginalPlayer</strong>'s original score was @replay.OriginalScore.ToString("N0").</span>
+                }
+            </p>
+        }
+
         @if (Session.IsRanked)
         {
             <p class="verdict">
                 @if (Session.SubmittingResult)
                 {
                     <span>Checking your game&hellip;</span>
+                }
+                else if (Session.Replay != null && Session.Result is { ReplayRank: { } replayRank })
+                {
+                    <span>Verified. You're <strong>#@replayRank</strong> on this deal's <a href="replays/@Session.Replay.OriginalGameId">replay list</a>!</span>
+                }
+                else if (Session.Replay != null && Session.Result != null)
+                {
+                    <span>Verified. Not a new best for you on this deal's <a href="replays/@Session.Replay.OriginalGameId">replay list</a>.</span>
                 }
                 else if (Session.Result is { Rank: { } rank })
                 {
@@ -66,7 +88,7 @@
 
         <div class="actions">
             <button class="btn btn-primary" disabled="@(countdown > 0)" @onclick="OnPlayAgain">
-                @(countdown > 0 ? $"Play again ({countdown})" : "Play again")
+                @(PlayAgainText + (countdown > 0 ? $" ({countdown})" : ""))
             </button>
         </div>
     </div>
@@ -77,6 +99,8 @@
     private Timer? timer;
 
     [Parameter, EditorRequired] public Game.GameSession Session { get; set; } = default!;
+
+    private string PlayAgainText => Session.Replay != null ? "Try this deal again" : "Play again";
 
     [Parameter] public ClientConfig? Config { get; set; }
 

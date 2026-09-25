@@ -13,6 +13,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<HighScoreEntity> HighScores => Set<HighScoreEntity>();
 
+    public DbSet<ReplayScoreEntity> ReplayScores => Set<ReplayScoreEntity>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -28,6 +30,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             score.ToTable("HighScores");
             score.HasIndex(s => new { s.LayoutName, s.Score });
+        });
+
+        builder.Entity<ReplayScoreEntity>(score =>
+        {
+            score.ToTable("ReplayScores");
+            // One entry per player per deal: their best.
+            score.HasIndex(s => new { s.OriginalGameId, s.UserId }).IsUnique();
+            score.HasIndex(s => new { s.OriginalGameId, s.Score });
         });
     }
 }
