@@ -38,7 +38,8 @@ jobs:
           dotnet test web/Mahjong.Web.Tests --configuration Release
 
       - name: Publish
-        run: dotnet publish web/Mahjong.Web --configuration Release --output ${{ runner.temp }}/web
+        # The commit goes into the app's version, which /healthz reports (see the smoke test).
+        run: dotnet publish web/Mahjong.Web --configuration Release --output ${{ runner.temp }}/web -p:SourceRevisionId=${{ github.sha }}
 
       - name: Build migration bundle
         run: |
@@ -101,18 +102,21 @@ jobs:
           # client), so App Service can't guess which one to run; name it explicitly.
           startup-command: dotnet Mahjong.Web.dll
 
-      # The free plan sleeps when idle, so give it a few minutes to wake up.
+      # The old version keeps serving while the new one starts (a minute or two), so wait until
+      # /healthz is answered by this commit's build. Only then does the maintenance page come down.
       - name: Smoke test
         run: |
           url="https://${{ vars.APP_NAME }}.azurewebsites.net/healthz"
-          for attempt in $(seq 1 20); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$url")" = "200" ]; then
-              echo "Healthy after $attempt attempt(s)."
+          for attempt in $(seq 1 30); do
+            headers=$(curl -s -D - -o /dev/null --max-time 60 "$url" || true)
+            if echo "$headers" | grep -qi "^x-app-version:.*${{ github.sha }}"; then
+              echo "The new version is up and healthy after $attempt attempt(s)."
               exit 0
             fi
+            echo "Attempt $attempt: $(echo "$headers" | grep -i -m1 '^x-app-version' || echo 'no version yet')"
             sleep 15
           done
-          echo "The site did not report healthy at $url"
+          echo "The new version did not report healthy at $url"
           exit 1
 
       # Runs even if an earlier step failed, so the site isn't left on the maintenance page.
