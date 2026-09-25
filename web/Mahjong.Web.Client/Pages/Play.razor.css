@@ -72,13 +72,19 @@
     gap: 1rem;
 }
 
-/* The board with its controls centered underneath. */
+/* The title and messages, then the board with its controls centered underneath. */
 .board-column {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.6rem;
     min-height: 0;
+}
+
+.board-column > .layout-title,
+.board-column > .notice,
+.board-column > .loading {
+    align-self: stretch;
 }
 
 .board-area {
