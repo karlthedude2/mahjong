@@ -14,6 +14,7 @@ builder.Services.AddScoped<GameApi>();
 builder.Services.AddScoped<BrowserInterop>();
 builder.Services.AddScoped<PlayerPreferences>();
 builder.Services.AddScoped<ITileEffects, SoundTileEffects>();
+builder.Services.AddScoped<GuestClaims>();
 builder.Services.AddScoped<GameSession>();
 
 await builder.Build().RunAsync();

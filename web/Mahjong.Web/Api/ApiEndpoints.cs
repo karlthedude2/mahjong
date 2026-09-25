@@ -12,6 +12,9 @@ public static partial class ApiEndpoints
 {
     public const string GamesRateLimit = "games";
 
+    /// <summary>The header a guest's game calls carry, holding the token from the game's start.</summary>
+    public const string GuestTokenHeader = "X-Guest-Token";
+
     public static void MapMahjongApi(this IEndpointRouteBuilder app)
     {
         // ads.txt names who may sell ads on this site; AdSense checks it. Built from Ads:ClientId
@@ -32,31 +35,20 @@ public static partial class ApiEndpoints
         api.MapGet("/replays/{gameId:guid}", async (Guid gameId, GameService games) =>
             await games.GetReplayInfoAsync(gameId) is { } info ? Results.Ok(info) : Results.NotFound());
 
+        // Signed-in players' games, and guests' games (which carry a token instead of a sign-in).
+        // Both are started, timed and verified the same way.
         var games = api.MapGroup("/games").RequireAuthorization().RequireRateLimiting(GamesRateLimit);
+        MapGameRoutes(games, http => Player.Account(UserId(http.User)));
 
-        games.MapPost("/", async (StartGameRequest request, ClaimsPrincipal user, GameService service, IOptions<GameOptions> options) =>
+        var guestGames = api.MapGroup("/guest-games").RequireRateLimiting(GamesRateLimit);
+        MapGameRoutes(guestGames, http => Player.Guest(http.Request.Headers[GuestTokenHeader].FirstOrDefault()));
+
+        // After signing in, a guest's verified win can be saved to their account.
+        games.MapPost("/{id:guid}/claim", async (Guid id, ClaimGameRequest request, ClaimsPrincipal user, GameService service) =>
         {
-            if (request.ReplayOf is { } originalGameId)
-            {
-                var replay = await service.StartReplayAsync(UserId(user), originalGameId);
-                return replay is null ? Results.NotFound("This deal is no longer on the leaderboard.") : Results.Ok(replay);
-            }
-
-            var started = await service.StartAsync(UserId(user), request.Layout, options.Value.ShowHiddenLayouts);
-            return started is null ? Results.BadRequest($"Unknown layout \"{request.Layout}\".") : Results.Ok(started);
-        });
-
-        games.MapPost("/{id:guid}/finish", async (Guid id, FinishGameRequest request, ClaimsPrincipal user, GameService service) =>
-        {
-            var result = await service.FinishAsync(UserId(user), id, request.Record);
+            var result = await service.ClaimAsync(UserId(user), id, request.GuestToken);
             return result.Outcome == GameActionOutcome.Ok ? Results.Ok(result.Response) : ToResult(result.Outcome, result.Error);
         });
-
-        games.MapPost("/{id:guid}/pause", async (Guid id, ClaimsPrincipal user, GameService service) =>
-            ToResult(await service.SetPausedAsync(UserId(user), id, paused: true)));
-
-        games.MapPost("/{id:guid}/resume", async (Guid id, ClaimsPrincipal user, GameService service) =>
-            ToResult(await service.SetPausedAsync(UserId(user), id, paused: false)));
 
         var me = api.MapGroup("/me").RequireAuthorization();
 
@@ -112,12 +104,39 @@ public static partial class ApiEndpoints
         });
     }
 
+    private static void MapGameRoutes(RouteGroupBuilder group, Func<HttpContext, Player> playerOf)
+    {
+        group.MapPost("/", async (StartGameRequest request, HttpContext http, GameService service, IOptions<GameOptions> options) =>
+        {
+            if (request.ReplayOf is { } originalGameId)
+            {
+                var replay = await service.StartReplayAsync(playerOf(http), originalGameId);
+                return replay is null ? Results.NotFound("This deal is no longer on the leaderboard.") : Results.Ok(replay);
+            }
+
+            var started = await service.StartAsync(playerOf(http), request.Layout, options.Value.ShowHiddenLayouts);
+            return started is null ? Results.BadRequest($"Unknown layout \"{request.Layout}\".") : Results.Ok(started);
+        });
+
+        group.MapPost("/{id:guid}/finish", async (Guid id, FinishGameRequest request, HttpContext http, GameService service) =>
+        {
+            var result = await service.FinishAsync(playerOf(http), id, request.Record);
+            return result.Outcome == GameActionOutcome.Ok ? Results.Ok(result.Response) : ToResult(result.Outcome, result.Error);
+        });
+
+        group.MapPost("/{id:guid}/pause", async (Guid id, HttpContext http, GameService service) =>
+            ToResult(await service.SetPausedAsync(playerOf(http), id, paused: true)));
+
+        group.MapPost("/{id:guid}/resume", async (Guid id, HttpContext http, GameService service) =>
+            ToResult(await service.SetPausedAsync(playerOf(http), id, paused: false)));
+    }
+
     private static IResult ToResult(GameActionOutcome outcome, string? error = null) => outcome switch
     {
         GameActionOutcome.Ok => Results.NoContent(),
         GameActionOutcome.NotFound => Results.NotFound(),
         GameActionOutcome.Forbidden => Results.Forbid(),
-        GameActionOutcome.AlreadyFinished => Results.Conflict("This game has already been finished."),
+        GameActionOutcome.AlreadyFinished => Results.Conflict(error ?? "This game has already been finished."),
         _ => Results.BadRequest(error),
     };
 

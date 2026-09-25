@@ -4,6 +4,17 @@ using Mahjong.Web.Client.Api;
 
 namespace Mahjong.Web.Client.Game;
 
+/// <summary>
+/// How a game is played: signed in (verified and ranked), as a guest (verified by the server, and
+/// the win can be claimed after signing in), or offline (in the browser only).
+/// </summary>
+public enum GameMode
+{
+    Offline,
+    Guest,
+    SignedIn
+}
+
 public enum SessionState
 {
     NotStarted,
@@ -17,11 +28,12 @@ public enum SessionState
 /// One game in the browser: the board, the clock, the selected tile, and (for signed-in
 /// players) the server round trips that start the game and verify the finished result.
 /// </summary>
-public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
+public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims guestClaims) : IDisposable
 {
     private readonly Stopwatch playTime = new();
     private Timer? timer;
     private Guid? serverGameId;
+    private string? guestToken;
 
     /// <summary>Raised whenever the UI should redraw. May fire from the clock timer.</summary>
     public event Action? Changed;
@@ -33,7 +45,10 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
     public SessionState State { get; private set; } = SessionState.NotStarted;
 
     /// <summary>True if this game's score will be verified and can reach the leaderboard.</summary>
-    public bool IsRanked => serverGameId.HasValue;
+    public bool IsRanked => serverGameId.HasValue && guestToken == null;
+
+    /// <summary>True for a guest's game the server is verifying, so a win can be saved by signing in.</summary>
+    public bool IsGuestVerified => serverGameId.HasValue && guestToken != null;
 
     /// <summary>False until the player's first move: the clock doesn't run before then.</summary>
     public bool ClockStarted { get; private set; }
@@ -52,23 +67,25 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
     public bool SubmittingResult { get; private set; }
 
     /// <summary>
-    /// Deals a new game. With a replay, it's that leaderboard game's deal: a ranked replay goes on
-    /// the deal's replay list; a guest's replay deals the same tiles locally.
+    /// Deals a new game. With a replay, it's that leaderboard game's deal: a verified replay goes on
+    /// the deal's replay list; an offline one deals the same tiles locally.
     /// </summary>
-    public async Task StartAsync(LayoutDefinition layout, bool ranked, ReplayInfo? replay = null)
+    public async Task StartAsync(LayoutDefinition layout, GameMode mode, ReplayInfo? replay = null)
     {
         StopClock();
         serverGameId = null;
+        guestToken = null;
         Result = null;
         Selected = null;
         Message = null;
         Replay = replay;
 
         long seed;
-        if (ranked)
+        if (mode != GameMode.Offline)
         {
-            var started = await api.StartGameAsync(layout.Name, replay?.OriginalGameId);
+            var started = await api.StartGameAsync(layout.Name, replay?.OriginalGameId, guest: mode == GameMode.Guest);
             serverGameId = started.GameId;
+            guestToken = started.GuestToken;
             seed = started.Seed;
         }
         else
@@ -152,7 +169,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
             CatchUpClock();
         }
 
-        if (serverGameId is { } id && !await api.SetPausedAsync(id, pausing))
+        if (serverGameId is { } id && !await api.SetPausedAsync(id, pausing, guestToken) && !GoOfflineIfGuest())
         {
             Message = pausing
                 ? "Couldn't pause: the server didn't respond. Check your connection and try again."
@@ -215,7 +232,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
             return true;
         }
 
-        if (serverGameId is { } id && !await api.SetPausedAsync(id, paused: false))
+        if (serverGameId is { } id && !await api.SetPausedAsync(id, paused: false, guestToken) && !GoOfflineIfGuest())
         {
             Message = "Couldn't start the game: the server didn't respond. Check your connection and try again.";
             Changed?.Invoke();
@@ -261,7 +278,11 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         Changed?.Invoke();
         try
         {
-            Result = await api.FinishGameAsync(id, new FinishGameRequest(Game.Record));
+            Result = await api.FinishGameAsync(id, new FinishGameRequest(Game.Record), guestToken);
+            if (Result is { Won: true } && guestToken != null)
+            {
+                await guestClaims.RememberAsync(id, guestToken);
+            }
         }
         catch (HttpRequestException)
         {
@@ -271,6 +292,22 @@ public sealed class GameSession(GameApi api, ITileEffects effects) : IDisposable
         {
             SubmittingResult = false;
         }
+    }
+
+    /// <summary>
+    /// A guest's game carries on in the browser if the server stops answering (it just can't be
+    /// saved any more); a signed-in game waits, so its score isn't lost. Returns true if it went offline.
+    /// </summary>
+    private bool GoOfflineIfGuest()
+    {
+        if (guestToken == null)
+        {
+            return false;
+        }
+
+        serverGameId = null;
+        guestToken = null;
+        return true;
     }
 
     private void OnTick()

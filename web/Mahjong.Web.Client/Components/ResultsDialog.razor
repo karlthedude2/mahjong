@@ -82,7 +82,21 @@
         }
         else
         {
-            <p class="verdict"><a href="Account/Login">Sign in</a> to save your scores, get on the leaderboards and see fewer ads.</p>
+            @if (Session.IsGuestVerified && Session.Result is { Won: true })
+            {
+                <p class="verdict">
+                    <strong>Save this score:</strong> <a href="Account/Login">sign in</a> or <a href="Account/Register">create an account</a>
+                    within a day, on this device, and it goes on @(Session.Replay != null ? "this deal's replay list" : "the leaderboard") as if you'd been signed in.
+                </p>
+            }
+            else if (Session.IsGuestVerified && Session.SubmittingResult)
+            {
+                <p class="verdict">Checking your game&hellip;</p>
+            }
+            else
+            {
+                <p class="verdict"><a href="Account/Login">Sign in</a> to save your scores, get on the leaderboards and see fewer ads.</p>
+            }
             <AdSlot ClientId="@Config?.AdsClientId" SlotId="@Config?.AdSlotResults" Format="rectangle" CssClass="results-ad" />
         }
 

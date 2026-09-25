@@ -12,13 +12,22 @@ public enum GameOutcome
     Rejected
 }
 
-/// <summary>A game started by a signed-in player. The seed is chosen by the server.</summary>
+/// <summary>
+/// A game the server started (and so can verify). The seed is chosen by the server. A guest's game
+/// has no user until they sign in and claim it; until then only the holder of the guest token can
+/// play it, and unclaimed guest games are deleted after a day.
+/// </summary>
 public class GameEntity
 {
     public Guid Id { get; set; }
 
+    /// <summary>The player, or empty for a guest's game that hasn't been claimed.</summary>
     [MaxLength(450)]
     public string UserId { get; set; } = "";
+
+    /// <summary>SHA-256 (hex) of a guest game's token; null for signed-in players' games and once claimed.</summary>
+    [MaxLength(64)]
+    public string? GuestTokenHash { get; set; }
 
     [MaxLength(64)]
     public string LayoutName { get; set; } = "";
