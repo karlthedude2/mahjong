@@ -107,6 +107,8 @@ app.UseWhen(
     site => site.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 app.UseHttpsRedirection();
 RedirectToCanonicalHost(app, config["Site:CanonicalHost"]);
+var maintenance = new MaintenanceMode(MaintenanceMode.DefaultFlagPath(config), app.Services.GetRequiredService<TimeProvider>());
+app.Use(maintenance.InvokeAsync);
 app.UseRateLimiter();
 app.UseAntiforgery();
 

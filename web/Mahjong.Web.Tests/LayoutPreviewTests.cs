@@ -19,7 +19,7 @@ public sealed class LayoutPreviewTests
         var pictures = Directory.GetFiles(PreviewFolder(), "*.png").Select(Path.GetFileNameWithoutExtension).ToList();
 
         Assert.NotEmpty(pictures);
-        Assert.All(pictures, p => Assert.Contains(p, slugs));
+        Assert.All(pictures, p => Assert.Contains(p!, slugs));
     }
 
     private static string PreviewFolder()
