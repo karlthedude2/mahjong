@@ -7,7 +7,9 @@
     grid-template-columns: 160px minmax(0, 1fr) 160px;
     grid-template-areas: "left game right";
     gap: 1rem;
-    height: calc(100vh - var(--nav-height));
+    /* The window less the header and footer, so the whole game fits without scrolling. */
+    height: calc(100vh - var(--nav-height) - var(--footer-height));
+    height: calc(100dvh - var(--nav-height) - var(--footer-height));
     padding: 1rem;
 }
 

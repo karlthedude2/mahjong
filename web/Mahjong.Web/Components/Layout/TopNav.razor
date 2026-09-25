@@ -1,44 +1,84 @@
 @implements IDisposable
 @inject NavigationManager NavigationManager
 
+@*
+    Every link is an icon with a tooltip (data-tip, shown on hover and keyboard focus; see
+    TopNav.razor.css) and an aria-label for screen readers, so the bar fits on a phone.
+*@
 <nav class="top-nav">
     <a class="brand" href="" aria-label="Mahjong Haus home">
         <img class="logo" src="logo.png" alt="" width="92" height="92" />
         <span class="brand-name">Mahjong Haus</span>
     </a>
-    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Play</NavLink>
-    <NavLink class="nav-link" href="leaderboards">Leaderboards</NavLink>
+    <NavLink class="icon-link" href="" Match="NavLinkMatch.All" aria-label="Play" data-tip="Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="5.5" y="3" width="13" height="18" rx="2.5" />
+            <circle cx="12" cy="9" r="2.2" />
+            <circle cx="12" cy="15.5" r="2.2" />
+        </svg>
+    </NavLink>
+    <NavLink class="icon-link" href="leaderboards" aria-label="Leaderboards" data-tip="Leaderboards">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
+            <path d="M8 6H5.5a2.5 2.5 0 0 0 2.8 4M16 6h2.5a2.5 2.5 0 0 1-2.8 4" />
+            <path d="M12 13v4M8.5 20h7M9.5 17h5v3h-5z" />
+        </svg>
+    </NavLink>
 
     <span class="spacer"></span>
 
-    @* Toggled by the script in App.razor; the setting is kept in the browser. *@
-    <button type="button" class="sound-toggle" aria-label="Mute sound" title="Mute sound">
-        <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9h4l5-4v14l-5-4H4z" />
-            <path class="wave" d="M16 9.5a3.5 3.5 0 0 1 0 5" />
-            <path class="wave" d="M18.5 7a7 7 0 0 1 0 10" />
-        </svg>
-        <svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 9h4l5-4v14l-5-4H4z" />
-            <path class="wave" d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
-        </svg>
-    </button>
+    <div class="right">
+        @* Toggled by the script in App.razor, which also swaps the label; the setting is kept in the browser. *@
+        <button type="button" class="icon-link sound-toggle" aria-label="Mute sound" data-tip="Mute sound">
+            <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true">
+                <path class="speaker" d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="M16 9.5a3.5 3.5 0 0 1 0 5" />
+                <path d="M18.5 7a7 7 0 0 1 0 10" />
+            </svg>
+            <svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true">
+                <path class="speaker" d="M4 9h4l5-4v14l-5-4H4z" />
+                <path d="M16.5 9.5l5 5M21.5 9.5l-5 5" />
+            </svg>
+        </button>
 
-    <AuthorizeView>
-        <Authorized>
-            <NavLink class="nav-link" href="stats">My stats</NavLink>
-            <NavLink class="nav-link" href="Account/Manage">@context.User.Identity?.Name</NavLink>
-            <form action="Account/Logout" method="post">
-                <AntiforgeryToken />
-                <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                <button type="submit" class="nav-link">Sign out</button>
-            </form>
-        </Authorized>
-        <NotAuthorized>
-            <NavLink class="nav-link" href="Account/Login">Sign in</NavLink>
-            <NavLink class="nav-link register" href="Account/Register">Create account</NavLink>
-        </NotAuthorized>
-    </AuthorizeView>
+        <AuthorizeView>
+            <Authorized>
+                <NavLink class="icon-link" href="stats" aria-label="My stats" data-tip="My stats">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" />
+                    </svg>
+                </NavLink>
+                <NavLink class="icon-link" href="Account/Manage" aria-label="Your account" data-tip="@($"Account ({context.User.Identity?.Name})")">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21a8 8 0 0 1 16 0" />
+                    </svg>
+                </NavLink>
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <button type="submit" class="icon-link" aria-label="Sign out" data-tip="Sign out">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" />
+                        </svg>
+                    </button>
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink class="icon-link" href="Account/Login" aria-label="Sign in" data-tip="Sign in">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14 4h5v16h-5M10 8l4 4-4 4M4 12h10" />
+                    </svg>
+                </NavLink>
+                <NavLink class="icon-link register" href="Account/Register" aria-label="Create account" data-tip="Create account">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="10" cy="8" r="4" />
+                        <path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6" />
+                    </svg>
+                </NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
 </nav>
 
 @code {
