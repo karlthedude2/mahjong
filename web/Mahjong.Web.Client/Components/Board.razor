@@ -7,12 +7,26 @@
     is where future animations (CSS classes on the element) will go.
 *@
 <svg class="board" viewBox="@viewBox" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mahjong board">
+    @*
+        Darkens the selected tile. This is an SVG filter rather than CSS filter: brightness(),
+        because Safari and every iPhone browser ignore CSS filters on elements inside an SVG.
+    *@
+    <defs>
+        <filter id="tile-selected" color-interpolation-filters="sRGB">
+            <feComponentTransfer>
+                <feFuncR type="linear" slope="0.72" />
+                <feFuncG type="linear" slope="0.72" />
+                <feFuncB type="linear" slope="0.72" />
+            </feComponentTransfer>
+        </filter>
+    </defs>
     @foreach (var tile in BoardGeometry.InDrawOrder(Game.Board.Tiles))
     {
         var bounds = BoardGeometry.Bounds(tile.Position);
         <g @key="tile.Id"
            class="tile @(tile == Selected ? "selected" : null)"
            transform="translate(@bounds.Left @bounds.Top)"
+           filter="@(tile == Selected ? "url(#tile-selected)" : null)"
            @onclick="() => OnTileClick.InvokeAsync(tile)">
             @if (TileSet.Kind == TileSetKind.Images)
             {

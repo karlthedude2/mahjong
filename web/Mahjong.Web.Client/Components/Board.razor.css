@@ -9,10 +9,6 @@
     cursor: pointer;
 }
 
-.tile.selected {
-    filter: brightness(0.72);
-}
-
 .tile:hover:not(.selected) {
     filter: brightness(1.05);
 }
