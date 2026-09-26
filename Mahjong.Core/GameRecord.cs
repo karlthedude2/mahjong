@@ -7,7 +7,10 @@ namespace Mahjong.Core
         Remove,
         Shuffle,
         Undo,
-        Redo
+        Redo,
+
+        /// <summary>A hint was shown (it costs part of the no-shuffle bonus).</summary>
+        Hint
     }
 
     /// <summary>One player action, with the game second it happened in.</summary>

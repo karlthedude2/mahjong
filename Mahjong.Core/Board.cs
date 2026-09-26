@@ -13,6 +13,9 @@ namespace Mahjong.Core
         // Guaranteed-winnable deals (and reshuffles), or purely random ones.
         private bool winnable = true;
 
+        // Which game's rules apply (solitaire or Connect), and Connect's grid and gravity.
+        private LayoutDefinition layout;
+
         private Board()
         {
         }
@@ -24,11 +27,11 @@ namespace Mahjong.Core
         public static Board Deal(LayoutDefinition layout, TileSet tileSet, Random random, bool winnable = true)
         {
             var pairFaces = tileSet.CreatePairs(layout.Positions.Count / 2, random);
-            var deal = winnable
-                ? WinnableDealer.Deal(layout.Positions, pairFaces, random)
-                : RandomDealer.Deal(layout.Positions, pairFaces, random);
+            var deal = !winnable ? RandomDealer.Deal(layout.Positions, pairFaces, random)
+                : layout.Kind == GameKind.Connect ? ConnectDealer.Deal(layout, layout.Positions, pairFaces, random)
+                : WinnableDealer.Deal(layout.Positions, pairFaces, random);
 
-            var board = new Board { LastDeal = deal, winnable = winnable };
+            var board = new Board { LastDeal = deal, winnable = winnable, layout = layout };
             int id = 0;
             foreach (var position in layout.Positions)
             {
@@ -64,16 +67,48 @@ namespace Mahjong.Core
             return tile;
         }
 
-        public bool IsFree(Tile tile) => Contains(tile) && BoardRules.IsFree(tile.Position, occupied);
+        /// <summary>Whether the tile can be picked: in Connect every tile can; in solitaire only free ones.</summary>
+        public bool IsFree(Tile tile) =>
+            Contains(tile) && (layout?.Kind == GameKind.Connect || BoardRules.IsFree(tile.Position, occupied));
 
         public bool CanRemove(Tile first, Tile second)
         {
-            return first != second && first.Face.Matches(second.Face) && IsFree(first) && IsFree(second);
+            return first != second && first.Face.Matches(second.Face) && IsFree(first) && IsFree(second)
+                && (layout?.Kind != GameKind.Connect || FindPath(first, second) != null);
         }
 
-        public bool HasAvailableMove()
+        /// <summary>
+        /// For Connect: the line joining two tiles (its corner points, in cells), or null if they
+        /// can't be joined. Always null in solitaire.
+        /// </summary>
+        public IReadOnlyList<Cell> FindPath(Tile first, Tile second)
         {
-            return Tiles.Where(IsFree).GroupBy(t => t.Face.Name).Any(g => g.Count() > 1);
+            return layout?.Kind == GameKind.Connect && Contains(first) && Contains(second)
+                ? ConnectRules.FindPath(layout, occupied, first.Position, second.Position)
+                : null;
+        }
+
+        public bool HasAvailableMove() => FindMove() != null;
+
+        /// <summary>A pair of tiles that can be removed now, or null if there's none (a hint).</summary>
+        public (Tile First, Tile Second)? FindMove()
+        {
+            foreach (var group in Tiles.Where(IsFree).GroupBy(t => t.Face.Name).Where(g => g.Count() > 1))
+            {
+                var tiles = group.OrderBy(t => t.Id).ToList();
+                for (int i = 0; i < tiles.Count; i++)
+                {
+                    for (int j = i + 1; j < tiles.Count; j++)
+                    {
+                        if (CanRemove(tiles[i], tiles[j]))
+                        {
+                            return (tiles[i], tiles[j]);
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         internal void Add(Tile tile)
@@ -86,6 +121,43 @@ namespace Mahjong.Core
         {
             tiles.Remove(tile.Position);
             occupied.Remove(tile.Position);
+        }
+
+        /// <summary>
+        /// For Connect with gravity: slides the remaining tiles to close the gaps. Returns the moves,
+        /// so they can be undone with <see cref="Unsettle"/>.
+        /// </summary>
+        internal IReadOnlyList<(Tile Tile, Position From, Position To)> Settle()
+        {
+            if (layout?.Kind != GameKind.Connect || layout.Gravity == Gravity.None)
+            {
+                return Array.Empty<(Tile, Position, Position)>();
+            }
+
+            var moves = ConnectRules.Settle(layout, occupied).Select(m => (tiles[m.From], m.From, m.To)).ToList();
+            MoveTiles(moves.Select(m => (m.Item1, m.To)));
+            return moves;
+        }
+
+        internal void Unsettle(IReadOnlyList<(Tile Tile, Position From, Position To)> moves)
+        {
+            MoveTiles(moves.Select(m => (m.Tile, m.From)));
+        }
+
+        private void MoveTiles(IEnumerable<(Tile Tile, Position To)> moves)
+        {
+            var list = moves.ToList();
+            foreach (var (tile, _) in list)
+            {
+                tiles.Remove(tile.Position);
+                occupied.Remove(tile.Position);
+            }
+
+            foreach (var (tile, to) in list)
+            {
+                tile.Position = to;
+                Add(tile);
+            }
         }
 
         /// <summary>
@@ -102,9 +174,9 @@ namespace Mahjong.Core
                 .ToList();
             random.Shuffle(pairFaces);
 
-            LastDeal = winnable
-                ? WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random)
-                : RandomDealer.Deal(tiles.Keys.ToList(), pairFaces, random);
+            LastDeal = !winnable ? RandomDealer.Deal(tiles.Keys.ToList(), pairFaces, random)
+                : layout?.Kind == GameKind.Connect ? ConnectDealer.Deal(layout, tiles.Keys.ToList(), pairFaces, random)
+                : WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random);
             foreach (var tile in tiles.Values)
             {
                 tile.Face = LastDeal.Faces[tile.Position];

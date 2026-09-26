@@ -22,9 +22,14 @@ namespace Mahjong.Core
 
         public static LayoutDefinition Default => Visible.FirstOrDefault() ?? layouts[0];
 
+        /// <summary>The Connect (Shisen-Sho) boards. They're kept apart from the solitaire layouts above.</summary>
+        public static IReadOnlyList<LayoutDefinition> Connect => ConnectLayouts.All;
+
+        /// <summary>A solitaire layout or Connect board by name.</summary>
         public static LayoutDefinition Find(string name)
         {
-            return layouts.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase));
+            return layouts.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? ConnectLayouts.All.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

@@ -182,6 +182,7 @@ namespace Mahjong.Core
         public const int SpeedBonusPerSecond = 100;
         public const int TimeBonusPerSecond = 30;
         public const int ShufflePenalty = 1000;
+        public const int HintPenalty = 500;
 
         public GameClock Clock { get; } = new GameClock();
 
@@ -192,6 +193,17 @@ namespace Mahjong.Core
 
         /// <summary>What the time bonus would be if the game finished now.</summary>
         public int TimeBonusNow => Clock.BonusClockSeconds * TimeBonusPerSecond;
+
+        /// <summary>
+        /// Hints taken this game. Kept outside the score card, so undoing moves doesn't give back
+        /// the hints' cost.
+        /// </summary>
+        public int HintsUsed { get; private set; }
+
+        /// <summary>The no-shuffle bonus as it stands: less 1,000 per shuffle and 500 per hint.</summary>
+        public int NoShuffleBonusNow => System.Math.Max(0, Card.NoShuffleBonus - HintsUsed * HintPenalty);
+
+        internal void HintUsed() => HintsUsed++;
 
         internal void Tick()
         {
@@ -241,7 +253,7 @@ namespace Mahjong.Core
             }
 
             Card.Final = EarnsFinalBonus
-                ? new FinalBonuses(TimeBonusNow, Clock.QuickFinishBonus, Card.NoShuffleBonus)
+                ? new FinalBonuses(TimeBonusNow, Clock.QuickFinishBonus, NoShuffleBonusNow)
                 : new FinalBonuses(0, 0, 0);
             Card.Score += Card.Final.Total;
         }
