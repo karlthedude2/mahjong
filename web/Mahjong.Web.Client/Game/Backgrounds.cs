@@ -16,8 +16,15 @@ public static class Backgrounds
     public static readonly BackgroundInfo DragonValley = new("dragon-valley", "Dragon Valley") { Url = "backgrounds/dragon-valley.jpg" };
     public static readonly BackgroundInfo DragonMountains = new("dragon-mountains", "Dragon Mountains");
     public static readonly BackgroundInfo JadeSilk = new("jade-silk", "Jade Silk");
+    public static readonly BackgroundInfo CandyStore = new("candy-store", "Candy Store") { Url = "backgrounds/candy-store.jpg" };
+    public static readonly BackgroundInfo CelestialChart = new("celestial-chart", "Celestial Chart") { Url = "backgrounds/celestial-chart.jpg" };
+    public static readonly BackgroundInfo MythicalForest = new("mythical-forest", "Mythical Forest") { Url = "backgrounds/mythical-forest.jpg" };
+    public static readonly BackgroundInfo Perseus = new("perseus", "Perseus") { Url = "backgrounds/perseus.jpg" };
+    public static readonly BackgroundInfo Rainforest = new("rainforest", "Rainforest") { Url = "backgrounds/rainforest.jpg" };
+    public static readonly BackgroundInfo TeddyPicnic = new("teddy-picnic", "Teddy Picnic") { Url = "backgrounds/teddy-picnic.jpg" };
 
-    public static IReadOnlyList<BackgroundInfo> All { get; } = [DragonValley, DragonMountains, JadeSilk];
+    public static IReadOnlyList<BackgroundInfo> All { get; } =
+        [DragonValley, CandyStore, CelestialChart, DragonMountains, JadeSilk, MythicalForest, Perseus, Rainforest, TeddyPicnic];
 
     public static BackgroundInfo Default => DragonValley;
 

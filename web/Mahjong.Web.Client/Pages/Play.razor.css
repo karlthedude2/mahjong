@@ -33,8 +33,12 @@
     min-height: 0;
 }
 
-/* The layout's name, centered above the board. */
+/* The layout's name, centered above the board on a see-through pill so it reads on any background. */
 .layout-title {
+    padding: 0.15rem 1rem;
+    border-radius: 999px;
+    background: rgba(20, 12, 6, 0.55);
+    backdrop-filter: blur(6px);
     text-align: center;
     color: #fff;
     font-size: 1.3rem;
@@ -92,7 +96,6 @@
     min-height: 0;
 }
 
-.board-column > .layout-title,
 .board-column > .notice,
 .board-column > .loading {
     align-self: stretch;
