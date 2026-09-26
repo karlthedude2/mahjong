@@ -124,6 +124,23 @@ namespace Mahjong.Core
             return true;
         }
 
+        /// <summary>
+        /// Finds a pair that can be removed now, for a hint, or null if there's none. A hint costs
+        /// <see cref="Scoring.HintPenalty"/> of the no-shuffle bonus (only when one is found), and
+        /// undo doesn't give it back.
+        /// </summary>
+        public (Tile First, Tile Second)? Hint()
+        {
+            var move = Board.FindMove();
+            if (move != null)
+            {
+                Scoring.HintUsed();
+                RecordMove(RecordedMoveKind.Hint);
+            }
+
+            return move;
+        }
+
         /// <summary>Adds the end-of-game bonuses once <see cref="Status"/> is Complete. Safe to call more than once.</summary>
         public void Finish()
         {

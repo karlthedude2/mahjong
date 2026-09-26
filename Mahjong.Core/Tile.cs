@@ -10,7 +10,8 @@ namespace Mahjong.Core
         }
 
         public int Id { get; }
-        public Position Position { get; }
+        /// <summary>Where the tile is. Only Connect's gravity ever moves a tile.</summary>
+        public Position Position { get; internal set; }
         public TileFace Face { get; internal set; }
 
         public override string ToString() => $"{Face} {Position}";

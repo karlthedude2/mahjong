@@ -17,6 +17,9 @@ namespace Mahjong.Core
         private readonly Tile first;
         private readonly Tile second;
 
+        // Where Connect's gravity slid the other tiles after the pair went (none otherwise).
+        private IReadOnlyList<(Tile Tile, Position From, Position To)> settled = new List<(Tile, Position, Position)>();
+
         public RemovePairMove(Tile first, Tile second)
         {
             this.first = first;
@@ -27,10 +30,12 @@ namespace Mahjong.Core
         {
             board.Remove(first);
             board.Remove(second);
+            settled = board.Settle();
         }
 
         public override void Revert(Board board)
         {
+            board.Unsettle(settled);
             board.Add(first);
             board.Add(second);
         }

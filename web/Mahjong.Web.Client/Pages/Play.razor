@@ -118,7 +118,8 @@
                         }
                         else
                         {
-                            <Board Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync" />
+                            <Board Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                               Path="Session.LastPath" Hinted="Session.HintedTiles" />
                         }
                     </div>
 
@@ -140,6 +141,12 @@
                                 aria-label="Redo" data-tip="Redo">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+                            </svg>
+                        </button>
+                        <button type="button" @onclick="Session.HintAsync" disabled="@(!CanPlay)"
+                                aria-label="Hint" data-tip="Hint (costs 500 of the no-shuffle bonus)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
                             </svg>
                         </button>
                         @if (Session.State == SessionState.Paused)
@@ -201,6 +208,9 @@
     private bool signedIn;
     private ClientConfig? config;
     private IReadOnlyList<LayoutDefinition> layouts = LayoutCatalog.Visible;
+
+    // Solitaire layouts and Connect boards: anything the player can choose.
+    private IEnumerable<LayoutDefinition> AllLayouts => layouts.Concat(LayoutCatalog.Connect);
     private LayoutDefinition? currentLayout;
     // A layout chosen mid-game, kept for the next game so the current one isn't interrupted.
     private LayoutDefinition? pendingLayout;
@@ -246,7 +256,7 @@
             claimed = await GuestClaims.ClaimPendingAsync();
         }
 
-        currentLayout = layouts.FirstOrDefault(l => l.Name == Preferences.LastLayout)
+        currentLayout = AllLayouts.FirstOrDefault(l => l.Name == Preferences.LastLayout)
             ?? layouts.FirstOrDefault(l => l.Name == DefaultLayoutName)
             ?? layouts[0];
 
@@ -419,7 +429,7 @@
             await Preferences.SetBackgroundAsync(Backgrounds.Find(choice.BackgroundId));
         }
 
-        var layout = layouts.FirstOrDefault(l => l.Name == choice.LayoutName);
+        var layout = AllLayouts.FirstOrDefault(l => l.Name == choice.LayoutName);
         if (settingsForNewGame)
         {
             // Settings for a new game: deal it with the chosen layout.

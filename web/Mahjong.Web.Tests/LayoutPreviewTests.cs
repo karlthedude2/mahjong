@@ -15,7 +15,7 @@ public sealed class LayoutPreviewTests
     [Fact]
     public void EveryPreviewPictureMatchesALayout()
     {
-        var slugs = LayoutCatalog.All.Select(l => LayoutPreviews.Slug(l.Name)).ToHashSet();
+        var slugs = LayoutCatalog.All.Concat(LayoutCatalog.Connect).Select(l => LayoutPreviews.Slug(l.PreviewName)).ToHashSet();
         var pictures = Directory.GetFiles(PreviewFolder(), "*.png").Select(Path.GetFileNameWithoutExtension).ToList();
 
         Assert.NotEmpty(pictures);

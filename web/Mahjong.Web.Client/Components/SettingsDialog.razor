@@ -11,9 +11,54 @@
         </header>
 
         <section>
-            <h3>Layout</h3>
-            <PreviewStrip @ref="layoutStrip" Label="Layout" Items="layoutItems" @bind-SelectedId="layoutName" />
+            <h3>Game</h3>
+            <div class="segmented" role="radiogroup" aria-label="Game">
+                <button type="button" role="radio" aria-checked="@(game == GameKind.Solitaire ? "true" : "false")"
+                        class="@(game == GameKind.Solitaire ? "on" : null)" @onclick="() => game = GameKind.Solitaire">Mahjong Solitaire</button>
+                <button type="button" role="radio" aria-checked="@(game == GameKind.Connect ? "true" : "false")"
+                        class="@(game == GameKind.Connect ? "on" : null)" @onclick="() => game = GameKind.Connect">Connect (Shisen-Sho)</button>
+            </div>
+            <p class="hint">
+                @(game == GameKind.Solitaire
+                    ? "Remove matching pairs of free tiles from the stack."
+                    : "Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board.")
+            </p>
         </section>
+
+        @if (game == GameKind.Solitaire)
+        {
+            <section>
+                <h3>Layout</h3>
+                <PreviewStrip @key="GameKind.Solitaire" @ref="layoutStrip" Label="Layout" Items="layoutItems" @bind-SelectedId="layoutName" />
+            </section>
+        }
+        else
+        {
+            <section>
+                <h3>Board</h3>
+                <PreviewStrip @key="GameKind.Connect" Label="Board size" Items="boardItems" @bind-SelectedId="boardName" />
+            </section>
+
+            <section>
+                <h3>Gravity</h3>
+                <div class="segmented" role="radiogroup" aria-label="Gravity">
+                    @foreach (var option in new[] { Gravity.None, Gravity.Down, Gravity.Left })
+                    {
+                        <button type="button" role="radio" aria-checked="@(gravity == option ? "true" : "false")"
+                                class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option == Gravity.None ? "Off" : option.ToString())</button>
+                    }
+                </div>
+                <p class="hint">
+                    @(gravity switch
+                    {
+                        Gravity.Down => "Tiles fall down to fill the gaps.",
+                        Gravity.Left => "Tiles slide left to fill the gaps.",
+                        _ => "Tiles stay where they are.",
+                    })
+                    Each setting has its own leaderboard.
+                </p>
+            </section>
+        }
 
         <section>
             <h3><label for="tile-set">Tiles</label></h3>
@@ -72,6 +117,10 @@
 @code {
     private PreviewStrip? layoutStrip;
     private IReadOnlyList<PreviewItem> layoutItems = [];
+    private IReadOnlyList<PreviewItem> boardItems = [];
+    private GameKind game;
+    private string? boardName;
+    private Gravity gravity;
     private IReadOnlyList<PreviewItem> backgroundItems = [];
     private string? layoutName;
     private string tileSetId = TileSets.Default.Id;
@@ -107,12 +156,23 @@
 
     protected override void OnInitialized()
     {
+        var playing = PlayingLayoutName == null ? null : LayoutCatalog.Find(PlayingLayoutName);
         layoutItems = Layouts
-            .Select(l => new PreviewItem(l.Name, l.Name, LayoutPreviews.Url(l.Name), l.Name == PlayingLayoutName ? "Playing now" : null))
+            .Select(l => new PreviewItem(l.Name, l.Name, LayoutPreviews.Url(l.PreviewName), l.Name == PlayingLayoutName ? "Playing now" : null))
             .ToList();
+        boardItems = ConnectLayouts.BaseBoards
+            .Select(b => new PreviewItem(b.Name, $"{b.Name[(ConnectLayouts.Prefix.Length + 1)..]} ({b.Columns}×{b.Rows})", LayoutPreviews.Url(b.PreviewName),
+                playing?.PreviewName == b.PreviewName ? "Playing now" : null))
+            .ToList();
+
+        // Start from the chosen (or playing) layout: its game, and for Connect its board and gravity.
+        var chosen = LayoutCatalog.Find(LayoutName ?? PlayingLayoutName ?? "");
+        game = chosen?.Kind ?? GameKind.Solitaire;
+        boardName = chosen?.Kind == GameKind.Connect ? chosen.PreviewName : ConnectLayouts.BaseBoards[0].Name;
+        gravity = chosen?.Kind == GameKind.Connect ? chosen.Gravity : Gravity.None;
         backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, b.Name, b.Url)).ToList();
 
-        layoutName = LayoutName ?? PlayingLayoutName ?? Layouts.FirstOrDefault()?.Name;
+        layoutName = chosen?.Kind == GameKind.Solitaire ? chosen.Name : Layouts.FirstOrDefault()?.Name;
         tileSetId = TileSets.Find(TileSetId).Id;
         backgroundId = Backgrounds.Find(BackgroundId).Id;
         skipSettings = SkipSettings;
@@ -137,5 +197,11 @@
 
     private Task CancelAsync() => OnCancel.InvokeAsync();
 
-    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId, skipSettings, winnable));
+    private Task ApplyAsync()
+    {
+        string chosen = game == GameKind.Connect
+            ? ConnectLayouts.WithGravity(LayoutCatalog.Find(boardName!)!, gravity).Name
+            : layoutName ?? PlayingLayoutName ?? "";
+        return OnApply.InvokeAsync(new SettingsChoice(chosen, tileSetId, backgroundId, skipSettings, winnable));
+    }
 }

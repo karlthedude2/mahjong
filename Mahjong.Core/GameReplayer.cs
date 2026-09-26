@@ -95,6 +95,9 @@ namespace Mahjong.Core
                 case RecordedMoveKind.Redo:
                     return game.Redo();
 
+                case RecordedMoveKind.Hint:
+                    return game.Hint() != null;
+
                 default:
                     return false;
             }
