@@ -12,7 +12,13 @@
 }
 else
 {
-    <h1>@info.OriginalPlayer's @info.Layout deal</h1>
+    <h1>
+        @info.OriginalPlayer's @info.Layout deal
+        @if (info.RandomDeal)
+        {
+            <span class="badge bg-secondary align-middle fs-6">Random deal</span>
+        }
+    </h1>
     <p>
         Everyone who replays this deal gets exactly the same tiles. Replays are ranked here, one best score per
         player. The original was a first play, so it stays on the <a href="leaderboards?layout=@Uri.EscapeDataString(info.Layout)">@info.Layout leaderboard</a>

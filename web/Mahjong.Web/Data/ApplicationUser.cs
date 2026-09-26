@@ -21,6 +21,9 @@ public class ApplicationUser : IdentityUser
     /// <summary>True if the player turned off the settings dialog that opens for each new game.</summary>
     public bool SkipSettingsOnNewGame { get; set; }
 
+    /// <summary>True if the player turned off "Guaranteed winnable path" and wants random deals.</summary>
+    public bool PreferRandomDeals { get; set; }
+
     public int GamesPlayed { get; set; }
 
     public int GamesWon { get; set; }

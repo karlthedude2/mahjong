@@ -10,7 +10,8 @@
 <p>
     The top @GameService.LeaderboardSize verified scores for each layout. <a href="Account/Login">Sign in</a> and play to get on the board.
     Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on
-    that deal's own list, so the original first-play score always stays here.
+    that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong>
+    were won on a randomly dealt board, which isn't guaranteed to be clearable.
 </p>
 
 <form method="get" class="d-flex gap-2 align-items-center mb-3">
@@ -39,7 +40,13 @@ else
             {
                 <tr>
                     <td>@entry.Rank</td>
-                    <td>@entry.DisplayName</td>
+                    <td>
+                        @entry.DisplayName
+                        @if (entry.RandomDeal)
+                        {
+                            <span class="badge bg-secondary ms-1" title="Won on a random deal, which isn't guaranteed to be clearable">Random deal</span>
+                        }
+                    </td>
                     <td class="text-end">@entry.Score.ToString("N0")</td>
                     <td class="text-end">@entry.TimeText</td>
                     <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>

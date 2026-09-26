@@ -26,6 +26,30 @@
         </section>
 
         <section>
+            <h3>Deal</h3>
+            <div class="deal-row">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="winnable" @bind="winnable" />
+                    <label class="form-check-label" for="winnable">Guaranteed winnable path</label>
+                </div>
+                @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
+                <span class="info @(showDealInfo ? "open" : null)">
+                    <button type="button" class="info-button" aria-label="About guaranteed winnable deals"
+                            aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9.5" />
+                            <path d="M12 11v6M12 7.5v.01" />
+                        </svg>
+                    </button>
+                    <span class="info-note" role="note">@WinnableNote</span>
+                </span>
+            </div>
+            <p class="hint">
+                @(winnable ? "Every deal can be cleared." : "Tiles are dealt at random, like a real set, so some deals can't be cleared.")
+            </p>
+        </section>
+
+        <section>
             <h3>Background</h3>
             <PreviewStrip Label="Background" Items="backgroundItems" @bind-SelectedId="backgroundId" />
         </section>
@@ -53,6 +77,10 @@
     private string tileSetId = TileSets.Default.Id;
     private string backgroundId = Backgrounds.Default.Id;
     private bool skipSettings;
+    private bool winnable = true;
+    private bool showDealInfo;
+
+    private const string WinnableNote = "As in life, a winnable game can still be lost if you choose the wrong path. Choose wisely.";
 
     [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
 
@@ -67,6 +95,8 @@
     [Parameter] public string? BackgroundId { get; set; }
 
     [Parameter] public bool SkipSettings { get; set; }
+
+    [Parameter] public bool GuaranteedWinnable { get; set; } = true;
 
     /// <summary>True when the dialog opens before a new game is dealt (OK reads "Start game").</summary>
     [Parameter] public bool ForNewGame { get; set; }
@@ -86,6 +116,7 @@
         tileSetId = TileSets.Find(TileSetId).Id;
         backgroundId = Backgrounds.Find(BackgroundId).Id;
         skipSettings = SkipSettings;
+        winnable = GuaranteedWinnable;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -106,5 +137,5 @@
 
     private Task CancelAsync() => OnCancel.InvokeAsync();
 
-    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId, skipSettings));
+    private Task ApplyAsync() => OnApply.InvokeAsync(new SettingsChoice(layoutName ?? PlayingLayoutName ?? "", tileSetId, backgroundId, skipSettings, winnable));
 }

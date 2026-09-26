@@ -10,17 +10,25 @@ namespace Mahjong.Core
         private readonly Dictionary<Position, Tile> tiles = new Dictionary<Position, Tile>();
         private readonly HashSet<Position> occupied = new HashSet<Position>();
 
+        // Guaranteed-winnable deals (and reshuffles), or purely random ones.
+        private bool winnable = true;
+
         private Board()
         {
         }
 
-        /// <summary>Deals a new, guaranteed-solvable board for <paramref name="layout"/>.</summary>
-        public static Board Deal(LayoutDefinition layout, TileSet tileSet, Random random)
+        /// <summary>
+        /// Deals a new board for <paramref name="layout"/>: guaranteed solvable, or (if
+        /// <paramref name="winnable"/> is false) purely random, which may have no solution.
+        /// </summary>
+        public static Board Deal(LayoutDefinition layout, TileSet tileSet, Random random, bool winnable = true)
         {
             var pairFaces = tileSet.CreatePairs(layout.Positions.Count / 2, random);
-            var deal = WinnableDealer.Deal(layout.Positions, pairFaces, random);
+            var deal = winnable
+                ? WinnableDealer.Deal(layout.Positions, pairFaces, random)
+                : RandomDealer.Deal(layout.Positions, pairFaces, random);
 
-            var board = new Board { LastDeal = deal };
+            var board = new Board { LastDeal = deal, winnable = winnable };
             int id = 0;
             foreach (var position in layout.Positions)
             {
@@ -37,8 +45,8 @@ namespace Mahjong.Core
         public bool IsComplete => tiles.Count == 0;
 
         /// <summary>
-        /// The result of the last deal or reshuffle. Its <see cref="DealResult.Solution"/> clears the
-        /// board as long as no tiles have been removed since.
+        /// The result of the last deal or reshuffle. For a winnable deal, its <see cref="DealResult.Solution"/>
+        /// clears the board as long as no tiles have been removed since; a random deal has none.
         /// </summary>
         public DealResult LastDeal { get; private set; }
 
@@ -81,8 +89,8 @@ namespace Mahjong.Core
         }
 
         /// <summary>
-        /// Redistributes the faces of the remaining tiles so the board can still be cleared.
-        /// Returns the faces as they were before, for undo.
+        /// Redistributes the faces of the remaining tiles: so the board can still be cleared, or at
+        /// random for a random deal. Returns the faces as they were before, for undo.
         /// </summary>
         internal Dictionary<Tile, TileFace> Reshuffle(Random random)
         {
@@ -94,7 +102,9 @@ namespace Mahjong.Core
                 .ToList();
             random.Shuffle(pairFaces);
 
-            LastDeal = WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random);
+            LastDeal = winnable
+                ? WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random)
+                : RandomDealer.Deal(tiles.Keys.ToList(), pairFaces, random);
             foreach (var tile in tiles.Values)
             {
                 tile.Face = LastDeal.Faces[tile.Position];

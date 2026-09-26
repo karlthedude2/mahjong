@@ -43,7 +43,7 @@ namespace Mahjong.Core
                 return ReplayResult.Fail($"Unknown layout \"{record?.LayoutName}\".");
             }
 
-            var game = new MahjongGame(layout, record.Seed);
+            var game = new MahjongGame(layout, record.Seed, record.Winnable);
 
             foreach (var move in record.Moves ?? Enumerable.Empty<RecordedMove>())
             {

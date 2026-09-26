@@ -57,7 +57,7 @@ public static partial class ApiEndpoints
             var user = await users.GetUserAsync(principal);
             return user is null
                 ? Results.Unauthorized()
-                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.PreferredBackground, user.GamesPlayed, user.GamesWon, user.SkipSettingsOnNewGame));
+                : Results.Ok(new PlayerProfile(user.DisplayName, user.PreferredTileSet, user.PreferredBackground, user.GamesPlayed, user.GamesWon, user.SkipSettingsOnNewGame, user.PreferRandomDeals));
         });
 
         me.MapPut("/", async (UpdateProfileRequest request, ClaimsPrincipal principal, UserManager<ApplicationUser> users) =>
@@ -104,6 +104,11 @@ public static partial class ApiEndpoints
                 user.SkipSettingsOnNewGame = skipSettings;
             }
 
+            if (request.PreferRandomDeals is { } preferRandomDeals)
+            {
+                user.PreferRandomDeals = preferRandomDeals;
+            }
+
             await users.UpdateAsync(user);
             return Results.NoContent();
         });
@@ -119,7 +124,7 @@ public static partial class ApiEndpoints
                 return replay is null ? Results.NotFound("This deal is no longer on the leaderboard.") : Results.Ok(replay);
             }
 
-            var started = await service.StartAsync(playerOf(http), request.Layout, options.Value.ShowHiddenLayouts);
+            var started = await service.StartAsync(playerOf(http), request.Layout, options.Value.ShowHiddenLayouts, request.RandomDeal);
             return started is null ? Results.BadRequest($"Unknown layout \"{request.Layout}\".") : Results.Ok(started);
         });
 
