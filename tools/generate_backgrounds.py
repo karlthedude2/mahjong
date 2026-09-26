@@ -3,7 +3,8 @@
 Run: python tools/generate_backgrounds.py
 
 "Dragon Mountains" is an original scene: a golden sky, misty stone spires, cliff-top temples and a
-pagoda, and a green dragon winding through the clouds. "Jade Silk" is a calm, low-contrast option.
+pagoda, and a green dragon winding through the clouds. The silks (Jade, Ruby, Sapphire, Amethyst, Amber and
+Onyx) are calm, low-contrast options: one pattern in different colours (see SILKS).
 """
 import math
 import os
@@ -273,17 +274,29 @@ def dragon_mountains():
     return svg(defs, layers)
 
 
-def jade_silk():
-    defs = '''
+# The silk backgrounds: a soft radial gradient (centre, middle, edge) with a faint diamond lattice
+# in a light tint of the same colour. Calm and low-contrast, so the tiles stand out.
+SILKS = {
+    "jade-silk": ("#2f7d67", "#1b5a4a", "#0d3129", "#9fd8c2"),
+    "ruby-silk": ("#9c2f36", "#6e1d24", "#350b10", "#f2b6b0"),
+    "sapphire-silk": ("#2f5d9c", "#1d3f73", "#0b1c38", "#a9c6f0"),
+    "amethyst-silk": ("#6b3f93", "#4a2968", "#220f33", "#d4b8ef"),
+    "amber-silk": ("#b07a2a", "#7f5319", "#3b2508", "#f3d59a"),
+    "onyx-silk": ("#3d3f45", "#26282c", "#0e0f11", "#c9ccd2"),
+}
+
+
+def silk(centre, middle, edge, line):
+    defs = f'''
   <defs>
     <radialGradient id="jade" cx="0.5" cy="0.4" r="0.8">
-      <stop offset="0" stop-color="#2f7d67"/>
-      <stop offset="0.6" stop-color="#1b5a4a"/>
-      <stop offset="1" stop-color="#0d3129"/>
+      <stop offset="0" stop-color="{centre}"/>
+      <stop offset="0.6" stop-color="{middle}"/>
+      <stop offset="1" stop-color="{edge}"/>
     </radialGradient>
     <pattern id="lattice" width="60" height="60" patternUnits="userSpaceOnUse">
-      <path d="M 30 0 L 60 30 L 30 60 L 0 30 Z" fill="none" stroke="#9fd8c2" stroke-width="1" opacity="0.12"/>
-      <circle cx="30" cy="30" r="3" fill="#9fd8c2" opacity="0.1"/>
+      <path d="M 30 0 L 60 30 L 30 60 L 0 30 Z" fill="none" stroke="{line}" stroke-width="1" opacity="0.12"/>
+      <circle cx="30" cy="30" r="3" fill="{line}" opacity="0.1"/>
     </pattern>
   </defs>'''
     return svg(defs, [f'<rect width="{W}" height="{H}" fill="url(#jade)"/>', f'<rect width="{W}" height="{H}" fill="url(#lattice)"/>'])
@@ -296,7 +309,8 @@ def svg(defs, layers):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for name, build in [("dragon-mountains", dragon_mountains), ("jade-silk", jade_silk)]:
+    builds = [("dragon-mountains", dragon_mountains)] + [(name, lambda colours=colours: silk(*colours)) for name, colours in SILKS.items()]
+    for name, build in builds:
         path = os.path.join(OUT, name + ".svg")
         with open(path, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(build())
