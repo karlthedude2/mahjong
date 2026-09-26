@@ -15,7 +15,7 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
     private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(3);
 
     // What the maintenance page itself needs, plus the health check the deploy waits on.
-    private static readonly string[] AlwaysAllowed = ["/healthz", "/logo.png", "/favicon.ico", "/favicon.png"];
+    private static readonly string[] AlwaysAllowed = ["/healthz", "/logo-text.png", "/favicon.ico", "/favicon.png"];
 
     private DateTimeOffset nextCheck = DateTimeOffset.MinValue;
     private bool active;
@@ -100,7 +100,7 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
                     box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
                     text-align: center;
                 }
-                img { width: 92px; height: 92px; }
+                img { display: block; width: 100%; max-width: 20rem; height: auto; margin: 0 auto 0.5rem; }
                 h1 { margin: 0.5rem 0 0.75rem; font-size: 1.6rem; }
                 p { margin: 0.5rem 0; line-height: 1.5; }
                 .small { color: #6b5a44; font-size: 0.9rem; }
@@ -108,7 +108,7 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
         </head>
         <body>
             <main>
-                <img src="/logo.png" alt="" />
+                <img src="/logo-text.png" alt="Mahjong Haus" width="684" height="98" />
                 <h1>We'll be right back</h1>
                 <p>Mahjong Haus is being updated. This usually takes a minute or two.</p>
                 <p class="small">This page will reload by itself when the site is ready.</p>

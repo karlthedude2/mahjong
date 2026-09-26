@@ -53,7 +53,7 @@ public sealed class MaintenanceTests : IDisposable
 
     [Theory]
     [InlineData("/healthz")]
-    [InlineData("/logo.png")]
+    [InlineData("/logo-text.png")]
     public async Task TheHealthCheckAndLogoStillWorkDuringMaintenance(string path)
     {
         File.WriteAllText(flag, "on");
