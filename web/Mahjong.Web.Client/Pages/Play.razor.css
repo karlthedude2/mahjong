@@ -231,3 +231,68 @@
         height: 65vh;
     }
 }
+
+/* The demo bar: what's happening, the speed, and Stop. */
+.demo-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.demo-speed {
+    display: inline-flex;
+    border: 1px solid #9fb7d6;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.demo-speed button {
+    padding: 0.1rem 0.7rem;
+    border: 0;
+    background: #fff;
+    color: #2b2116;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.demo-speed button + button {
+    border-left: 1px solid #9fb7d6;
+}
+
+.demo-speed button.on {
+    background: #2b6cb0;
+    color: #fff;
+}
+
+/* Small dialogs for starting and finishing a demo. */
+.demo-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 100;
+}
+
+.demo-dialog {
+    width: min(26rem, 100%);
+    padding: 1.4rem 1.5rem;
+    border-radius: 1rem;
+    background: #fffaf0;
+    color: #2b2116;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+}
+
+.demo-dialog h2 {
+    margin: 0 0 0.6rem;
+    font-size: 1.3rem;
+}
+
+.demo-dialog .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

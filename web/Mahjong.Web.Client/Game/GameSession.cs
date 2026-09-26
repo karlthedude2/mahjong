@@ -34,6 +34,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     private Timer? timer;
     private Guid? serverGameId;
     private string? guestToken;
+    private CancellationTokenSource? demo;
 
     /// <summary>Raised whenever the UI should redraw. May fire from the clock timer.</summary>
     public event Action? Changed;
@@ -64,6 +65,25 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     /// <summary>A problem to show the player (e.g. a pause that couldn't reach the server), or null.</summary>
     public string? Message { get; private set; }
 
+    /// <summary>True while the computer is playing (or has just played) the deal as a demo.</summary>
+    public bool IsDemo { get; private set; }
+
+    /// <summary>True once a demo has finished or been stopped.</summary>
+    public bool DemoEnded { get; private set; }
+
+    /// <summary>Why the demo ended early, if it did (e.g. a random deal it couldn't clear).</summary>
+    public string? DemoNote { get; private set; }
+
+    /// <summary>How long the demo takes per pair, in milliseconds.</summary>
+    public int DemoPace { get; set; } = 800;
+
+    /// <summary>True for a practice game: a deal played in the browser only, never on a leaderboard.</summary>
+    public bool IsPractice { get; private set; }
+
+    /// <summary>The deal on the board (layout, seed, and whether it's winnable), to watch or practise again.</summary>
+    public (LayoutDefinition Layout, long Seed, bool Winnable)? Deal =>
+        Game?.Record is { } record ? (Game.Layout, record.Seed, Game.Winnable) : null;
+
     /// <summary>The leaderboard deal this game replays, or null for a normal game.</summary>
     public ReplayInfo? Replay { get; private set; }
 
@@ -78,6 +98,62 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     /// the deal's replay list; an offline one deals the same tiles locally.
     /// </summary>
     public async Task StartAsync(LayoutDefinition layout, GameMode mode, ReplayInfo? replay = null, bool randomDeal = false)
+    {
+        Reset();
+        await DealAsync(layout, mode, replay, randomDeal, seedOverride: null);
+    }
+
+    /// <summary>
+    /// A practice game: the given deal again (e.g. the one a demo just played), in the browser only.
+    /// It never reaches the server or a leaderboard.
+    /// </summary>
+    public async Task StartPracticeAsync(LayoutDefinition layout, long seed, bool winnable)
+    {
+        Reset();
+        await DealAsync(layout, GameMode.Offline, null, !winnable, seed);
+        IsPractice = true;
+        Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// The computer plays the given deal from the start while the player watches. Nothing is sent to
+    /// the server. It follows the deal's known solution (winnable deals), or otherwise takes any pair
+    /// it can and shuffles when stuck. <see cref="StopDemo"/> ends it early.
+    /// </summary>
+    public async Task StartDemoAsync(LayoutDefinition layout, long seed, bool winnable)
+    {
+        Reset();
+        await DealAsync(layout, GameMode.Offline, null, !winnable, seed);
+        IsDemo = true;
+        ClockStarted = true;
+        playTime.Start();
+        demo = new CancellationTokenSource();
+        Changed?.Invoke();
+        _ = PlayDemoAsync(demo.Token);
+    }
+
+    public void StopDemo()
+    {
+        if (!IsDemo || DemoEnded)
+        {
+            return;
+        }
+
+        demo?.Cancel();
+        EndDemo(null);
+    }
+
+    private void Reset()
+    {
+        demo?.Cancel();
+        demo = null;
+        IsDemo = false;
+        DemoEnded = false;
+        DemoNote = null;
+        IsPractice = false;
+    }
+
+    private async Task DealAsync(LayoutDefinition layout, GameMode mode, ReplayInfo? replay, bool randomDeal, long? seedOverride)
     {
         StopClock();
         serverGameId = null;
@@ -101,7 +177,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         }
         else
         {
-            seed = replay?.Seed ?? Random.Shared.NextInt64();
+            seed = seedOverride ?? replay?.Seed ?? Random.Shared.NextInt64();
         }
 
         Game = new MahjongGame(layout, seed, winnable: !randomDeal);
@@ -114,7 +190,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
 
     public async Task ClickAsync(Tile tile)
     {
-        if (Game == null || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !Game.Board.IsFree(tile))
+        if (Game == null || IsDemo || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !Game.Board.IsFree(tile))
         {
             return;
         }
@@ -168,7 +244,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     public async Task HintAsync()
     {
         // A hint that's still showing is free to ask for again.
-        if (Game == null || HintedTiles != null || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !await StartClockAsync())
+        if (Game == null || IsDemo || HintedTiles != null || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !await StartClockAsync())
         {
             return;
         }
@@ -227,6 +303,82 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         Changed?.Invoke();
     }
 
+    // The demo: one pair per DemoPace, the first tile selected for a moment before the pair goes.
+    private async Task PlayDemoAsync(CancellationToken token)
+    {
+        try
+        {
+            var plan = Game!.Board.LastDeal.Solution.ToList();
+            int step = 0, shuffles = 0;
+            while (Game.Status != GameStatus.Complete)
+            {
+                await Task.Delay(DemoPace / 2, token);
+                while (State == SessionState.Paused)
+                {
+                    await Task.Delay(150, token);
+                }
+
+                // The known solution while it still fits the board, otherwise any pair that can go.
+                (Tile First, Tile Second)? move = null;
+                if (step < plan.Count && Game.Board.At(plan[step].First) is { } a && Game.Board.At(plan[step].Second) is { } b && Game.Board.CanRemove(a, b))
+                {
+                    move = (a, b);
+                }
+                else
+                {
+                    plan.Clear();
+                    move = Game.Board.FindMove();
+                }
+
+                if (move is not { } pair)
+                {
+                    if (++shuffles > 3)
+                    {
+                        EndDemo("The computer couldn't find a way to clear this random deal. Some random deals can't be cleared.");
+                        return;
+                    }
+
+                    CatchUpClock();
+                    Game.Shuffle();
+                    plan = Game.Board.LastDeal.Solution.ToList();
+                    step = 0;
+                    Changed?.Invoke();
+                    continue;
+                }
+
+                Selected = pair.First;
+                Changed?.Invoke();
+                await Task.Delay(DemoPace / 2, token);
+
+                CatchUpClock();
+                var path = Game.Board.FindPath(pair.First, pair.Second);
+                Game.TryRemovePair(pair.First, pair.Second);
+                Selected = null;
+                ShowPath(path);
+                step++;
+                await effects.OnPairRemovedAsync(pair.First, pair.Second);
+                await UpdateStateAsync();
+                Changed?.Invoke();
+            }
+
+            EndDemo(null);
+        }
+        catch (TaskCanceledException)
+        {
+            // Stopped, or a new game started.
+        }
+    }
+
+    private void EndDemo(string? note)
+    {
+        DemoEnded = true;
+        DemoNote = note;
+        Selected = null;
+        playTime.Stop();
+        StopClock();
+        Changed?.Invoke();
+    }
+
     // Shows Connect's joining line until it fades (the board animates it out).
     private void ShowPath(IReadOnlyList<Cell>? path)
     {
@@ -253,7 +405,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
 
     private async Task ChangeBoardAsync(Func<MahjongGame, bool> change)
     {
-        if (Game == null || State is not (SessionState.Playing or SessionState.NoMovesLeft))
+        if (Game == null || IsDemo || State is not (SessionState.Playing or SessionState.NoMovesLeft))
         {
             return;
         }

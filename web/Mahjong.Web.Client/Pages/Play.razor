@@ -41,6 +41,29 @@
                     <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
                 }
 
+                @if (Session.IsDemo && !Session.DemoEnded)
+                {
+                    <div class="notice info demo-bar">
+                        <span><strong>Demo:</strong> the computer is playing this deal. It won't go on the leaderboard.</span>
+                        <span class="demo-speed" role="radiogroup" aria-label="Demo speed">
+                            @foreach (var (label, pace) in DemoSpeeds)
+                            {
+                                <button type="button" role="radio" aria-checked="@(Session.DemoPace == pace ? "true" : "false")"
+                                        class="@(Session.DemoPace == pace ? "on" : null)" @onclick="() => Session.DemoPace = pace">@label</button>
+                            }
+                        </span>
+                        <button class="btn btn-sm btn-primary" @onclick="Session.StopDemo">Stop demo</button>
+                    </div>
+                }
+
+                @if (Session.IsPractice)
+                {
+                    <div class="notice info">
+                        <strong>Practice:</strong> the deal from the demo. This game won't go on the leaderboard.
+                        <button class="btn btn-link btn-sm" @onclick="RequestNewGameAsync">New game</button>
+                    </div>
+                }
+
                 @if (claimed != null)
                 {
                     <div class="notice info">
@@ -149,6 +172,13 @@
                                 <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
                             </svg>
                         </button>
+                        <button type="button" @onclick="RequestDemoAsync" disabled="@(Session.IsDemo || Session.Game == null)"
+                                aria-label="Watch a demo" data-tip="Watch the computer play this deal (not ranked)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        </button>
                         @if (Session.State == SessionState.Paused)
                         {
                             <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="Resume" data-tip="Resume">
@@ -189,7 +219,40 @@
     </aside>
 </div>
 
-@if (Session.State == SessionState.Won && PlayingLayout != null)
+@if (confirmDemo)
+{
+    <div class="demo-backdrop" @onclick="() => confirmDemo = false">
+        <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="demo-confirm-title" @onclick:stopPropagation="true">
+            <h2 id="demo-confirm-title">Watch a demo?</h2>
+            <p>The computer will play this deal from the start. Your current game ends here and won't be saved.</p>
+            <div class="actions">
+                <button class="btn btn-light" @onclick="() => confirmDemo = false">Keep playing</button>
+                <button class="btn btn-primary" @onclick="StartDemoAsync">Watch the demo</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Session.IsDemo && Session.DemoEnded && demoDeal is { } watched)
+{
+    <div class="demo-backdrop">
+        <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="demo-done-title">
+            <h2 id="demo-done-title">@(Session.Game?.Board.IsComplete == true ? "Demo finished" : "Demo stopped")</h2>
+            <p>
+                @(Session.DemoNote ?? (Session.Game?.Board.IsComplete == true
+                    ? $"The computer cleared {watched.Layout.Name}. Now try the same deal yourself."
+                    : "You can try this deal yourself from the start."))
+                It's practice, so it won't go on the leaderboard.
+            </p>
+            <div class="actions">
+                <button class="btn btn-light" @onclick="RequestNewGameAsync">New game</button>
+                <button class="btn btn-primary" @onclick="PracticeAsync">Play this deal</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (Session.State == SessionState.Won && !Session.IsDemo && PlayingLayout != null)
 {
     <ResultsDialog Session="Session" Config="config" LayoutName="@PlayingLayout.Name" OnPlayAgain="PlayAgainAsync" />
 }
@@ -241,7 +304,13 @@
     public string? SettingsRequested { get; set; }
 
     // The layout on the board: the replay's, or the player's own choice.
-    private LayoutDefinition? PlayingLayout => replay != null ? replayLayout : currentLayout;
+    // The layout on the board (a replay's, a demo's, or the player's own choice).
+    private LayoutDefinition? PlayingLayout => Session.Game?.Layout ?? (replay != null ? replayLayout : currentLayout);
+
+    // Demos: the deal being watched (to practise afterwards), and the speeds on offer (ms per pair).
+    private (LayoutDefinition Layout, long Seed, bool Winnable)? demoDeal;
+    private bool confirmDemo;
+    private static readonly (string Label, int Pace)[] DemoSpeeds = [("Slow", 1400), ("Normal", 800), ("Fast", 300)];
 
     private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
 
@@ -351,7 +420,53 @@
         }
     }
 
-    private Task PlayAgainAsync() => replay != null ? PlayReplayAsync() : RequestNewGameAsync();
+    private Task PlayAgainAsync() => Session.IsPractice ? PracticeAsync() : replay != null ? PlayReplayAsync() : RequestNewGameAsync();
+
+    // Watch: straight away if nothing's been played, otherwise after asking (the game in progress ends).
+    private async Task RequestDemoAsync()
+    {
+        if (GameUnderWay && !Session.IsPractice)
+        {
+            confirmDemo = true;
+        }
+        else
+        {
+            await StartDemoAsync();
+        }
+    }
+
+    private async Task StartDemoAsync()
+    {
+        confirmDemo = false;
+        if (Session.Deal is not { } deal)
+        {
+            return;
+        }
+
+        demoDeal = deal;
+        LeaveReplay();
+        await Session.StartDemoAsync(deal.Layout, deal.Seed, deal.Winnable);
+    }
+
+    // The watched deal, for the player to try: in the browser only, never ranked.
+    private async Task PracticeAsync()
+    {
+        if (demoDeal is { } deal)
+        {
+            await Session.StartPracticeAsync(deal.Layout, deal.Seed, deal.Winnable);
+        }
+    }
+
+    // Replay mode ends (e.g. for a demo); ?replay= goes from the address so a reload doesn't return to it.
+    private void LeaveReplay()
+    {
+        if (replay != null)
+        {
+            replay = null;
+            replayLayout = null;
+            Navigation.NavigateTo("", replace: true);
+        }
+    }
 
     // Deals the replayed game's tiles. Signed-in players' replays are verified and ranked on the
     // deal's replay list; once the original drops off the leaderboard, replays are just for fun.
@@ -386,13 +501,8 @@
 
     private async Task NewGameAsync()
     {
-        if (replay != null)
-        {
-            // Leaving a replay: back to normal play, and drop ?replay= so a reload doesn't return to it.
-            replay = null;
-            replayLayout = null;
-            Navigation.NavigateTo("", replace: true);
-        }
+        LeaveReplay();
+        demoDeal = null;
 
         if (pendingLayout != null)
         {
