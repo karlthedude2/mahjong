@@ -45,6 +45,19 @@ The `EveryDealCanBeCleared` test checks every built-in layout automatically.
 
 The shape layouts (Pyramid, Fortress, Cat and so on) are drawn as text grids in `tools/generate_layouts.py`, one grid per layer. Editing a grid and running `python tools/generate_layouts.py` is often easier than typing coordinates by hand.
 
+### The layout's picture (web)
+
+The web settings dialog shows a 300×223 picture of each layout, from `web/Mahjong.Web.Client/wwwroot/layouts/previews/<slug>.png` (the name in lower case with hyphens for spaces: `Standard Turtle` is `standard-turtle.png`). A layout without one shows a placeholder. To draw the pictures (Classic tiles over the Dragon Valley background, the layout centered), run this on Windows:
+
+```
+dotnet run --project tools/LayoutPreviews                        # layouts that don't have a picture yet
+dotnet run --project tools/LayoutPreviews -- "My Layout"         # just these (hidden layouts too)
+dotnet run --project tools/LayoutPreviews -- --all               # redraw every visible layout
+dotnet run --project tools/LayoutPreviews -- --copy-to <folder>  # also save "<Layout name>.png" there
+```
+
+You can also make a picture yourself: any 300×223 PNG with the right name works.
+
 ## Adding a tile set or background (web)
 
 - **Tile set:** put one PNG per face (`2bams.png`, `Cdragon.png`, ...) in `web/Mahjong.Web.Client/wwwroot/tilesets/<id>/`, then add a line to `TileSets.All` in `web/Mahjong.Web.Client/Game/TileSets.cs`.
