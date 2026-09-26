@@ -10,14 +10,14 @@
         <img class="logo" src="logo.png" alt="" width="92" height="92" />
         <span class="brand-name">Mahjong Haus</span>
     </a>
-    @* New game and Settings act in place on the game page (see App.razor); elsewhere they're links to it. *@
+    @* New game, Leaderboards and Settings act in place on the game page (see App.razor); elsewhere they're ordinary links. *@
     <a class="icon-link" href="" data-play-action="new-game" aria-label="New game" data-tip="New game">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5.5" y="3" width="13" height="18" rx="2.5" />
             <path d="M12 8.5v7M8.5 12h7" />
         </svg>
     </a>
-    <NavLink class="icon-link" href="leaderboards" aria-label="Leaderboards" data-tip="Leaderboards">
+    <NavLink class="icon-link" href="leaderboards" data-play-action="leaderboards" aria-label="Leaderboards" data-tip="Leaderboards">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
             <path d="M8 6H5.5a2.5 2.5 0 0 0 2.8 4M16 6h2.5a2.5 2.5 0 0 1-2.8 4" />

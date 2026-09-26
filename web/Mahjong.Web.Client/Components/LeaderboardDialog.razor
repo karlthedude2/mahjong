@@ -1,0 +1,134 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Api
+@inject GameApi Api
+
+@* The leaderboards over the (paused) game. Opens on the game's own layout; others can be picked. *@
+<div class="board-backdrop" @onclick="CloseAsync">
+    <div class="board-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title"
+         @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync" tabindex="-1" @ref="dialog">
+        <header>
+            <h2 id="leaderboard-title">Leaderboard</h2>
+            <button type="button" class="btn-close" aria-label="Close" @onclick="CloseAsync"></button>
+        </header>
+
+        <label class="picker">
+            <span>Layout</span>
+            <select class="form-select form-select-sm" value="@layoutName" @onchange="OnLayoutChangedAsync">
+                <optgroup label="Mahjong Solitaire">
+                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Solitaire))
+                    {
+                        <option value="@l.Name">@l.Name</option>
+                    }
+                </optgroup>
+                <optgroup label="Connect (Shisen-Sho)">
+                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Connect))
+                    {
+                        <option value="@l.Name">@l.Name</option>
+                    }
+                </optgroup>
+            </select>
+        </label>
+
+        @if (entries == null)
+        {
+            <p class="status">@(failed ? "The leaderboard couldn't be loaded. Check your connection and try again." : "Loading…")</p>
+        }
+        else if (entries.Count == 0)
+        {
+            <p class="status">No scores on @layoutName yet. Be the first!</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Player</th>
+                            <th scope="col" class="text-end">Score</th>
+                            <th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th>
+                            <th scope="col" class="text-end">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in entries)
+                        {
+                            <tr>
+                                <td>@entry.Rank</td>
+                                <td>
+                                    @entry.DisplayName
+                                    @if (entry.RandomDeal)
+                                    {
+                                        <span class="badge bg-secondary ms-1">Random deal</span>
+                                    }
+                                </td>
+                                <td class="text-end">@entry.Score.ToString("N0")</td>
+                                <td class="text-end">@entry.TimeText</td>
+                                <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <footer>
+            <a class="more" href="leaderboards?layout=@Uri.EscapeDataString(layoutName)" target="_blank" rel="noopener">Replays and more (new tab)</a>
+            <button type="button" class="btn btn-primary" @onclick="CloseAsync">Close</button>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private ElementReference dialog;
+    private string layoutName = "";
+    private IReadOnlyList<LeaderboardEntry>? entries;
+    private bool failed;
+
+    /// <summary>The layouts to choose from (solitaire and Connect).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
+
+    /// <summary>The layout to show first: the game's own.</summary>
+    [Parameter] public string? LayoutName { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        layoutName = LayoutName ?? Layouts.FirstOrDefault()?.Name ?? "";
+        await LoadAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // So Escape works straight away.
+            await dialog.FocusAsync();
+        }
+    }
+
+    private async Task OnLayoutChangedAsync(ChangeEventArgs e)
+    {
+        layoutName = (string?)e.Value ?? layoutName;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        entries = null;
+        failed = false;
+        entries = await Api.GetLeaderboardAsync(layoutName);
+        failed = entries == null;
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await CloseAsync();
+        }
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+}
