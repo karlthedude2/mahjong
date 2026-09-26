@@ -72,6 +72,76 @@ h3 label {
     border-top: 1px solid #eadfca;
 }
 
+.deal-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.deal-row .form-check {
+    margin: 0;
+}
+
+/* The info icon and its note: shown on hover or keyboard focus, or while tapped open. */
+.info {
+    position: relative;
+    display: inline-flex;
+}
+
+.info-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: #6b5a44;
+    cursor: pointer;
+}
+
+.info-button:hover,
+.info-button:focus-visible {
+    color: var(--accent);
+    background: rgba(184, 50, 31, 0.08);
+}
+
+.info-button svg {
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.info-note {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.4rem);
+    z-index: 10;
+    width: max-content;
+    max-width: min(18rem, 70vw);
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.5rem;
+    background: rgba(20, 12, 6, 0.95);
+    color: #fff;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    transform: translateX(-50%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.info:hover .info-note,
+.info:focus-within .info-note,
+.info.open .info-note {
+    opacity: 1;
+}
+
 .form-switch .form-check-input {
     cursor: pointer;
 }

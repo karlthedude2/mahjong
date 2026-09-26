@@ -67,10 +67,11 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     public bool SubmittingResult { get; private set; }
 
     /// <summary>
-    /// Deals a new game. With a replay, it's that leaderboard game's deal: a verified replay goes on
+    /// Deals a new game: guaranteed winnable, or a random deal if <paramref name="randomDeal"/> is set.
+    /// With a replay, it's that leaderboard game's deal (and kind of deal): a verified replay goes on
     /// the deal's replay list; an offline one deals the same tiles locally.
     /// </summary>
-    public async Task StartAsync(LayoutDefinition layout, GameMode mode, ReplayInfo? replay = null)
+    public async Task StartAsync(LayoutDefinition layout, GameMode mode, ReplayInfo? replay = null, bool randomDeal = false)
     {
         StopClock();
         serverGameId = null;
@@ -80,20 +81,22 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         Message = null;
         Replay = replay;
 
+        randomDeal = replay?.RandomDeal ?? randomDeal;
         long seed;
         if (mode != GameMode.Offline)
         {
-            var started = await api.StartGameAsync(layout.Name, replay?.OriginalGameId, guest: mode == GameMode.Guest);
+            var started = await api.StartGameAsync(layout.Name, replay?.OriginalGameId, guest: mode == GameMode.Guest, randomDeal);
             serverGameId = started.GameId;
             guestToken = started.GuestToken;
             seed = started.Seed;
+            randomDeal = started.RandomDeal;
         }
         else
         {
             seed = replay?.Seed ?? Random.Shared.NextInt64();
         }
 
-        Game = new MahjongGame(layout, seed);
+        Game = new MahjongGame(layout, seed, winnable: !randomDeal);
         State = SessionState.Playing;
         ClockStarted = false;
         playTime.Reset();

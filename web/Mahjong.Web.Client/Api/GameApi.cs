@@ -22,9 +22,9 @@ public sealed class GameApi(HttpClient http)
     /// Starts a server-verified game (a guest's if guest is true); with replayOf, a replay of that
     /// leaderboard game's deal.
     /// </summary>
-    public async Task<StartGameResponse> StartGameAsync(string layout, Guid? replayOf = null, bool guest = false)
+    public async Task<StartGameResponse> StartGameAsync(string layout, Guid? replayOf = null, bool guest = false, bool randomDeal = false)
     {
-        var response = await http.PostAsJsonAsync(guest ? "api/guest-games" : "api/games", new StartGameRequest(layout, replayOf));
+        var response = await http.PostAsJsonAsync(guest ? "api/guest-games" : "api/games", new StartGameRequest(layout, replayOf, randomDeal));
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<StartGameResponse>())!;
     }

@@ -32,6 +32,12 @@ namespace Mahjong.Core
     {
         public string LayoutName { get; set; }
         public long Seed { get; set; }
+
+        /// <summary>
+        /// True if the board was dealt (and reshuffled) to be winnable; false for a random deal.
+        /// Records from before random deals existed have no value here, and were all winnable.
+        /// </summary>
+        public bool Winnable { get; set; } = true;
         public List<RecordedMove> Moves { get; set; } = new List<RecordedMove>();
     }
 }

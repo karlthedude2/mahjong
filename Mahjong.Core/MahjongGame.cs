@@ -17,24 +17,32 @@ namespace Mahjong.Core
         private readonly Stack<Move> undoStack = new Stack<Move>();
         private readonly Stack<Move> redoStack = new Stack<Move>();
 
-        public MahjongGame(LayoutDefinition layout, TileSet tileSet = null, Random random = null)
+        /// <summary>
+        /// Deals a new game: guaranteed winnable, or (if <paramref name="winnable"/> is false) a
+        /// purely random deal that may have no solution.
+        /// </summary>
+        public MahjongGame(LayoutDefinition layout, TileSet tileSet = null, Random random = null, bool winnable = true)
         {
             this.random = random ?? new Random();
             Layout = layout;
-            Board = Board.Deal(layout, tileSet ?? TileSet.Standard, this.random);
+            Winnable = winnable;
+            Board = Board.Deal(layout, tileSet ?? TileSet.Standard, this.random, winnable);
         }
 
         /// <summary>
         /// Deals from <paramref name="seed"/> with <see cref="DeterministicRandom"/> and records every
         /// move in <see cref="Record"/>, so the game can be replayed exactly (e.g. by the server).
         /// </summary>
-        public MahjongGame(LayoutDefinition layout, long seed)
-            : this(layout, TileSet.Standard, new DeterministicRandom(seed))
+        public MahjongGame(LayoutDefinition layout, long seed, bool winnable = true)
+            : this(layout, TileSet.Standard, new DeterministicRandom(seed), winnable)
         {
-            Record = new GameRecord { LayoutName = layout.Name, Seed = seed };
+            Record = new GameRecord { LayoutName = layout.Name, Seed = seed, Winnable = winnable };
         }
 
         public LayoutDefinition Layout { get; }
+
+        /// <summary>True for a guaranteed-winnable deal; false for a random one.</summary>
+        public bool Winnable { get; }
 
         /// <summary>The moves so far, for games created from a seed; otherwise null.</summary>
         public GameRecord Record { get; }

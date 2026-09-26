@@ -51,7 +51,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     /// <summary>How long a guest has to sign in and claim a win (and when unclaimed guest games are deleted).</summary>
     public static readonly TimeSpan GuestClaimWindow = TimeSpan.FromDays(1);
 
-    public async Task<StartGameResponse?> StartAsync(Player player, string layoutName, bool allowHiddenLayouts)
+    public async Task<StartGameResponse?> StartAsync(Player player, string layoutName, bool allowHiddenLayouts, bool randomDeal = false)
     {
         var layout = LayoutCatalog.Find(layoutName);
         if (layout == null || (layout.Hidden && !allowHiddenLayouts))
@@ -59,7 +59,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return null;
         }
 
-        return await AddGameAsync(player, layout.Name, NewSeed(), replayOf: null);
+        return await AddGameAsync(player, layout.Name, NewSeed(), randomDeal, replayOf: null);
     }
 
     /// <summary>
@@ -69,10 +69,10 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     public async Task<StartGameResponse?> StartReplayAsync(Player player, Guid originalGameId)
     {
         var original = await OriginalOnLeaderboardAsync(originalGameId);
-        return original == null ? null : await AddGameAsync(player, original.LayoutName, original.Seed, original.Id);
+        return original == null ? null : await AddGameAsync(player, original.LayoutName, original.Seed, original.RandomDeal, original.Id);
     }
 
-    private async Task<StartGameResponse> AddGameAsync(Player player, string layoutName, long seed, Guid? replayOf)
+    private async Task<StartGameResponse> AddGameAsync(Player player, string layoutName, long seed, bool randomDeal, Guid? replayOf)
     {
         string? guestToken = player.IsGuest ? NewGuestToken() : null;
         var now = time.GetUtcNow().UtcDateTime;
@@ -83,6 +83,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             GuestTokenHash = guestToken == null ? null : Hash(guestToken),
             LayoutName = layoutName,
             Seed = seed,
+            RandomDeal = randomDeal,
             ReplayOfGameId = replayOf,
             StartedUtc = now,
             Status = GameOutcome.InProgress,
@@ -100,7 +101,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
 
         await db.SaveChangesAsync();
 
-        return new StartGameResponse(game.Id, game.Seed, guestToken);
+        return new StartGameResponse(game.Id, game.Seed, guestToken, game.RandomDeal);
     }
 
     public async Task<FinishResult> FinishAsync(Player player, Guid gameId, GameRecord? record)
@@ -202,7 +203,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             .ToDictionaryAsync(g => g.GameId, g => g.Count);
 
         return top.Select((s, i) => new LeaderboardEntry(
-            i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId, replayCounts.GetValueOrDefault(s.GameId))).ToList();
+            i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId, replayCounts.GetValueOrDefault(s.GameId), s.RandomDeal)).ToList();
     }
 
     /// <summary>
@@ -240,7 +241,8 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             onLeaderboard?.Seconds ?? original.Seconds ?? 0,
             finished,
             CanPlay: onLeaderboard != null,
-            replays.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId)).ToList());
+            replays.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId)).ToList(),
+            original.RandomDeal);
     }
 
     /// <summary>
@@ -252,7 +254,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     private static string? Verify(GameEntity game, GameRecord? record, DateTime now, out ReplayResult? replay)
     {
         replay = null;
-        if (record == null || record.Seed != game.Seed || record.LayoutName != game.LayoutName)
+        if (record == null || record.Seed != game.Seed || record.LayoutName != game.LayoutName || record.Winnable == game.RandomDeal)
         {
             return "The record doesn't match the game that was started.";
         }
@@ -442,6 +444,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             Seconds = seconds,
             AchievedUtc = game.FinishedUtc!.Value,
             GameId = game.Id,
+            RandomDeal = game.RandomDeal,
         };
         db.HighScores.Add(entry);
 

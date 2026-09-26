@@ -28,7 +28,13 @@
            which reaches up to the site header. *@
         <div class="play-table">
             <div class="board-column">
-                <div class="layout-title">@PlayingLayout?.Name</div>
+                <div class="layout-title">
+                    @PlayingLayout?.Name
+                    @if (Session.Game is { Winnable: false })
+                    {
+                        <span class="deal-badge" title="Tiles were dealt at random, so this deal may not be clearable.">Random deal</span>
+                    }
+                </div>
 
                 @if (!signedIn)
                 {
@@ -65,6 +71,14 @@
                     </div>
                 }
 
+                @if (pendingDealChange)
+                {
+                    <div class="notice info">
+                        Your next game will be @(Preferences.GuaranteedWinnable ? "a guaranteed winnable deal" : "a random deal").
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
+                    </div>
+                }
+
                 @if (pendingLayout != null)
                 {
                     <div class="notice info">
@@ -86,7 +100,13 @@
 
                 @if (Session.State == SessionState.NoMovesLeft)
                 {
-                    <div class="notice warning">No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.</div>
+                    <div class="notice warning">
+                        No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.
+                        @if (Session.Game is { Winnable: false })
+                        {
+                            <span>(Random deals can't always be cleared.)</span>
+                        }
+                    </div>
                 }
 
                 @if (Session.Game is { } game)
@@ -171,7 +191,7 @@
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
                     TileSetId="@Preferences.TileSet.Id" BackgroundId="@Preferences.Background.Id"
-                    SkipSettings="Preferences.SkipSettings" ForNewGame="settingsForNewGame"
+                    SkipSettings="Preferences.SkipSettings" GuaranteedWinnable="Preferences.GuaranteedWinnable" ForNewGame="settingsForNewGame"
                     OnApply="ApplySettingsAsync" OnCancel="CancelSettingsAsync" />
 }
 
@@ -187,6 +207,8 @@
     private bool showSettings;
     // The dialog is open to pick settings for a new game, which is dealt when it closes.
     private bool settingsForNewGame;
+    // The deal setting was changed mid-game; it applies from the next game.
+    private bool pendingDealChange;
     private DotNetObjectReference<Play>? selfReference;
     private string? error;
     // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
@@ -352,10 +374,12 @@
             pendingLayout = null;
         }
 
+        pendingDealChange = false;
+
         error = null;
         try
         {
-            await Session.StartAsync(currentLayout!, signedIn ? GameMode.SignedIn : GameMode.Guest);
+            await Session.StartAsync(currentLayout!, signedIn ? GameMode.SignedIn : GameMode.Guest, randomDeal: !Preferences.GuaranteedWinnable);
         }
         catch (HttpRequestException)
         {
@@ -365,7 +389,7 @@
                 error = "Couldn't reach the server, so this game won't be saved.";
             }
 
-            await Session.StartAsync(currentLayout!, GameMode.Offline);
+            await Session.StartAsync(currentLayout!, GameMode.Offline, randomDeal: !Preferences.GuaranteedWinnable);
         }
     }
 
@@ -377,6 +401,12 @@
         if (choice.SkipSettings != Preferences.SkipSettings)
         {
             await Preferences.SetSkipSettingsAsync(choice.SkipSettings);
+        }
+
+        bool dealChanged = choice.GuaranteedWinnable != Preferences.GuaranteedWinnable;
+        if (dealChanged)
+        {
+            await Preferences.SetGuaranteedWinnableAsync(choice.GuaranteedWinnable);
         }
 
         if (choice.TileSetId != Preferences.TileSet.Id)
@@ -407,7 +437,22 @@
 
         if (layout is null || layout == (pendingLayout ?? currentLayout))
         {
+            // Only the deal setting changed: redeal now if nothing's been played, otherwise next game.
+            if (dealChanged && replay == null && !GameUnderWay)
+            {
+                await NewGameAsync();
+            }
+            else if (dealChanged)
+            {
+                pendingDealChange = true;
+            }
+
             return;
+        }
+
+        if (dealChanged && (GameUnderWay || replay != null))
+        {
+            pendingDealChange = true;
         }
 
         await Preferences.SetLastLayoutAsync(layout.Name);

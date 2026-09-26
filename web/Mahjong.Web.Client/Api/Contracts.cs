@@ -4,11 +4,14 @@ namespace Mahjong.Web.Client.Api;
 
 // Request and response shapes shared by the browser client and the server API.
 
-/// <summary>Starts a ranked game. With ReplayOf, the game replays that leaderboard game's deal.</summary>
-public sealed record StartGameRequest(string Layout, Guid? ReplayOf = null);
+/// <summary>
+/// Starts a verified game: guaranteed winnable, or a random deal if RandomDeal is set. With ReplayOf,
+/// the game replays that leaderboard game's deal (and takes its kind of deal).
+/// </summary>
+public sealed record StartGameRequest(string Layout, Guid? ReplayOf = null, bool RandomDeal = false);
 
 /// <summary>A started game. Guest games also get a token that proves which browser is playing.</summary>
-public sealed record StartGameResponse(Guid GameId, long Seed, string? GuestToken = null);
+public sealed record StartGameResponse(Guid GameId, long Seed, string? GuestToken = null, bool RandomDeal = false);
 
 public sealed record FinishGameRequest(GameRecord Record);
 
@@ -44,7 +47,7 @@ public sealed record BreakdownDto(
 /// before times were kept). GameId is the game that set the score; ReplayCount is how many
 /// players are on its replay list (leaderboard rows only).
 /// </summary>
-public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, int Seconds, DateTime AchievedUtc, Guid GameId = default, int ReplayCount = 0)
+public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, int Seconds, DateTime AchievedUtc, Guid GameId = default, int ReplayCount = 0, bool RandomDeal = false)
 {
     /// <summary>The time as m:ss (or h:mm:ss), or an empty string if it wasn't recorded.</summary>
     public string TimeText => Seconds <= 0 ? "" : TimeSpan.FromSeconds(Seconds).ToString(Seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
@@ -64,12 +67,13 @@ public sealed record ReplayInfo(
     int OriginalSeconds,
     DateTime OriginalAchievedUtc,
     bool CanPlay,
-    IReadOnlyList<LeaderboardEntry> Entries);
+    IReadOnlyList<LeaderboardEntry> Entries,
+    bool RandomDeal = false);
 
-public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon, bool SkipSettingsOnNewGame = false);
+public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon, bool SkipSettingsOnNewGame = false, bool PreferRandomDeals = false);
 
 /// <summary>Changes to the player's profile; null fields are left as they are.</summary>
-public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null);
+public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null, bool? PreferRandomDeals = null);
 
 /// <summary>Settings the browser needs from the server's configuration.</summary>
 public sealed record ClientConfig(string? AdsClientId, string? AdSlotRail, string? AdSlotBanner, string? AdSlotResults, bool ShowHiddenLayouts);

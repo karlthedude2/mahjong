@@ -43,6 +43,17 @@
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
+.deal-badge {
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(184, 50, 31, 0.85);
+    font-size: 0.75rem;
+    font-weight: 600;
+    vertical-align: middle;
+    text-shadow: none;
+}
+
 .notice {
     padding: 0.4rem 0.75rem;
     border-radius: 0.5rem;

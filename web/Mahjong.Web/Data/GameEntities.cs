@@ -34,6 +34,9 @@ public class GameEntity
 
     public long Seed { get; set; }
 
+    /// <summary>True for a random deal (which may have no solution); false for a guaranteed-winnable one.</summary>
+    public bool RandomDeal { get; set; }
+
     /// <summary>For a replay, the leaderboard game whose deal (layout and seed) this game replays.</summary>
     public Guid? ReplayOfGameId { get; set; }
 
@@ -96,6 +99,9 @@ public class HighScoreEntity
     public DateTime AchievedUtc { get; set; }
 
     public Guid GameId { get; set; }
+
+    /// <summary>True if the score was set on a random deal (shown with a badge).</summary>
+    public bool RandomDeal { get; set; }
 }
 
 /// <summary>
