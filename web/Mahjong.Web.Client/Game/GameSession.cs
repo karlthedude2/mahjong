@@ -42,6 +42,12 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
 
     public Tile? Selected { get; private set; }
 
+    /// <summary>Connect: the line that joined the last pair, while it's being shown (briefly).</summary>
+    public IReadOnlyList<Cell>? LastPath { get; private set; }
+
+    /// <summary>The ids of the two tiles a hint points to, until the next move.</summary>
+    public IReadOnlySet<int>? HintedTiles { get; private set; }
+
     public SessionState State { get; private set; } = SessionState.NotStarted;
 
     /// <summary>True if this game's score will be verified and can reach the leaderboard.</summary>
@@ -79,6 +85,8 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         Result = null;
         Selected = null;
         Message = null;
+        LastPath = null;
+        HintedTiles = null;
         Replay = replay;
 
         randomDeal = replay?.RandomDeal ?? randomDeal;
@@ -125,6 +133,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
 
         CatchUpClock();
 
+        IReadOnlyList<Cell>? path = Selected != null && Selected != tile ? Game.Board.FindPath(Selected, tile) : null;
         if (Selected == null)
         {
             Selected = tile;
@@ -137,6 +146,8 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         {
             var first = Selected;
             Selected = null;
+            HintedTiles = null;
+            ShowPath(path);
             await effects.OnPairRemovedAsync(first, tile);
             await UpdateStateAsync();
         }
@@ -149,6 +160,25 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
     }
 
     public async Task ShuffleAsync() => await ChangeBoardAsync(game => { game.Shuffle(); return true; });
+
+    /// <summary>
+    /// Rings two tiles that can be removed now, until the next move. It costs part of the no-shuffle
+    /// bonus; if there's no move, it says so instead (and costs nothing).
+    /// </summary>
+    public async Task HintAsync()
+    {
+        // A hint that's still showing is free to ask for again.
+        if (Game == null || HintedTiles != null || State is not (SessionState.Playing or SessionState.NoMovesLeft) || !await StartClockAsync())
+        {
+            return;
+        }
+
+        CatchUpClock();
+        var hint = Game.Hint();
+        HintedTiles = hint is { } pair ? new HashSet<int> { pair.First.Id, pair.Second.Id } : null;
+        Message = hint == null ? "There are no pairs to take. Try Shuffle or Undo." : null;
+        Changed?.Invoke();
+    }
 
     public async Task UndoAsync() => await ChangeBoardAsync(game => game.Undo());
 
@@ -197,6 +227,25 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         Changed?.Invoke();
     }
 
+    // Shows Connect's joining line until it fades (the board animates it out).
+    private void ShowPath(IReadOnlyList<Cell>? path)
+    {
+        LastPath = path;
+        if (path == null)
+        {
+            return;
+        }
+
+        _ = Task.Delay(650).ContinueWith(_ =>
+        {
+            if (LastPath == path)
+            {
+                LastPath = null;
+                Changed?.Invoke();
+            }
+        });
+    }
+
     /// <summary>Loads the tile effects' sounds ahead of the first click.</summary>
     public ValueTask PreloadEffectsAsync() => effects.PreloadAsync();
 
@@ -215,6 +264,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         }
 
         Selected = null;
+        HintedTiles = null;
         CatchUpClock();
         if (change(Game))
         {

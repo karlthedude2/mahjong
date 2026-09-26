@@ -282,17 +282,27 @@ namespace Mahjong.Core
             var occupied = new HashSet<Position>(startOf);
             while (occupied.Count > 0)
             {
-                // A random tile, and a random partner it can be joined to.
+                // A random tile, and a random partner it can be joined to (the first that can, in a
+                // random order, which is as fair as picking from all of them and much quicker).
                 var candidates = occupied.ToList();
                 random.Shuffle(candidates);
                 Position? first = null, second = null;
                 foreach (var a in candidates)
                 {
-                    var partners = candidates.Where(b => b != a && ConnectRules.FindPath(layout, occupied, a, b) != null).ToList();
-                    if (partners.Count > 0)
+                    var others = candidates.Where(b => b != a).ToList();
+                    random.Shuffle(others);
+                    foreach (var b in others)
                     {
-                        first = a;
-                        second = partners[random.Next(partners.Count)];
+                        if (ConnectRules.FindPath(layout, occupied, a, b) != null)
+                        {
+                            first = a;
+                            second = b;
+                            break;
+                        }
+                    }
+
+                    if (first != null)
+                    {
                         break;
                     }
                 }

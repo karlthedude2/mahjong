@@ -70,3 +70,15 @@ The built-in backgrounds are drawn by `tools/generate_backgrounds.py`. Run `pyth
 ## How winnable deals work
 
 The dealer removes random pairs of free positions from the empty layout until the layout is empty. Each removed pair then gets the same face, so replaying that order clears the board. Shuffle uses the same method on the tiles that are left.
+
+With **Guaranteed winnable path** switched off (web settings), tiles are dealt at random instead (`RandomDealer`), so a deal may have no solution.
+
+## Connect (Shisen-Sho)
+
+The web version's second game, chosen under **Game** in the settings dialog. Tiles lie flat in a grid; two matching tiles can be removed if a line with at most two turns joins them through empty cells, including around the outside of the board.
+
+- **Boards:** Small (12×6), Medium (14×8) and Classic (18×8), each with **Gravity** off, down or left (tiles slide to close the gaps). Each combination is its own "layout", named like `Connect Small (Gravity Down)`, so it has its own leaderboard. They're defined in `Mahjong.Core/ConnectRules.cs` (`ConnectLayouts`) and found with `LayoutCatalog.Find` alongside the solitaire layouts; `LayoutCatalog.All` and `Visible` stay solitaire-only, so the desktop game doesn't show them.
+- **Rules:** `ConnectRules.FindPath` finds the line (the web board draws it briefly), and `ConnectRules.Settle` applies gravity; gravity moves are undoable.
+- **Winnable deals:** `ConnectDealer` works like the solitaire dealer: it removes random joinable pairs from the faceless board (applying gravity) until it's empty, then gives each pair the same face.
+- **Hints** (both games) cost 500 of the no-shuffle bonus; undo doesn't give it back. Hints are recorded, so the server's replay check sees them.
+- **Pictures:** one per board size (`connect-small.png` and so on), drawn by `tools/LayoutPreviews`.

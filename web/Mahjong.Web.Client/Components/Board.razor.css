@@ -7,6 +7,37 @@
 
 .tile {
     cursor: pointer;
+    transition: transform 0.18s ease-out;
+}
+
+/* Connect: the joining line fades out after a match. */
+.connect-path {
+    fill: none;
+    stroke: #d83a22;
+    stroke-width: 9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+    animation: path-fade 0.6s ease-in forwards;
+}
+
+@keyframes path-fade {
+    0%, 40% { opacity: 0.95; }
+    100% { opacity: 0; }
+}
+
+/* A hint's tiles pulse with a gold ring. */
+.hint-ring {
+    fill: rgba(255, 214, 90, 0.25);
+    stroke: #ffc933;
+    stroke-width: 6;
+    pointer-events: none;
+    animation: hint-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes hint-pulse {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
 }
 
 .tile:hover:not(.selected) {

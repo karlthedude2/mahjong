@@ -14,10 +14,19 @@
     were won on a randomly dealt board, which isn't guaranteed to be clearable.
 </p>
 
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(game == GameKind.Solitaire ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(DefaultLayoutName)">Mahjong Solitaire</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(game == GameKind.Connect ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)">Connect (Shisen-Sho)</a>
+    </li>
+</ul>
+
 <form method="get" class="d-flex gap-2 align-items-center mb-3">
-    <label for="layout" class="form-label mb-0">Layout</label>
+    <label for="layout" class="form-label mb-0">@(game == GameKind.Connect ? "Board" : "Layout")</label>
     <select id="layout" name="layout" class="form-select w-auto" onchange="this.form.submit()">
-        @foreach (var l in LayoutCatalog.Visible)
+        @foreach (var l in Choices)
         {
             <option value="@l.Name" selected="@(l.Name == selected)">@l.Name</option>
         }
@@ -65,14 +74,21 @@ else
     private const string DefaultLayoutName = "Twin Peaks";
 
     private string selected = DefaultLayoutName;
+    private GameKind game;
     private IReadOnlyList<LeaderboardEntry> entries = [];
+
+    // The layouts (or Connect boards) of the game being shown.
+    private IEnumerable<LayoutDefinition> Choices => game == GameKind.Connect ? LayoutCatalog.Connect : LayoutCatalog.Visible;
 
     [SupplyParameterFromQuery]
     private string? Layout { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        selected = LayoutCatalog.Visible.FirstOrDefault(l => l.Name == Layout)?.Name ?? DefaultLayoutName;
+        var layout = LayoutCatalog.Visible.Concat(LayoutCatalog.Connect).FirstOrDefault(l => l.Name == Layout)
+            ?? LayoutCatalog.Find(DefaultLayoutName)!;
+        selected = layout.Name;
+        game = layout.Kind;
         entries = await Games.GetLeaderboardAsync(selected);
     }
 }

@@ -59,9 +59,11 @@ if (unknown.Count > 0)
     return 1;
 }
 
+// Solitaire layouts, and one picture per Connect board size (gravity doesn't change the picture).
+var menu = LayoutCatalog.Visible.Concat(ConnectLayouts.BaseBoards).ToList();
 var layouts = names.Count > 0 ? names.Select(n => LayoutCatalog.Find(n)!).ToList()
-    : all ? LayoutCatalog.Visible.ToList()
-    : LayoutCatalog.Visible.Where(l => !File.Exists(Path.Combine(outFolder, Slug(l.Name) + ".png"))).ToList();
+    : all ? menu
+    : menu.Where(l => !File.Exists(Path.Combine(outFolder, Slug(l.PreviewName) + ".png"))).ToList();
 
 if (layouts.Count == 0)
 {
@@ -74,14 +76,14 @@ var tileImages = new Dictionary<string, Image>();
 foreach (var layout in layouts)
 {
     using var preview = Render(layout);
-    string file = Path.Combine(outFolder, Slug(layout.Name) + ".png");
+    string file = Path.Combine(outFolder, Slug(layout.PreviewName) + ".png");
     preview.Save(file, ImageFormat.Png);
     if (copyTo != null)
     {
-        preview.Save(Path.Combine(copyTo, layout.Name + ".png"), ImageFormat.Png);
+        preview.Save(Path.Combine(copyTo, layout.PreviewName + ".png"), ImageFormat.Png);
     }
 
-    Console.WriteLine($"{layout.Name} -> {Path.GetRelativePath(repo, file)}");
+    Console.WriteLine($"{layout.PreviewName} -> {Path.GetRelativePath(repo, file)}");
 }
 
 foreach (var image in tileImages.Values)

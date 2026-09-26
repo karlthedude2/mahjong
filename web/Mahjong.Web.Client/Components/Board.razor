@@ -23,9 +23,10 @@
     @foreach (var tile in BoardGeometry.InDrawOrder(Game.Board.Tiles))
     {
         var bounds = BoardGeometry.Bounds(tile.Position);
+        @* Placed with a CSS transform, so tiles slide when Connect's gravity moves them. *@
         <g @key="tile.Id"
            class="tile @(tile == Selected ? "selected" : null)"
-           transform="translate(@bounds.Left @bounds.Top)"
+           style="transform: translate(@(bounds.Left)px, @(bounds.Top)px)"
            filter="@(tile == Selected ? "url(#tile-selected)" : null)"
            @onclick="() => OnTileClick.InvokeAsync(tile)">
             @if (TileSet.Kind == TileSetKind.Images)
@@ -40,6 +41,22 @@
                 @GlyphText(glyph)
             }
         </g>
+    }
+
+    @* A pulsing ring around a hint's two tiles. *@
+    @if (Hinted != null)
+    {
+        foreach (var tile in Game.Board.Tiles.Where(t => Hinted.Contains(t.Id)))
+        {
+            var bounds = BoardGeometry.Bounds(tile.Position);
+            <rect class="hint-ring" x="@(bounds.Left + 1)" y="@(bounds.Top + 1)" width="@FaceWidth" height="@(ImageHeight - 12)" rx="9" />
+        }
+    }
+
+    @* Connect: the line that joined the last pair, drawn briefly through the cell centres. *@
+    @if (Path is { Count: > 1 })
+    {
+        <polyline @key="Path" class="connect-path" points="@PathPoints(Path)" />
     }
 </svg>
 
@@ -61,6 +78,20 @@
     [Parameter] public TileSetInfo TileSet { get; set; } = TileSets.Default;
 
     [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
+
+    /// <summary>Connect: the corner points of the line that just joined a pair, to draw briefly.</summary>
+    [Parameter] public IReadOnlyList<Cell>? Path { get; set; }
+
+    /// <summary>The ids of a hint's tiles, to ring.</summary>
+    [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
+
+    // A cell's centre in board pixels (the tile's face, not its 3D edge). Cells just outside a
+    // Connect board work too, which is where the line may run.
+    private static string PathPoints(IReadOnlyList<Cell> path) => string.Join(" ", path.Select(cell =>
+    {
+        var bounds = BoardGeometry.Bounds(cell.ToPosition());
+        return $"{bounds.Left + BoardGeometry.XStep},{bounds.Top + BoardGeometry.YStep}";
+    }));
 
     // Razor reserves <text>, so the SVG text elements are built in code.
     private static RenderFragment GlyphText(TileGlyph glyph) => builder =>
@@ -84,7 +115,8 @@
     {
         // Size to the whole layout (not the tiles left), so the board doesn't jump as tiles go.
         var bounds = BoardGeometry.Bounds(Game.Layout.Positions);
-        const int margin = 8;
+        // Connect lines may run around the outside of the board, so leave room for them.
+        int margin = Game.Layout.Kind == GameKind.Connect ? 64 : 8;
         viewBox = $"{bounds.Left - margin} {bounds.Top - margin} {bounds.Width + 2 * margin} {bounds.Height + 2 * margin}";
     }
 }
