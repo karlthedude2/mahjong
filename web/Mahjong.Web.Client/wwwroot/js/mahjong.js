@@ -75,7 +75,7 @@ export function pushAd(slot) {
     }
 }
 
-// The header's New game and Settings are plain links to the game page. While the game page is
+// The header's New game, Leaderboards and Settings are plain links. While the game page is
 // showing, App.razor's script hands their clicks to it instead, so nothing reloads.
 export function setPlayActions(dotnet) {
     window.mahjongPlayAction = dotnet ? action => dotnet.invokeMethodAsync("OnHeaderAction", action) : undefined;

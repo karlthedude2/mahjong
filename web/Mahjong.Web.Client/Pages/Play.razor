@@ -194,6 +194,11 @@
     <ResultsDialog Session="Session" Config="config" LayoutName="@PlayingLayout.Name" OnPlayAgain="PlayAgainAsync" />
 }
 
+@if (showLeaderboard)
+{
+    <LeaderboardDialog Layouts="AllLayouts.ToList()" LayoutName="@PlayingLayout?.Name" OnClose="() => showLeaderboard = false" />
+}
+
 @if (showSettings)
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
@@ -215,6 +220,7 @@
     // A layout chosen mid-game, kept for the next game so the current one isn't interrupted.
     private LayoutDefinition? pendingLayout;
     private bool showSettings;
+    private bool showLeaderboard;
     // The dialog is open to pick settings for a new game, which is dealt when it closes.
     private bool settingsForNewGame;
     // The deal setting was changed mid-game; it applies from the next game.
@@ -304,13 +310,23 @@
         }
     }
 
-    /// <summary>The header's New game ("new-game") and Settings ("settings"), while this page is showing.</summary>
+    /// <summary>The header's New game ("new-game"), Leaderboards ("leaderboards") and Settings ("settings"), while this page is showing.</summary>
     [JSInvokable]
     public async Task OnHeaderAction(string action)
     {
         if (action == "new-game")
         {
             await RequestNewGameAsync();
+        }
+        else if (action == "leaderboards")
+        {
+            // Pause a running game first; closing the leaderboard leaves it paused, ready to resume.
+            if (Session.CanPause && Session.State != SessionState.Paused)
+            {
+                await Session.TogglePauseAsync();
+            }
+
+            showLeaderboard = true;
         }
         else if (action == "settings")
         {

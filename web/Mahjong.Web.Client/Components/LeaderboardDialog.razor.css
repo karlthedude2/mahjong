@@ -1,0 +1,82 @@
+.board-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 100;
+}
+
+.board-dialog {
+    display: flex;
+    flex-direction: column;
+    width: min(44rem, 100%);
+    max-height: 100%;
+    padding: 1.25rem 1.5rem;
+    border-radius: 1rem;
+    background: #fffaf0;
+    color: #2b2116;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+    outline: none;
+}
+
+header,
+footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+footer {
+    margin-top: 0.75rem;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.picker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    font-weight: 600;
+}
+
+.picker .form-select {
+    width: auto;
+    max-width: 100%;
+}
+
+/* The table scrolls inside the dialog on small screens. */
+.table-wrap {
+    min-height: 0;
+    overflow: auto;
+}
+
+.table {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.status {
+    margin: 0.5rem 0;
+}
+
+.more {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .board-backdrop {
+        padding: 0.5rem;
+    }
+
+    .board-dialog {
+        padding: 1rem;
+    }
+}

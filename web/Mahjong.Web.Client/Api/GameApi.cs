@@ -61,6 +61,19 @@ public sealed class GameApi(HttpClient http)
         return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<ClaimGameResponse>() : null;
     }
 
+    /// <summary>A layout's leaderboard, or null if it couldn't be loaded.</summary>
+    public async Task<IReadOnlyList<LeaderboardEntry>?> GetLeaderboardAsync(string layout)
+    {
+        try
+        {
+            return await http.GetFromJsonAsync<List<LeaderboardEntry>>($"api/leaderboards/{Uri.EscapeDataString(layout)}");
+        }
+        catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>A leaderboard game's deal and replay list, or null if it can't be found.</summary>
     public async Task<ReplayInfo?> GetReplayAsync(Guid originalGameId)
     {

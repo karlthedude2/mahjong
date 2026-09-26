@@ -65,8 +65,8 @@
             } catch (err) { }
             window.mahjongApplySettings();
         });
-        // The header's New game and Settings: on the game page, act in place (the capture phase
-        // gets here before Blazor's link handling); anywhere else they're links to the game page.
+        // The header's New game, Leaderboards and Settings: on the game page, act in place (the
+        // capture phase gets here before Blazor's link handling); anywhere else they're plain links.
         document.addEventListener("click", function (e) {
             var button = e.target.closest && e.target.closest("[data-play-action]");
             if (button && window.mahjongPlayAction) {
