@@ -82,7 +82,11 @@
         }
         else
         {
-            @if (Session.IsGuestVerified && Session.Result is { Won: true })
+            @if (Session.IsPractice)
+            {
+                <p class="verdict">That was practice, so it isn't saved or ranked. Start a new game to play for the leaderboard.</p>
+            }
+            else if (Session.IsGuestVerified && Session.Result is { Won: true })
             {
                 <p class="verdict">
                     <strong>Save this score:</strong> <a href="Account/Login">sign in</a> or <a href="Account/Register">create an account</a>
@@ -114,7 +118,7 @@
 
     [Parameter, EditorRequired] public Game.GameSession Session { get; set; } = default!;
 
-    private string PlayAgainText => Session.Replay != null ? "Try this deal again" : "Play again";
+    private string PlayAgainText => Session.Replay != null || Session.IsPractice ? "Try this deal again" : "Play again";
 
     [Parameter] public ClientConfig? Config { get; set; }
 
