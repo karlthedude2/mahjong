@@ -55,7 +55,14 @@ public sealed class MahjongAppFactory : WebApplicationFactory<Program>
     {
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Users.Add(new ApplicationUser { Id = id, UserName = id, Email = $"{id}@example.com", DisplayName = displayName });
+        db.Users.Add(new ApplicationUser
+        {
+            Id = id,
+            UserName = id,
+            Email = $"{id}@example.com",
+            DisplayName = displayName,
+            DisplayNameKey = Mahjong.Web.Services.DisplayNames.Key(displayName),
+        });
         await db.SaveChangesAsync();
     }
 

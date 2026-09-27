@@ -19,6 +19,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        // No two players share a display name (compared by its key). Accounts without one are left out.
+        builder.Entity<ApplicationUser>()
+            .HasIndex(u => u.DisplayNameKey)
+            .IsUnique()
+            .HasFilter("[DisplayNameKey] <> ''");
+
         builder.Entity<GameEntity>(game =>
         {
             game.ToTable("Games");

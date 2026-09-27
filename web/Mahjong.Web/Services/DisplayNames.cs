@@ -8,7 +8,8 @@ namespace Mahjong.Web.Services;
 /// <summary>
 /// The rules for display names, which are chosen once, when the account is created, and shown on
 /// the leaderboards. Letters, numbers, spaces, punctuation and emoji are all fine; invisible
-/// control and direction characters aren't.
+/// control and direction characters aren't, nor are offensive or reserved names (<see cref="NameFilter"/>).
+/// Names are unique, compared by <see cref="Key"/>.
 /// </summary>
 public static class DisplayNames
 {
@@ -48,8 +49,14 @@ public static class DisplayNames
                 or UnicodeCategory.OtherSymbol;
         }
 
-        return hasSubstance ? null : "Display names need at least one letter, number or emoji.";
+        return hasSubstance ? NameFilter.Check(name) : "Display names need at least one letter, number or emoji.";
     }
+
+    /// <summary>
+    /// What makes two names "the same" for uniqueness: compatibility-normalised (so full-width and
+    /// styled letters match their plain forms) and upper-cased. "Karl", "KARL" and "Ｋａｒｌ" share a key.
+    /// </summary>
+    public static string Key(string name) => name.Normalize(NormalizationForm.FormKC).ToUpperInvariant();
 
     private static bool Allowed(Rune rune, UnicodeCategory category) => category switch
     {

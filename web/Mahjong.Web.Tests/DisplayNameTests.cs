@@ -3,7 +3,10 @@ using System.Net.Http.Json;
 using Mahjong.Core;
 using Mahjong.Web.Client.Api;
 using Mahjong.Web.Services;
+using Mahjong.Web.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Mahjong.Web.Tests;
 
@@ -43,6 +46,63 @@ public sealed class DisplayNameTests : IAsyncLifetime
     public void EmptyInvisibleOrPunctuationOnlyNamesAreRefused(string input)
     {
         Assert.NotNull(DisplayNames.Check(input, out _));
+    }
+
+    [Theory]
+    [InlineData("Fuuuck")]
+    [InlineData("f.u.c.k this")]
+    [InlineData("Sh1t Happens")]
+    [InlineData("Big A$$")]
+    [InlineData("Bïtch")]
+    [InlineData("the admin")]
+    [InlineData("Mahjong Haus Official")]
+    [InlineData("KabKolor")]
+    public void OffensiveOrReservedNamesAreRefused(string input)
+    {
+        Assert.NotNull(DisplayNames.Check(input, out _));
+    }
+
+    [Theory]
+    [InlineData("Scunthorpe United")]
+    [InlineData("Grape Ape")]
+    [InlineData("Dickens Fan")]
+    [InlineData("Class Act")]
+    [InlineData("Peacock 🦚")]
+    [InlineData("Sussex Tiles")]
+    [InlineData("Nazir")]
+    [InlineData("Modern Mahjong")]
+    [InlineData("Happiness")]
+    public void OrdinaryWordsThatContainBadOnesAreFine(string input)
+    {
+        Assert.Null(DisplayNames.Check(input, out _));
+    }
+
+    [Theory]
+    [InlineData("Alice")]
+    [InlineData("ALICE")]
+    [InlineData("Ａｌｉｃｅ")]
+    public async Task ANameAnotherPlayerHasIsTakenWhateverTheCapitals(string name)
+    {
+        using var scope = app.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var carol = new ApplicationUser { UserName = "carol", Email = "carol@example.com", DisplayName = name, DisplayNameKey = DisplayNames.Key(name) };
+
+        var result = await users.CreateAsync(carol);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains(result.Errors, e => e.Code == "DuplicateDisplayName");
+    }
+
+    [Fact]
+    public async Task AFreeNameCanBeTakenAndTheOwnerCanStillSaveTheirAccount()
+    {
+        using var scope = app.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var carol = new ApplicationUser { UserName = "carol", Email = "carol@example.com", DisplayName = "Carol 🐼", DisplayNameKey = DisplayNames.Key("Carol 🐼") };
+
+        Assert.True((await users.CreateAsync(carol)).Succeeded);
+        carol.Avatar = "tiger";
+        Assert.True((await users.UpdateAsync(carol)).Succeeded);
     }
 
     [Fact]

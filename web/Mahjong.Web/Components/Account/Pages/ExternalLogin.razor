@@ -157,6 +157,7 @@
         var user = CreateUser();
         DisplayNames.Check(Input.DisplayName, out var displayName);
         user.DisplayName = displayName;
+        user.DisplayNameKey = DisplayNames.Key(displayName);
         user.Avatar = Avatars.Find(Input.Avatar)?.Id ?? "";
 
         // The provider has already verified its own email address, so only other addresses need confirming.

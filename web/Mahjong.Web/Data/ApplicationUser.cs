@@ -15,6 +15,13 @@ public class ApplicationUser : IdentityUser
     [MaxLength(DisplayNameMaxLength)]
     public string DisplayName { get; set; } = "";
 
+    /// <summary>
+    /// <see cref="Services.DisplayNames.Key"/> of the display name, kept unique by an index so no two
+    /// players share a name (whatever the capitals). Set it whenever the display name is set.
+    /// </summary>
+    [MaxLength(DisplayNameMaxLength)]
+    public string DisplayNameKey { get; set; } = "";
+
     [MaxLength(32)]
     public string PreferredTileSet { get; set; } = "classic";
 
