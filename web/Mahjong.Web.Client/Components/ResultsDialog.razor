@@ -14,22 +14,22 @@
         <table class="breakdown">
             <tbody>
                 <tr title="Face value of every tile you removed.">
-                    <th>Tile points</th><td>@breakdown.TilePoints.ToString("N0")</td>
+                    <th>Tile Points Completed</th><td>@breakdown.TilePoints.ToString("N0")</td>
                 </tr>
                 <tr title="20 tiles inside one 30-second window: 100 points per second left.">
-                    <th>Speed bonuses <span class="count">(@breakdown.SpeedBonusCount &times;)</span></th><td>@breakdown.SpeedBonusTotal.ToString("N0")</td>
+                    <th>Speed Bonus <span class="count">(@breakdown.SpeedBonusCount &times;)</span></th><td>@breakdown.SpeedBonusTotal.ToString("N0")</td>
                 </tr>
                 <tr title="Every 20 tiles: the seconds left on the 5-minute bonus clock.">
-                    <th>Pace bonuses</th><td>@breakdown.PaceBonusTotal.ToString("N0")</td>
+                    <th>Pace Bonus</th><td>@breakdown.PaceBonusTotal.ToString("N0")</td>
                 </tr>
                 <tr title="30 points per second left on the bonus clock when you finished.">
-                    <th>Time bonus</th><td>@breakdown.TimeBonus.ToString("N0")</td>
+                    <th>Time Left Bonus</th><td>@breakdown.TimeBonus.ToString("N0")</td>
                 </tr>
                 <tr title="5,000 for a fast finish, dropping in steps after 2:40.">
-                    <th>Quick finish bonus</th><td>@breakdown.QuickFinishBonus.ToString("N0")</td>
+                    <th>Quick Finish Bonus</th><td>@breakdown.QuickFinishBonus.ToString("N0")</td>
                 </tr>
                 <tr title="3,000, less 1,000 for each shuffle.">
-                    <th>No-shuffle bonus</th><td>@breakdown.NoShuffleBonus.ToString("N0")</td>
+                    <th>No-Shuffle Bonus</th><td>@breakdown.NoShuffleBonus.ToString("N0")</td>
                 </tr>
             </tbody>
             <tfoot>
