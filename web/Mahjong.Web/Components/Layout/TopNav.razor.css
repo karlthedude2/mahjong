@@ -21,8 +21,15 @@
     white-space: nowrap;
 }
 
-/* haus-glyph.png, shown as it is. */
+/* The full logo (white lettering for the dark bar). */
+.brand-logo {
+    width: auto;
+    height: 1.9rem;
+}
+
+/* haus-glyph.png, shown as it is: only on phones, in place of the full logo. */
 .logo {
+    display: none;
     width: 2.6rem;
     height: 2.6rem;
 }
@@ -140,7 +147,11 @@ form {
         margin-right: 0.25rem;
     }
 
-    .brand-name {
+    .brand-logo {
         display: none;
+    }
+
+    .logo {
+        display: block;
     }
 }

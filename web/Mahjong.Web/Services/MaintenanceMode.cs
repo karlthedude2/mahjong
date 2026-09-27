@@ -100,7 +100,7 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
                     box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
                     text-align: center;
                 }
-                img { display: block; width: 100%; max-width: 20rem; height: auto; margin: 0 auto 0.5rem; }
+                img { display: block; width: 100%; max-width: 288px; height: auto; margin: 0 auto 0.75rem; }
                 h1 { margin: 0.5rem 0 0.75rem; font-size: 1.6rem; }
                 p { margin: 0.5rem 0; line-height: 1.5; }
                 .small { color: #6b5a44; font-size: 0.9rem; }
@@ -108,7 +108,7 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
         </head>
         <body>
             <main>
-                <img src="/logo-text.png" alt="Mahjong Haus" width="684" height="98" />
+                <img src="/logo-text.png" alt="Mahjong Haus" width="288" height="33" />
                 <h1>We'll be right back</h1>
                 <p>Mahjong Haus is being updated. This usually takes a minute or two.</p>
                 <p class="small">This page will reload by itself when the site is ready.</p>
