@@ -133,16 +133,19 @@
 
                 @if (Session.Game is { } game)
                 {
-                    <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
+                    @* As wide as the board is drawn (see matchBoardWidth in mahjong.js). *@
+                    <div class="score-bar" @ref="scoreBar">
+                        <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
+                    </div>
 
-                    <div class="board-area">
+                    <div class="board-area" @ref="boardArea">
                         @if (Session.State == SessionState.Paused)
                         {
                             <div class="paused">Paused</div>
                         }
                         else
                         {
-                            <Board Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                            <Board @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
                                Path="Session.LastPath" Hinted="Session.HintedTiles" />
                         }
                     </div>
@@ -206,8 +209,10 @@
         </div>
     </section>
 
+    @* Two ad boxes on the right, one above the other. *@
     <aside class="ad-rail right" aria-label="Advertisement">
-        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="rectangle" />
+        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="rectangle" />
     </aside>
 
     <aside class="ad-banner" aria-label="Advertisement">
@@ -285,6 +290,9 @@
     // The deal setting was changed mid-game; it applies from the next game.
     private bool pendingDealChange;
     private DotNetObjectReference<Play>? selfReference;
+    private ElementReference scoreBar;
+    private ElementReference boardArea;
+    private IJSObjectReference? boardWidthWatcher;
     private string? error;
     // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
     private ReplayInfo? replay;
@@ -372,6 +380,12 @@
         {
             selfReference = DotNetObjectReference.Create(this);
             await Browser.SetPlayActionsAsync(selfReference);
+        }
+
+        // The score bar and board appear with the first game; from then on they stay.
+        if (boardWidthWatcher == null && Session.Game != null && boardArea.Context != null)
+        {
+            boardWidthWatcher = await Browser.MatchBoardWidthAsync(boardArea, scoreBar);
         }
     }
 
@@ -622,6 +636,7 @@
         Session.Changed -= OnSessionChanged;
         Session.Dispose();
         _ = Browser.SetPlayActionsAsync(null).AsTask();
+        _ = boardWidthWatcher?.InvokeVoidAsync("dispose").AsTask();
         selfReference?.Dispose();
     }
 }

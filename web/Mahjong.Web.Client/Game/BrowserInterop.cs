@@ -25,6 +25,10 @@ public sealed class BrowserInterop(IJSRuntime js) : IAsyncDisposable
     public async ValueTask SetPlayActionsAsync(object? dotnetReference) =>
         await (await module.Value).InvokeVoidAsync("setPlayActions", dotnetReference);
 
+    /// <summary>Keeps <paramref name="target"/> as wide as the board drawn in <paramref name="boardArea"/>. Dispose the result to stop.</summary>
+    public async ValueTask<IJSObjectReference> MatchBoardWidthAsync(ElementReference boardArea, ElementReference target) =>
+        await (await module.Value).InvokeAsync<IJSObjectReference>("matchBoardWidth", boardArea, target);
+
     public async ValueTask PushAdAsync(ElementReference slot) => await (await module.Value).InvokeVoidAsync("pushAd", slot);
 
     public async ValueTask DisposeAsync()

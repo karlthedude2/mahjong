@@ -75,6 +75,31 @@ export function pushAd(slot) {
     }
 }
 
+// Keeps an element (the score bar) as wide as the board is drawn. The board is an SVG scaled to
+// fit its area without stretching, so its width depends on the area's shape and the layout's; this
+// follows window resizes and layout changes (a new viewBox).
+export function matchBoardWidth(area, target) {
+    const update = () => {
+        const svg = area.querySelector("svg.board");
+        const box = svg && svg.viewBox && svg.viewBox.baseVal;
+        if (!box || !box.width || !area.clientHeight) {
+            return; // paused (no board shown) or not laid out yet: keep the last width
+        }
+
+        // The drawn scale, and the layout's width without the room left around it.
+        const margin = Number(svg.dataset.margin) || 0;
+        const scale = Math.min(area.clientWidth / box.width, area.clientHeight / box.height);
+        target.style.maxWidth = Math.round((box.width - 2 * margin) * scale) + "px";
+    };
+
+    const resized = new ResizeObserver(update);
+    resized.observe(area);
+    const changed = new MutationObserver(update);
+    changed.observe(area, { subtree: true, childList: true, attributes: true, attributeFilter: ["viewBox"] });
+    update();
+    return { dispose: () => { resized.disconnect(); changed.disconnect(); } };
+}
+
 // The header's New game, Leaderboards and Settings are plain links. While the game page is
 // showing, App.razor's script hands their clicks to it instead, so nothing reloads.
 export function setPlayActions(dotnet) {

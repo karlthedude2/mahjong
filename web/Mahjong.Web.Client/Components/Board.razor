@@ -6,7 +6,7 @@
     the tile on top is also the one that receives a click. Each tile is its own <g> element, which
     is where future animations (CSS classes on the element) will go.
 *@
-<svg class="board" viewBox="@viewBox" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mahjong board">
+<svg class="board" viewBox="@viewBox" data-margin="@margin" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mahjong board">
     @*
         Darkens the selected tile. This is an SVG filter rather than CSS filter: brightness(),
         because Safari and every iPhone browser ignore CSS filters on elements inside an SVG.
@@ -71,6 +71,9 @@
 
     private string viewBox = "0 0 1 1";
 
+    // Room around the layout inside the viewBox (more for Connect, whose lines can run outside).
+    private int margin;
+
     [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
 
     [Parameter] public Tile? Selected { get; set; }
@@ -116,7 +119,7 @@
         // Size to the whole layout (not the tiles left), so the board doesn't jump as tiles go.
         var bounds = BoardGeometry.Bounds(Game.Layout.Positions);
         // Connect lines may run around the outside of the board, so leave room for them.
-        int margin = Game.Layout.Kind == GameKind.Connect ? 64 : 8;
+        margin = Game.Layout.Kind == GameKind.Connect ? 64 : 8;
         viewBox = $"{bounds.Left - margin} {bounds.Top - margin} {bounds.Width + 2 * margin} {bounds.Height + 2 * margin}";
     }
 }
