@@ -83,7 +83,7 @@
     flex: 1;
     min-height: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 15rem;
+    grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
 }
 
@@ -97,7 +97,8 @@
 }
 
 .board-column > .notice,
-.board-column > .loading {
+.board-column > .loading,
+.board-column > ::deep .score-panel {
     align-self: stretch;
 }
 
@@ -223,10 +224,6 @@
     .play-page,
     .play-page.signed-in {
         height: auto;
-    }
-
-    .play-table {
-        grid-template-columns: minmax(0, 1fr);
     }
 
     .board-area {
