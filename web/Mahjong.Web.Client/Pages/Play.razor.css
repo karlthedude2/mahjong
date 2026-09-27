@@ -179,18 +179,19 @@
     font-size: 0.8rem;
     white-space: nowrap;
     pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.12s;
+
+    /* Hidden (not just transparent) until wanted, so long tips can't widen a phone's page. */
+    display: none;
 }
 
 .game-controls button[data-tip]:hover::after,
 .game-controls button[data-tip]:focus-visible::after {
-    opacity: 1;
+    display: block;
 }
 
 @media (hover: none) {
     .game-controls button[data-tip]:hover::after {
-        opacity: 0;
+        display: none;
     }
 }
 
@@ -231,9 +232,19 @@
         height: auto;
     }
 
+    /* Phones: the board takes just its own height (it scales to the screen's width), so the score
+       bar sits right above the tiles and the controls right below, leaving room for the ad. */
     .board-area {
         flex: none;
-        height: 65vh;
+        height: auto;
+    }
+
+    .board-area ::deep .board {
+        height: auto;
+    }
+
+    .paused {
+        min-height: 40vh;
     }
 }
 
