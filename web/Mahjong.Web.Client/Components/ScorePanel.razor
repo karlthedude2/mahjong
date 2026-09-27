@@ -24,7 +24,7 @@
     </div>
 
     <div class="bonus" title="Remove 20 tiles inside one 30-second window to earn 100 points for every second still left in it.">
-        <div class="bonus-name">Speed bonus</div>
+        <div class="bonus-name">Speed Bonus</div>
         <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="20" aria-valuenow="@card.SpeedWindowTiles">
             <div class="meter-fill" style="width: @(card.SpeedWindowTiles * 100 / Scoring.TilesPerBonus)%"></div>
         </div>
@@ -36,7 +36,7 @@
     </div>
 
     <div class="bonus" title="Every 20 tiles you remove adds the seconds left on the 5-minute bonus clock.">
-        <div class="bonus-name">Pace bonus</div>
+        <div class="bonus-name">Pace Bonus</div>
         <div class="bonus-detail">
             Next in @tilesToPace tile@(tilesToPace == 1 ? "" : "s"), worth @clock.BonusClockSeconds
         </div>
@@ -45,15 +45,15 @@
 
     <div class="bonus @(finishBonusesLive ? null : "expired")" title="Paid when you clear the board, but only if you finish before the 5-minute bonus clock runs out.">
         <div class="bonus-name">
-            Finish bonuses
+            Finish Bonuses
             <span class="bonus-clock">@(finishBonusesLive ? $"{clock.BonusClockSeconds / 60}:{clock.BonusClockSeconds % 60:00} left" : "clock ran out")</span>
         </div>
         @if (finishBonusesLive)
         {
             <ul class="finish-list">
                 <li title="30 points for every second left on the bonus clock."><span>Time</span><span>@Game.Scoring.TimeBonusNow.ToString("N0")</span></li>
-                <li title="Starts at 5,000 and drops in steps after 2:40."><span>Quick finish</span><span>@clock.QuickFinishBonus.ToString("N0")</span></li>
-                <li title="Starts at 3,000; each shuffle costs 1,000 and each hint 500."><span>No shuffle</span><span>@Game.Scoring.NoShuffleBonusNow.ToString("N0")</span></li>
+                <li title="Starts at 5,000 and drops in steps after 2:40."><span>Quick Finish</span><span>@clock.QuickFinishBonus.ToString("N0")</span></li>
+                <li title="Starts at 3,000; each shuffle costs 1,000 and each hint 500."><span>No Shuffle</span><span>@Game.Scoring.NoShuffleBonusNow.ToString("N0")</span></li>
             </ul>
         }
         else

@@ -27,11 +27,11 @@
     height: 1.9rem;
 }
 
-/* haus-glyph.png, shown as it is: only on phones, in place of the full logo. */
+/* The 家 glyph (haus-glyph2.png): only on phones, in place of the full logo. */
 .logo {
     display: none;
-    width: 2.6rem;
-    height: 2.6rem;
+    width: auto;
+    height: 2.4rem;
 }
 
 .spacer {
