@@ -209,10 +209,8 @@
         </div>
     </section>
 
-    @* Two ad boxes on the right, one above the other. *@
     <aside class="ad-rail right" aria-label="Advertisement">
-        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="rectangle" />
-        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="rectangle" />
+        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
     </aside>
 
     <aside class="ad-banner" aria-label="Advertisement">
