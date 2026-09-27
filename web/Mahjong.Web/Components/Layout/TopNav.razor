@@ -1,4 +1,6 @@
 @implements IDisposable
+@using Mahjong.Web.Client.Components
+@using Mahjong.Web.Services
 @inject NavigationManager NavigationManager
 
 @*
@@ -55,11 +57,11 @@
                         <path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" />
                     </svg>
                 </NavLink>
-                <NavLink class="icon-link" href="Account/Manage" aria-label="Your account" data-tip="@($"Account ({context.User.Identity?.Name})")">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="8" r="4" />
-                        <path d="M4 21a8 8 0 0 1 16 0" />
-                    </svg>
+                @{
+                    var shownName = context.User.FindFirst(PlayerClaimsFactory.DisplayNameClaim)?.Value ?? context.User.Identity?.Name;
+                }
+                <NavLink class="icon-link account" href="Account/Manage" aria-label="Your account" data-tip="@($"Account ({shownName})")">
+                    <AvatarImage Id="@context.User.FindFirst(PlayerClaimsFactory.AvatarClaim)?.Value" Size="30" />
                 </NavLink>
                 <form action="Account/Logout" method="post">
                     <AntiforgeryToken />

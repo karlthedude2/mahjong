@@ -202,8 +202,10 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             .Select(g => new { GameId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.GameId, g => g.Count);
 
+        var avatars = await AvatarsOfAsync(top.Select(s => s.UserId));
         return top.Select((s, i) => new LeaderboardEntry(
-            i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId, replayCounts.GetValueOrDefault(s.GameId), s.RandomDeal)).ToList();
+            i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId, replayCounts.GetValueOrDefault(s.GameId), s.RandomDeal,
+            avatars.GetValueOrDefault(s.UserId))).ToList();
     }
 
     /// <summary>
@@ -229,6 +231,7 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             return null;
         }
 
+        var avatars = await AvatarsOfAsync(replays.Select(s => s.UserId));
         string? player = onLeaderboard?.DisplayName
             ?? await db.Users.Where(u => u.Id == original.UserId).Select(u => u.DisplayName).FirstOrDefaultAsync();
 
@@ -241,7 +244,8 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
             onLeaderboard?.Seconds ?? original.Seconds ?? 0,
             finished,
             CanPlay: onLeaderboard != null,
-            replays.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId)).ToList(),
+            replays.Select((s, i) => new LeaderboardEntry(i + 1, s.DisplayName, s.Score, s.Seconds, s.AchievedUtc, s.GameId,
+                Avatar: avatars.GetValueOrDefault(s.UserId))).ToList(),
             original.RandomDeal);
     }
 
@@ -367,6 +371,15 @@ public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILog
     private static bool TokenMatches(string? token, string? hash) =>
         !string.IsNullOrEmpty(token) && hash != null
         && CryptographicOperations.FixedTimeEquals(System.Text.Encoding.ASCII.GetBytes(Hash(token)), System.Text.Encoding.ASCII.GetBytes(hash));
+
+    // The players' current avatars (they can change them), by user id; deleted accounts have none.
+    private async Task<Dictionary<string, string>> AvatarsOfAsync(IEnumerable<string> userIds)
+    {
+        var ids = userIds.Where(id => id != "").Distinct().ToList();
+        return await db.Users.Where(u => ids.Contains(u.Id) && u.Avatar != "")
+            .Select(u => new { u.Id, u.Avatar })
+            .ToDictionaryAsync(u => u.Id, u => u.Avatar);
+    }
 
     /// <summary>The original game if it's on a leaderboard now; only those deals can be replayed.</summary>
     private async Task<GameEntity?> OriginalOnLeaderboardAsync(Guid gameId) =>

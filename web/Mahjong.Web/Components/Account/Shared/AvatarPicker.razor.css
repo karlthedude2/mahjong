@@ -1,0 +1,63 @@
+.avatar-picker {
+    margin: 0 0 1rem;
+    padding: 0;
+    border: 0;
+}
+
+.avatar-picker legend {
+    margin-bottom: 0.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr));
+    gap: 0.5rem;
+}
+
+.choice {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.4rem 0.2rem;
+    border: 2px solid transparent;
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    text-align: center;
+}
+
+.choice:hover {
+    border-color: #d6c29c;
+}
+
+/* The radio button itself is hidden; the card shows the choice. */
+.choice ::deep input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.choice:has(input:checked) {
+    border-color: var(--accent);
+    background: #fbe9dc;
+}
+
+.choice:has(input:focus-visible) {
+    outline: 3px solid #2b6cb0;
+    outline-offset: 2px;
+}
+
+.name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.chinese {
+    font-weight: 400;
+    opacity: 0.8;
+}

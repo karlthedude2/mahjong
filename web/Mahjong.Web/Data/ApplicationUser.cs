@@ -5,9 +5,13 @@ namespace Mahjong.Web.Data;
 
 public class ApplicationUser : IdentityUser
 {
-    public const int DisplayNameMaxLength = 30;
+    /// <summary>
+    /// Room for a display name in the database, in UTF-16 code units. Names are limited to 24 visible
+    /// characters (see DisplayNames), but an emoji can take several code units.
+    /// </summary>
+    public const int DisplayNameMaxLength = 64;
 
-    /// <summary>The name shown on leaderboards.</summary>
+    /// <summary>The name shown on leaderboards, chosen when the account is created. It can't be changed.</summary>
     [MaxLength(DisplayNameMaxLength)]
     public string DisplayName { get; set; } = "";
 
@@ -23,6 +27,10 @@ public class ApplicationUser : IdentityUser
 
     /// <summary>True if the player turned off "Guaranteed winnable path" and wants random deals.</summary>
     public bool PreferRandomDeals { get; set; }
+
+    /// <summary>The chosen avatar's id (a Chinese zodiac animal, e.g. "dragon"), or empty for none.</summary>
+    [MaxLength(16)]
+    public string Avatar { get; set; } = "";
 
     public int GamesPlayed { get; set; }
 

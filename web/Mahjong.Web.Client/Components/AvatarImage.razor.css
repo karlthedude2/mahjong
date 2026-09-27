@@ -1,0 +1,8 @@
+.avatar-image {
+    display: inline-block;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    background: #efe6d2;
+}

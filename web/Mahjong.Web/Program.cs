@@ -53,6 +53,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
+    .AddClaimsPrincipalFactory<PlayerClaimsFactory>()
     .AddDefaultTokenProviders();
 
 // Email: Azure Communication Services when configured, otherwise the log (development).

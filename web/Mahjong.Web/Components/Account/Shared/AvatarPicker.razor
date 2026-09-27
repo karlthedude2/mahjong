@@ -1,0 +1,35 @@
+@using System.Linq.Expressions
+@using Mahjong.Web.Client.Components
+@using Mahjong.Web.Client.Game
+
+@* Choose an avatar (or none): the twelve animals of the Chinese zodiac, as radio buttons in a grid. *@
+<fieldset class="avatar-picker">
+    <legend>@Legend</legend>
+    <InputRadioGroup TValue="string" Value="@Value" ValueChanged="@ValueChanged" ValueExpression="@ValueExpression">
+        <div class="choices">
+            <label class="choice">
+                <InputRadio Value="@("")" />
+                <AvatarImage Id="" Size="56" />
+                <span class="name">None</span>
+            </label>
+            @foreach (var avatar in Avatars.All)
+            {
+                <label class="choice" title="@avatar.Name (@avatar.Chinese)">
+                    <InputRadio Value="@avatar.Id" />
+                    <AvatarImage Id="@avatar.Id" Size="56" />
+                    <span class="name">@avatar.Name <span class="chinese">@avatar.Chinese</span></span>
+                </label>
+            }
+        </div>
+    </InputRadioGroup>
+</fieldset>
+
+@code {
+    [Parameter] public string Legend { get; set; } = "Avatar";
+
+    [Parameter] public string? Value { get; set; }
+
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter] public Expression<Func<string?>>? ValueExpression { get; set; }
+}

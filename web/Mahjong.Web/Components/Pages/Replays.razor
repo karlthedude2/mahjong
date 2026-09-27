@@ -1,5 +1,6 @@
 @page "/replays/{GameId:guid}"
 @using Mahjong.Web.Client.Api
+@using Mahjong.Web.Client.Components
 @using Mahjong.Web.Services
 @inject GameService Games
 
@@ -67,6 +68,7 @@ else
                         <tr>
                             <td>@entry.Rank</td>
                             <td>
+                                <AvatarImage Id="@entry.Avatar" Size="24" CssClass="me-1" />
                                 @entry.DisplayName
                                 @if (entry.Score > info.OriginalScore)
                                 {

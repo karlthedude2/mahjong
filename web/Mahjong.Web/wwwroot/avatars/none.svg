@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- The "no image" avatar: a plain silhouette, used until a player picks an avatar (or a picture is missing). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9dfc9"/>
+      <stop offset="1" stop-color="#cdbd9c"/>
+    </linearGradient>
+    <clipPath id="round"><circle cx="128" cy="128" r="128"/></clipPath>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="256" height="256" fill="url(#bg)"/>
+    <circle cx="128" cy="100" r="46" fill="#8f7c5c"/>
+    <path d="M 38 256 C 38 190 80 160 128 160 C 176 160 218 190 218 256 Z" fill="#8f7c5c"/>
+  </g>
+</svg>

@@ -1,0 +1,35 @@
+.display-name-help {
+    margin: -0.5rem 0 1rem;
+    font-size: 0.9rem;
+}
+
+.display-name-help p {
+    margin: 0.35rem 0;
+}
+
+.emoji {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.emoji button {
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    border: 1px solid #d6c29c;
+    border-radius: 0.4rem;
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.emoji button:hover {
+    background: #fbe9dc;
+}
+
+.tip {
+    color: #6b5a44;
+    font-size: 0.8rem;
+}
