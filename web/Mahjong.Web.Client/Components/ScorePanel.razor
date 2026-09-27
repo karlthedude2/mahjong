@@ -51,7 +51,7 @@
         @if (finishBonusesLive)
         {
             <ul class="finish-list">
-                <li title="30 points for every second left on the bonus clock."><span>Time</span><span>@Game.Scoring.TimeBonusNow.ToString("N0")</span></li>
+                <li title="30 points for every second left on the bonus clock."><span>Time Left</span><span>@Game.Scoring.TimeBonusNow.ToString("N0")</span></li>
                 <li title="Starts at 5,000 and drops in steps after 2:40."><span>Quick Finish</span><span>@clock.QuickFinishBonus.ToString("N0")</span></li>
                 <li title="Starts at 3,000; each shuffle costs 1,000 and each hint 500."><span>No Shuffle</span><span>@Game.Scoring.NoShuffleBonusNow.ToString("N0")</span></li>
             </ul>
