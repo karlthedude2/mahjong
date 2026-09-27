@@ -1,4 +1,4 @@
-﻿@page "/Account/Register"
+@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using Mahjong.Web.Data
+@using Mahjong.Web.Services
+@using Mahjong.Web.Client.Game
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -32,6 +34,8 @@
                 <label for="Input.DisplayName">Display name (shown on leaderboards)</label>
                 <ValidationMessage For="() => Input.DisplayName" class="text-danger" />
             </div>
+            <DisplayNameHelp TargetId="Input.DisplayName" />
+            <AvatarPicker Legend="Avatar (you can change it later)" @bind-Value="Input.Avatar" />
             <div class="form-floating mb-3">
                 <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label for="Input.Email">Email</label>
@@ -78,7 +82,9 @@
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
-        user.DisplayName = Input.DisplayName.Trim();
+        DisplayNames.Check(Input.DisplayName, out var displayName);
+        user.DisplayName = displayName;
+        user.Avatar = Avatars.Find(Input.Avatar)?.Id ?? "";
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
         var emailStore = GetEmailStore();
@@ -139,10 +145,11 @@
 
     private sealed class InputModel
     {
-        [Required]
-        [StringLength(ApplicationUser.DisplayNameMaxLength)]
+        [ValidDisplayName]
         [Display(Name = "Display name")]
         public string DisplayName { get; set; } = "";
+
+        public string? Avatar { get; set; } = "";
 
         [Required]
         [EmailAddress]

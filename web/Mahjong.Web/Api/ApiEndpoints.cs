@@ -68,15 +68,10 @@ public static partial class ApiEndpoints
                 return Results.Unauthorized();
             }
 
-            if (request.DisplayName is { } name)
+            // Display names are chosen once, when the account is created.
+            if (request.DisplayName != null)
             {
-                name = name.Trim();
-                if (name.Length == 0 || name.Length > ApplicationUser.DisplayNameMaxLength)
-                {
-                    return Results.BadRequest($"Display names must be 1-{ApplicationUser.DisplayNameMaxLength} characters.");
-                }
-
-                user.DisplayName = name;
+                return Results.BadRequest("Display names can't be changed.");
             }
 
             if (request.PreferredTileSet is { } tileSet)

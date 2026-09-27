@@ -1,0 +1,16 @@
+@using Mahjong.Web.Client.Game
+
+@* A player's avatar, round. A picture that isn't there yet falls back to the "no image" avatar. *@
+<img class="avatar-image @CssClass" src="@Avatars.UrlFor(Id)" alt="@Alt" width="@Size" height="@Size"
+     style="width: @(Size)px; height: @(Size)px" onerror="@Avatars.FallbackScript" />
+
+@code {
+    /// <summary>The avatar's id (e.g. "dragon"); null or empty for the "no image" avatar.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    [Parameter] public int Size { get; set; } = 24;
+
+    [Parameter] public string Alt { get; set; } = "";
+
+    [Parameter] public string? CssClass { get; set; }
+}

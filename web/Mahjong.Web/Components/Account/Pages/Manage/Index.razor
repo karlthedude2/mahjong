@@ -3,6 +3,8 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
 @using Mahjong.Web.Data
+@using Mahjong.Web.Client.Game
+@using Mahjong.Web.Client.Components
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -22,12 +24,13 @@
                 <input type="text" value="@username" id="username" class="form-control" disabled />
                 <label for="username" class="form-label">Email</label>
             </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.DisplayName" id="Input.DisplayName" class="form-control" placeholder="Your name" />
-                <label for="Input.DisplayName" class="form-label">Display name (shown on leaderboards)</label>
-                <ValidationMessage For="() => Input.DisplayName" class="text-danger" />
+            <div class="form-floating mb-1">
+                <input type="text" value="@user?.DisplayName" id="display-name" class="form-control" disabled />
+                <label for="display-name" class="form-label">Display name (shown on leaderboards)</label>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+            <p class="form-text mb-3">Display names are chosen when the account is created and can't be changed.</p>
+            <AvatarPicker @bind-Value="Input.Avatar" />
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Save avatar</button>
         </EditForm>
 
         @if (user is not null)
@@ -62,7 +65,7 @@
         }
 
         username = await UserManager.GetUserNameAsync(user);
-        Input.DisplayName ??= user.DisplayName;
+        Input.Avatar ??= user.Avatar;
     }
 
     private async Task OnValidSubmitAsync()
@@ -73,7 +76,7 @@
             return;
         }
 
-        user.DisplayName = Input.DisplayName!.Trim();
+        user.Avatar = Avatars.Find(Input.Avatar)?.Id ?? "";
         var result = await UserManager.UpdateAsync(user);
         if (!result.Succeeded)
         {
@@ -81,15 +84,13 @@
             return;
         }
 
+        // Refreshing the sign-in updates the avatar in the header (it travels in the sign-in cookie).
         await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        RedirectManager.RedirectToCurrentPageWithStatus("Your avatar has been updated", HttpContext);
     }
 
     private sealed class InputModel
     {
-        [Required]
-        [StringLength(ApplicationUser.DisplayNameMaxLength)]
-        [Display(Name = "Display name")]
-        public string? DisplayName { get; set; }
+        public string? Avatar { get; set; }
     }
 }

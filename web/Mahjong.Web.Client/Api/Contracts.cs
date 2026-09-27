@@ -47,7 +47,7 @@ public sealed record BreakdownDto(
 /// before times were kept). GameId is the game that set the score; ReplayCount is how many
 /// players are on its replay list (leaderboard rows only).
 /// </summary>
-public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, int Seconds, DateTime AchievedUtc, Guid GameId = default, int ReplayCount = 0, bool RandomDeal = false)
+public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, int Seconds, DateTime AchievedUtc, Guid GameId = default, int ReplayCount = 0, bool RandomDeal = false, string? Avatar = null)
 {
     /// <summary>The time as m:ss (or h:mm:ss), or an empty string if it wasn't recorded.</summary>
     public string TimeText => Seconds <= 0 ? "" : TimeSpan.FromSeconds(Seconds).ToString(Seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
