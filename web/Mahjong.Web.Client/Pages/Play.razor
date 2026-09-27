@@ -24,8 +24,7 @@
     }
 
     <section class="game">
-        @* The board column (title, messages, board and its controls) beside the score panel,
-           which reaches up to the site header. *@
+        @* The board column: title, messages, the score bar, then the board and its controls. *@
         <div class="play-table">
             <div class="board-column">
                 <div class="layout-title">
@@ -134,6 +133,8 @@
 
                 @if (Session.Game is { } game)
                 {
+                    <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
+
                     <div class="board-area">
                         @if (Session.State == SessionState.Paused)
                         {
@@ -202,11 +203,6 @@
                     <div class="loading">Dealing&hellip;</div>
                 }
             </div>
-
-            @if (Session.Game is { } scored)
-            {
-                <ScorePanel Game="scored" ClockStarted="Session.ClockStarted" />
-            }
         </div>
     </section>
 
