@@ -1,31 +1,38 @@
 using System.Text.Encodings.Web;
 using Azure;
 using Azure.Communication.Email;
+using Mahjong.Web.Client;
 using Mahjong.Web.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace Mahjong.Web.Services;
 
-/// <summary>The account emails Identity sends, as subject and HTML body.</summary>
-internal static class AccountEmails
+/// <summary>
+/// The account emails Identity sends, as subject and HTML body, in the language of the page that
+/// sent them (the player's language when they signed up or asked for a reset).
+/// </summary>
+internal sealed class AccountEmails(IStringLocalizer<Strings> L)
 {
-    public static (string Subject, string Html) Confirmation(string link) =>
-        ("Confirm your Mahjong account",
-         $"<p>Welcome to Mahjong!</p><p>Please <a href='{link}'>confirm your email address</a> to finish creating your account.</p>");
+    public (string Subject, string Html) Confirmation(string link) =>
+        (L["Confirm your Mahjong Haus account"],
+         L["<p>Welcome to Mahjong Haus!</p><p>Please <a href='{0}'>confirm your email address</a> to finish creating your account.</p>", link]);
 
-    public static (string Subject, string Html) PasswordResetLink(string link) =>
-        ("Reset your Mahjong password",
-         $"<p>You can <a href='{link}'>reset your password here</a>. If you didn't ask for this, you can ignore this email.</p>");
+    public (string Subject, string Html) PasswordResetLink(string link) =>
+        (L["Reset your Mahjong Haus password"],
+         L["<p>You can <a href='{0}'>reset your password here</a>. If you didn't ask for this, you can ignore this email.</p>", link]);
 
-    public static (string Subject, string Html) PasswordResetCode(string code) =>
-        ("Reset your Mahjong password", $"<p>Your password reset code is <strong>{HtmlEncoder.Default.Encode(code)}</strong>.</p>");
+    public (string Subject, string Html) PasswordResetCode(string code) =>
+        (L["Reset your Mahjong Haus password"], L["<p>Your password reset code is <strong>{0}</strong>.</p>", HtmlEncoder.Default.Encode(code)]);
 }
 
 /// <summary>Sends account emails through Azure Communication Services.</summary>
-public sealed class AcsEmailSender(EmailClient client, IOptions<EmailOptions> options, ILogger<AcsEmailSender> logger)
+public sealed class AcsEmailSender(EmailClient client, IOptions<EmailOptions> options, ILogger<AcsEmailSender> logger, IStringLocalizer<Strings> L)
     : IEmailSender<ApplicationUser>
 {
+    private readonly AccountEmails AccountEmails = new(L);
+
     public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
         SendAsync(email, AccountEmails.Confirmation(confirmationLink));
 
@@ -51,8 +58,10 @@ public sealed class AcsEmailSender(EmailClient client, IOptions<EmailOptions> op
 }
 
 /// <summary>Development sender: writes account emails (with their links) to the log.</summary>
-public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender<ApplicationUser>
+public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger, IStringLocalizer<Strings> L) : IEmailSender<ApplicationUser>
 {
+    private readonly AccountEmails AccountEmails = new(L);
+
     public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
         Log(email, AccountEmails.Confirmation(confirmationLink));
 

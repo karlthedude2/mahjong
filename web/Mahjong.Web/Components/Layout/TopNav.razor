@@ -9,18 +9,18 @@
 *@
 <nav class="top-nav">
     @* The full logo; on phones just the 家 glyph, so the icons fit. *@
-    <a class="brand" href="" aria-label="Mahjong Haus home">
+    <a class="brand" href="" aria-label="@L["Mahjong Haus home"]">
         <img class="brand-logo" src="logo-header.png" alt="" width="288" height="33" />
         <img class="logo" src="logo.png" alt="" width="100" height="104" />
     </a>
     @* New game, Leaderboards and Settings act in place on the game page (see App.razor); elsewhere they're ordinary links. *@
-    <a class="icon-link" href="" data-play-action="new-game" aria-label="New game" data-tip="New game">
+    <a class="icon-link" href="" data-play-action="new-game" aria-label="@L["New game"]" data-tip="@L["New game"]">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="5.5" y="3" width="13" height="18" rx="2.5" />
             <path d="M12 8.5v7M8.5 12h7" />
         </svg>
     </a>
-    <NavLink class="icon-link" href="leaderboards" data-play-action="leaderboards" aria-label="Leaderboards" data-tip="Leaderboards">
+    <NavLink class="icon-link" href="leaderboards" data-play-action="leaderboards" aria-label="@L["Leaderboards"]" data-tip="@L["Leaderboards"]">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M8 4h8v5a4 4 0 0 1-8 0z" />
             <path d="M8 6H5.5a2.5 2.5 0 0 0 2.8 4M16 6h2.5a2.5 2.5 0 0 1-2.8 4" />
@@ -31,14 +31,18 @@
     <span class="spacer"></span>
 
     <div class="right">
-        <a class="icon-link" href="?settings=1" data-play-action="settings" aria-label="Settings" data-tip="Settings">
+        @* The other language: a full page load (data-enhance-nav="false"), so the game starts in it too. *@
+        <a class="icon-link language" href="@LanguageLink" data-enhance-nav="false" data-play-action="language"
+           lang="@OtherLanguage" aria-label="@OtherLanguageName" data-tip="@OtherLanguageName">@OtherLanguage.ToUpperInvariant()</a>
+        <a class="icon-link" href="?settings=1" data-play-action="settings" aria-label="@L["Settings"]" data-tip="@L["Settings"]">
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
             </svg>
         </a>
         @* Toggled by the script in App.razor, which also swaps the label; the setting is kept in the browser. *@
-        <button type="button" class="icon-link sound-toggle" aria-label="Mute sound" data-tip="Mute sound">
+        <button type="button" class="icon-link sound-toggle" aria-label="@L["Mute sound"]" data-tip="@L["Mute sound"]"
+                data-label-mute="@L["Mute sound"]" data-label-unmute="@L["Turn sound on"]">
             <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true">
                 <path class="speaker" d="M4 9h4l5-4v14l-5-4H4z" />
                 <path d="M16 9.5a3.5 3.5 0 0 1 0 5" />
@@ -52,7 +56,7 @@
 
         <AuthorizeView>
             <Authorized>
-                <NavLink class="icon-link" href="stats" aria-label="My stats" data-tip="My stats">
+                <NavLink class="icon-link" href="stats" aria-label="@L["My stats"]" data-tip="@L["My stats"]">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" />
                     </svg>
@@ -60,13 +64,13 @@
                 @{
                     var shownName = context.User.FindFirst(PlayerClaimsFactory.DisplayNameClaim)?.Value ?? context.User.Identity?.Name;
                 }
-                <NavLink class="icon-link account" href="Account/Manage" aria-label="Your account" data-tip="@($"Account ({shownName})")">
+                <NavLink class="icon-link account" href="Account/Manage" aria-label="@L["Your account"]" data-tip="@L["Account ({0})", shownName ?? ""]">
                     <AvatarImage Id="@context.User.FindFirst(PlayerClaimsFactory.AvatarClaim)?.Value" Size="30" />
                 </NavLink>
                 <form action="Account/Logout" method="post">
                     <AntiforgeryToken />
                     <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                    <button type="submit" class="icon-link" aria-label="Sign out" data-tip="Sign out">
+                    <button type="submit" class="icon-link" aria-label="@L["Sign out"]" data-tip="@L["Sign out"]">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10" />
                         </svg>
@@ -74,12 +78,12 @@
                 </form>
             </Authorized>
             <NotAuthorized>
-                <NavLink class="icon-link" href="Account/Login" aria-label="Sign in" data-tip="Sign in">
+                <NavLink class="icon-link" href="Account/Login" aria-label="@L["Sign in"]" data-tip="@L["Sign in"]">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M14 4h5v16h-5M10 8l4 4-4 4M4 12h10" />
                     </svg>
                 </NavLink>
-                <NavLink class="icon-link register" href="Account/Register" aria-label="Create account" data-tip="Create account">
+                <NavLink class="icon-link register" href="Account/Register" aria-label="@L["Create account"]" data-tip="@L["Create account"]">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <circle cx="10" cy="8" r="4" />
                         <path d="M3 21a7 7 0 0 1 14 0M19 8v6M16 11h6" />
@@ -92,6 +96,11 @@
 
 @code {
     private string? currentUrl;
+
+    // The language to switch to (the one not showing), named in that language.
+    private static string OtherLanguage => Strings.IsSpanish ? "en" : "es";
+    private static string OtherLanguageName => Strings.IsSpanish ? "Switch to English" : "Cambiar a español";
+    private string LanguageLink => $"language/{OtherLanguage}?returnUrl={Uri.EscapeDataString("/" + currentUrl)}";
 
     protected override void OnInitialized()
     {

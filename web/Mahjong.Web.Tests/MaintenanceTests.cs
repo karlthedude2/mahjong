@@ -42,6 +42,19 @@ public sealed class MaintenanceTests : IDisposable
     }
 
     [Fact]
+    public async Task SpanishSpeakersSeeTheMaintenancePageInSpanish()
+    {
+        File.WriteAllText(flag, "on");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/leaderboards");
+        request.Headers.Add("Accept-Language", "es-MX");
+
+        var response = await Client().SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("Volvemos enseguida", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task TheApiAnswersServiceUnavailableDuringMaintenance()
     {
         File.WriteAllText(flag, "on");

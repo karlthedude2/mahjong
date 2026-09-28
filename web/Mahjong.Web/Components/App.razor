@@ -4,7 +4,7 @@
 @inject IOptions<AnalyticsOptions> Analytics
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
 
 <head>
     <meta charset="utf-8" />
@@ -17,6 +17,8 @@
     <ImportMap />
     @* Apply the saved background and sound setting before the page paints. *@
     <script>
+        // The page's language (chosen by the server), for the game code as it starts.
+        window.mahjongLanguage = function () { return document.documentElement.lang; };
         window.mahjongApplySettings = function () {
             try {
                 var root = document.documentElement;
@@ -27,7 +29,7 @@
                 var muted = localStorage.getItem("mahjong.sound") === "off";
                 root.dataset.sound = muted ? "off" : "on";
                 document.querySelectorAll(".sound-toggle").forEach(function (button) {
-                    var label = muted ? "Turn sound on" : "Mute sound";
+                    var label = muted ? button.getAttribute("data-label-unmute") : button.getAttribute("data-label-mute");
                     button.setAttribute("aria-label", label);
                     button.setAttribute("data-tip", label);
                     button.setAttribute("aria-pressed", muted ? "true" : "false");

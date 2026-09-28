@@ -4,6 +4,7 @@ using Mahjong.Web.Client.Api;
 using Mahjong.Web.Data;
 using Mahjong.Web.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 
 namespace Mahjong.Web.Api;
@@ -23,6 +24,25 @@ public static partial class ApiEndpoints
             ads.Value.ClientId is { Length: > 0 } clientId
                 ? Results.Text($"google.com, {clientId.Replace("ca-pub-", "pub-")}, DIRECT, f08c47fec0942fa0\n", "text/plain")
                 : Results.NotFound());
+
+        // Switches the site's language (the header's EN/ES button): remembers it for a year, then goes
+        // back to the page the player was on.
+        app.MapGet("/language/{code}", (string code, string? returnUrl, HttpContext http) =>
+        {
+            if (!Mahjong.Web.Client.Strings.Cultures.Contains(code))
+            {
+                return Results.NotFound();
+            }
+
+            http.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(code)),
+                new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), IsEssential = true, SameSite = SameSiteMode.Lax, Secure = http.Request.IsHttps });
+
+            // Only back to this site (a relative path), never elsewhere.
+            string target = returnUrl is { Length: > 0 } url && url.StartsWith('/') && !url.StartsWith("//") && !url.StartsWith("/\\") ? url : "/";
+            return Results.LocalRedirect(target);
+        });
 
         var api = app.MapGroup("/api");
 

@@ -9,31 +9,31 @@
 
 <div class="results-backdrop" role="dialog" aria-modal="true" aria-labelledby="results-title">
     <div class="results">
-        <h2 id="results-title">You cleared @LayoutName!</h2>
+        <h2 id="results-title">@L["You cleared {0}!", LayoutName]</h2>
 
         <table class="breakdown">
             <tbody>
-                <tr title="Face value of every tile you removed.">
-                    <th>Tile Points Completed</th><td>@breakdown.TilePoints.ToString("N0")</td>
+                <tr title="@L["Face value of every tile you removed."]">
+                    <th>@L["Tile Points Completed"]</th><td>@breakdown.TilePoints.ToString("N0")</td>
                 </tr>
-                <tr title="20 tiles inside one 30-second window: 100 points per second left.">
-                    <th>Speed Bonus <span class="count">(@breakdown.SpeedBonusCount &times;)</span></th><td>@breakdown.SpeedBonusTotal.ToString("N0")</td>
+                <tr title="@L["20 tiles inside one 30-second window: 100 points per second left."]">
+                    <th>@L["Speed Bonus"] <span class="count">(@breakdown.SpeedBonusCount &times;)</span></th><td>@breakdown.SpeedBonusTotal.ToString("N0")</td>
                 </tr>
-                <tr title="Every 20 tiles: the seconds left on the 5-minute bonus clock.">
-                    <th>Pace Bonus</th><td>@breakdown.PaceBonusTotal.ToString("N0")</td>
+                <tr title="@L["Every 20 tiles: the seconds left on the 5-minute bonus clock."]">
+                    <th>@L["Pace Bonus"]</th><td>@breakdown.PaceBonusTotal.ToString("N0")</td>
                 </tr>
-                <tr title="30 points per second left on the bonus clock when you finished.">
-                    <th>Time Left Bonus</th><td>@breakdown.TimeBonus.ToString("N0")</td>
+                <tr title="@L["30 points per second left on the bonus clock when you finished."]">
+                    <th>@L["Time Left Bonus"]</th><td>@breakdown.TimeBonus.ToString("N0")</td>
                 </tr>
-                <tr title="5,000 for a fast finish, dropping in steps after 2:40.">
-                    <th>Quick Finish Bonus</th><td>@breakdown.QuickFinishBonus.ToString("N0")</td>
+                <tr title="@L["5,000 for a fast finish, dropping in steps after 2:40."]">
+                    <th>@L["Quick Finish Bonus"]</th><td>@breakdown.QuickFinishBonus.ToString("N0")</td>
                 </tr>
-                <tr title="3,000, less 1,000 for each shuffle.">
-                    <th>No-Shuffle Bonus</th><td>@breakdown.NoShuffleBonus.ToString("N0")</td>
+                <tr title="@L["3,000, less 1,000 for each shuffle and 500 for each hint."]">
+                    <th>@L["No-Shuffle Bonus"]</th><td>@breakdown.NoShuffleBonus.ToString("N0")</td>
                 </tr>
             </tbody>
             <tfoot>
-                <tr><th>Total</th><td>@breakdown.Total.ToString("N0")</td></tr>
+                <tr><th>@L["Total"]</th><td>@breakdown.Total.ToString("N0")</td></tr>
             </tfoot>
         </table>
 
@@ -42,11 +42,11 @@
             <p class="replay-compare">
                 @if (breakdown.Total > replay.OriginalScore)
                 {
-                    <span>You beat <strong>@replay.OriginalPlayer</strong>'s original score of @replay.OriginalScore.ToString("N0")!</span>
+                    <span>@L.Html("You beat <strong>{0}</strong>'s original score of {1}!", replay.OriginalPlayer, replay.OriginalScore.ToString("N0"))</span>
                 }
                 else
                 {
-                    <span><strong>@replay.OriginalPlayer</strong>'s original score was @replay.OriginalScore.ToString("N0").</span>
+                    <span>@L.Html("<strong>{0}</strong>'s original score was {1}.", replay.OriginalPlayer, replay.OriginalScore.ToString("N0"))</span>
                 }
             </p>
         }
@@ -56,27 +56,27 @@
             <p class="verdict">
                 @if (Session.SubmittingResult)
                 {
-                    <span>Checking your game&hellip;</span>
+                    <span>@L["Checking your game…"]</span>
                 }
                 else if (Session.Replay != null && Session.Result is { ReplayRank: { } replayRank })
                 {
-                    <span>Verified. You're <strong>#@replayRank</strong> on this deal's <a href="replays/@Session.Replay.OriginalGameId">replay list</a>!</span>
+                    <span>@L.Html("Verified. You're <strong>#{0}</strong> on this deal's <a href=\"replays/{1}\">replay list</a>!", replayRank, Session.Replay.OriginalGameId)</span>
                 }
                 else if (Session.Replay != null && Session.Result != null)
                 {
-                    <span>Verified. Not a new best for you on this deal's <a href="replays/@Session.Replay.OriginalGameId">replay list</a>.</span>
+                    <span>@L.Html("Verified. Not a new best for you on this deal's <a href=\"replays/{0}\">replay list</a>.", Session.Replay.OriginalGameId)</span>
                 }
                 else if (Session.Result is { Rank: { } rank })
                 {
-                    <span>Verified. You're <strong>#@rank</strong> on the @LayoutName leaderboard!</span>
+                    <span>@L.Html("Verified. You're <strong>#{0}</strong> on the {1} leaderboard!", rank, LayoutName)</span>
                 }
                 else if (Session.Result != null)
                 {
-                    <span>Verified. Not in the top 20 this time.</span>
+                    <span>@L["Verified. Not in the top 20 this time."]</span>
                 }
                 else
                 {
-                    <span class="error">We couldn't verify this game, so it wasn't saved.</span>
+                    <span class="error">@L["We couldn't verify this game, so it wasn't saved."]</span>
                 }
             </p>
         }
@@ -84,22 +84,23 @@
         {
             @if (Session.IsPractice)
             {
-                <p class="verdict">That was practice, so it isn't saved or ranked. Start a new game to play for the leaderboard.</p>
+                <p class="verdict">@L["That was practice, so it isn't saved or ranked. Start a new game to play for the leaderboard."]</p>
             }
             else if (Session.IsGuestVerified && Session.Result is { Won: true })
             {
                 <p class="verdict">
-                    <strong>Save this score:</strong> <a href="Account/Login">sign in</a> or <a href="Account/Register">create an account</a>
-                    within a day, on this device, and it goes on @(Session.Replay != null ? "this deal's replay list" : "the leaderboard") as if you'd been signed in.
+                    @(Session.Replay != null
+                        ? L.Html("<strong>Save this score:</strong> <a href=\"Account/Login\">sign in</a> or <a href=\"Account/Register\">create an account</a> within a day, on this device, and it goes on this deal's replay list as if you'd been signed in.")
+                        : L.Html("<strong>Save this score:</strong> <a href=\"Account/Login\">sign in</a> or <a href=\"Account/Register\">create an account</a> within a day, on this device, and it goes on the leaderboard as if you'd been signed in."))
                 </p>
             }
             else if (Session.IsGuestVerified && Session.SubmittingResult)
             {
-                <p class="verdict">Checking your game&hellip;</p>
+                <p class="verdict">@L["Checking your game…"]</p>
             }
             else
             {
-                <p class="verdict"><a href="Account/Login">Sign in</a> to save your scores, get on the leaderboards and see fewer ads.</p>
+                <p class="verdict">@L.Html("<a href=\"Account/Login\">Sign in</a> to save your scores, get on the leaderboards and see fewer ads.")</p>
             }
             <AdSlot ClientId="@Config?.AdsClientId" SlotId="@Config?.AdSlotResults" Format="rectangle" CssClass="results-ad" />
         }
@@ -118,7 +119,7 @@
 
     [Parameter, EditorRequired] public Game.GameSession Session { get; set; } = default!;
 
-    private string PlayAgainText => Session.Replay != null || Session.IsPractice ? "Try this deal again" : "Play again";
+    private string PlayAgainText => Session.Replay != null || Session.IsPractice ? L["Try this deal again"] : L["Play again"];
 
     [Parameter] public ClientConfig? Config { get; set; }
 

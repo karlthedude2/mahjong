@@ -10,6 +10,7 @@ using Mahjong.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,22 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
+
+// English and Spanish (see Mahjong.Web.Client.Strings): the player's choice (a cookie set by
+// /language/{code}), otherwise the browser's preferred language, otherwise English.
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.SetDefaultCulture("en")
+        .AddSupportedCultures(Mahjong.Web.Client.Strings.Cultures)
+        .AddSupportedUICultures(Mahjong.Web.Client.Strings.Cultures);
+    options.ApplyCurrentCultureToResponseHeaders = true;
+    options.RequestCultureProviders =
+    [
+        new CookieRequestCultureProvider(),
+        new AcceptLanguageHeaderRequestCultureProvider(),
+    ];
+});
 
 // Sign-in: Identity cookies, plus each external provider whose keys are configured.
 var authentication = builder.Services.AddAuthentication(options =>
@@ -52,6 +69,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.Stores.SchemaVersion = ApplicationDbContext.IdentitySchemaVersion;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddErrorDescriber<LocalizedIdentityErrors>()
     .AddSignInManager()
     .AddClaimsPrincipalFactory<PlayerClaimsFactory>()
     .AddUserValidator<UniqueDisplayNameValidator>()
@@ -111,6 +129,13 @@ app.UseWhen(
     site => site.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 app.UseHttpsRedirection();
 RedirectToCanonicalHost(app, config["Site:CanonicalHost"]);
+app.UseRequestLocalization();
+// Spanish numbers and dates are written the Mexican way (see Strings.FormattingCulture).
+app.Use((context, next) =>
+{
+    System.Globalization.CultureInfo.CurrentCulture = Mahjong.Web.Client.Strings.FormattingCulture(System.Globalization.CultureInfo.CurrentUICulture);
+    return next(context);
+});
 var maintenance = new MaintenanceMode(MaintenanceMode.DefaultFlagPath(config), app.Services.GetRequiredService<TimeProvider>());
 app.Use(maintenance.InvokeAsync);
 app.UseRateLimiter();

@@ -6,32 +6,32 @@
 @attribute [Authorize]
 @inject ApplicationDbContext Db
 
-<PageTitle>My stats</PageTitle>
+<PageTitle>@L["My stats"] - Mahjong Haus</PageTitle>
 
-<h1>My stats</h1>
+<h1>@L["My stats"]</h1>
 
 @if (user != null)
 {
     <div class="d-flex gap-4 flex-wrap mb-4">
-        <div><div class="text-muted small">Games played</div><div class="fs-3 fw-bold">@user.GamesPlayed</div></div>
-        <div><div class="text-muted small">Games won</div><div class="fs-3 fw-bold">@user.GamesWon</div></div>
-        <div><div class="text-muted small">Win rate</div><div class="fs-3 fw-bold">@(user.GamesPlayed == 0 ? "-" : $"{100.0 * user.GamesWon / user.GamesPlayed:0}%")</div></div>
+        <div><div class="text-muted small">@L["Games played"]</div><div class="fs-3 fw-bold">@user.GamesPlayed</div></div>
+        <div><div class="text-muted small">@L["Games won"]</div><div class="fs-3 fw-bold">@user.GamesWon</div></div>
+        <div><div class="text-muted small">@L["Win rate"]</div><div class="fs-3 fw-bold">@(user.GamesPlayed == 0 ? "-" : $"{100.0 * user.GamesWon / user.GamesPlayed:0}%")</div></div>
     </div>
 
-    <h2 class="h4">Best scores</h2>
+    <h2 class="h4">@L["Best scores"]</h2>
     @if (bests.Count == 0)
     {
-        <p>Win a game to set your first best score.</p>
+        <p>@L["Win a game to set your first best score."]</p>
     }
     else
     {
         <table class="table table-sm">
-            <thead><tr><th scope="col">Layout</th><th scope="col" class="text-end">Best</th><th scope="col" class="text-end">Wins</th></tr></thead>
+            <thead><tr><th scope="col">@L["Layout"]</th><th scope="col" class="text-end">@L["Best"]</th><th scope="col" class="text-end">@L["Wins"]</th></tr></thead>
             <tbody>
                 @foreach (var best in bests)
                 {
                     <tr>
-                        <td><a href="leaderboards?layout=@Uri.EscapeDataString(best.Layout)">@best.Layout</a></td>
+                        <td><a href="leaderboards?layout=@Uri.EscapeDataString(best.Layout)">@L.LayoutName(best.Layout)</a></td>
                         <td class="text-end">@best.Score.ToString("N0")</td>
                         <td class="text-end">@best.Wins</td>
                     </tr>

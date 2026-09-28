@@ -7,23 +7,23 @@
     <div class="board-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title"
          @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync" tabindex="-1" @ref="dialog">
         <header>
-            <h2 id="leaderboard-title">Leaderboard</h2>
-            <button type="button" class="btn-close" aria-label="Close" @onclick="CloseAsync"></button>
+            <h2 id="leaderboard-title">@L["Leaderboard"]</h2>
+            <button type="button" class="btn-close" aria-label="@L["Close"]" @onclick="CloseAsync"></button>
         </header>
 
         <label class="picker">
-            <span>Layout</span>
+            <span>@L["Layout"]</span>
             <select class="form-select form-select-sm" value="@layoutName" @onchange="OnLayoutChangedAsync">
-                <optgroup label="Mahjong Solitaire">
+                <optgroup label="@L["Mahjong Solitaire"]">
                     @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Solitaire))
                     {
-                        <option value="@l.Name">@l.Name</option>
+                        <option value="@l.Name">@L.LayoutName(l)</option>
                     }
                 </optgroup>
-                <optgroup label="Connect (Shisen-Sho)">
+                <optgroup label="@L["Connect (Shisen-Sho)"]">
                     @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Connect))
                     {
-                        <option value="@l.Name">@l.Name</option>
+                        <option value="@l.Name">@L.LayoutName(l)</option>
                     }
                 </optgroup>
             </select>
@@ -31,11 +31,11 @@
 
         @if (entries == null)
         {
-            <p class="status">@(failed ? "The leaderboard couldn't be loaded. Check your connection and try again." : "Loading…")</p>
+            <p class="status">@(failed ? L["The leaderboard couldn't be loaded. Check your connection and try again."] : L["Loading…"])</p>
         }
         else if (entries.Count == 0)
         {
-            <p class="status">No scores on @layoutName yet. Be the first!</p>
+            <p class="status">@L["No scores on {0} yet. Be the first!", L.LayoutName(layoutName)]</p>
         }
         else
         {
@@ -44,10 +44,10 @@
                     <thead>
                         <tr>
                             <th scope="col">#</th>
-                            <th scope="col">Player</th>
-                            <th scope="col" class="text-end">Score</th>
-                            <th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th>
-                            <th scope="col" class="text-end">Date</th>
+                            <th scope="col">@L["Player"]</th>
+                            <th scope="col" class="text-end">@L["Score"]</th>
+                            <th scope="col" class="text-end" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</th>
+                            <th scope="col" class="text-end">@L["Date"]</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,7 +60,7 @@
                                     @entry.DisplayName
                                     @if (entry.RandomDeal)
                                     {
-                                        <span class="badge bg-secondary ms-1">Random deal</span>
+                                        <span class="badge bg-secondary ms-1">@L["Random deal"]</span>
                                     }
                                 </td>
                                 <td class="text-end">@entry.Score.ToString("N0")</td>
@@ -74,8 +74,8 @@
         }
 
         <footer>
-            <a class="more" href="leaderboards?layout=@Uri.EscapeDataString(layoutName)" target="_blank" rel="noopener">Replays and more (new tab)</a>
-            <button type="button" class="btn btn-primary" @onclick="CloseAsync">Close</button>
+            <a class="more" href="leaderboards?layout=@Uri.EscapeDataString(layoutName)" target="_blank" rel="noopener">@L["Replays and more (new tab)"]</a>
+            <button type="button" class="btn btn-primary" @onclick="CloseAsync">@L["Close"]</button>
         </footer>
     </div>
 </div>

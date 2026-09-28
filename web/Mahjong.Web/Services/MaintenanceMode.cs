@@ -62,12 +62,15 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
 
         if (path.StartsWithSegments("/api"))
         {
-            await context.Response.WriteAsync("The site is being updated. Please try again in a minute or two.");
+            await context.Response.WriteAsync(Mahjong.Web.Client.Strings.IsSpanish
+                ? "Estamos actualizando el sitio. Vuelve a intentarlo en uno o dos minutos."
+                : "The site is being updated. Please try again in a minute or two.");
             return;
         }
 
         context.Response.ContentType = "text/html; charset=utf-8";
-        await context.Response.WriteAsync(Page);
+        // In the visitor's language (request localization has already chosen it).
+        await context.Response.WriteAsync(Mahjong.Web.Client.Strings.IsSpanish ? SpanishPage : Page);
     }
 
     private const string Page = """
@@ -112,6 +115,53 @@ public sealed class MaintenanceMode(string? flagPath, TimeProvider time)
                 <h1>We'll be right back</h1>
                 <p>Mahjong Haus is being updated. This usually takes a minute or two.</p>
                 <p class="small">This page will reload by itself when the site is ready.</p>
+            </main>
+        </body>
+        </html>
+        """;
+
+    private const string SpanishPage = """
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta http-equiv="refresh" content="30" />
+            <title>Volvemos enseguida - Mahjong Haus</title>
+            <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+            <style>
+                body {
+                    margin: 0;
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 1rem;
+                    box-sizing: border-box;
+                    background: radial-gradient(circle at 50% 30%, #1f5a4a, #0e2a23);
+                    color: #2b2116;
+                    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+                }
+                main {
+                    max-width: 28rem;
+                    padding: 2rem 1.75rem;
+                    border-radius: 1rem;
+                    background: #fffaf0;
+                    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+                    text-align: center;
+                }
+                img { display: block; width: 100%; max-width: 288px; height: auto; margin: 0 auto 0.75rem; }
+                h1 { margin: 0.5rem 0 0.75rem; font-size: 1.6rem; }
+                p { margin: 0.5rem 0; line-height: 1.5; }
+                .small { color: #6b5a44; font-size: 0.9rem; }
+            </style>
+        </head>
+        <body>
+            <main>
+                <img src="/logo-text.png" alt="Mahjong Haus" width="288" height="33" />
+                <h1>Volvemos enseguida</h1>
+                <p>Estamos actualizando Mahjong Haus. Suele tardar uno o dos minutos.</p>
+                <p class="small">Esta página se recargará sola cuando el sitio esté listo.</p>
             </main>
         </body>
         </html>

@@ -6,7 +6,7 @@
     the tile on top is also the one that receives a click. Each tile is its own <g> element, which
     is where future animations (CSS classes on the element) will go.
 *@
-<svg class="board" viewBox="@viewBox" data-margin="@margin" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mahjong board">
+<svg class="board" viewBox="@viewBox" data-margin="@margin" preserveAspectRatio="xMidYMid meet" role="img" aria-label="@L["Mahjong board"]">
     @*
         Darkens the selected tile. This is an SVG filter rather than CSS filter: brightness(),
         because Safari and every iPhone browser ignore CSS filters on elements inside an SVG.
@@ -97,7 +97,7 @@
     }));
 
     // Razor reserves <text>, so the SVG text elements are built in code.
-    private static RenderFragment GlyphText(TileGlyph glyph) => builder =>
+    private RenderFragment GlyphText(TileGlyph glyph) => builder =>
     {
         builder.OpenElement(0, "text");
         builder.AddAttribute(1, "class", $"glyph-main {glyph.ColorClass}");
@@ -110,7 +110,15 @@
         builder.AddAttribute(6, "class", $"glyph-caption {glyph.ColorClass}");
         builder.AddAttribute(7, "x", FaceWidth / 2);
         builder.AddAttribute(8, "y", FaceHeight * 0.82);
-        builder.AddContent(9, glyph.Caption);
+        // Translated captions can be longer ("ESTACIÓN"): squeeze long ones to fit the tile.
+        string caption = L[glyph.Caption];
+        if (caption.Length > 6)
+        {
+            builder.AddAttribute(10, "textLength", FaceWidth - 12);
+            builder.AddAttribute(11, "lengthAdjust", "spacingAndGlyphs");
+        }
+
+        builder.AddContent(12, caption);
         builder.CloseElement();
     };
 
