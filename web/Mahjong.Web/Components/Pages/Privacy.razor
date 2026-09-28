@@ -1,179 +1,368 @@
 @page "/privacy"
 
-<PageTitle>Privacy policy - Mahjong</PageTitle>
+@* The policy in full in each language (a legal text reads better whole than as translated fragments). *@
+@if (Strings.IsSpanish)
+{
+    <PageTitle>Política de privacidad - Mahjong Haus</PageTitle>
 
-<article class="policy">
-    <h1>Privacy policy</h1>
-    <p class="effective">Effective 24 September 2026</p>
+    <article class="policy" lang="es">
+        <h1>Política de privacidad</h1>
+        <p class="effective">Vigente desde el 28 de septiembre de 2026</p>
+        <p class="effective">Esta es una traducción de la política en inglés. Si hubiera alguna diferencia, prevalece la <a href="language/en?returnUrl=%2Fprivacy" data-enhance-nav="false">versión en inglés</a>.</p>
 
-    <p>
-        This policy explains what information Mahjong (<a href="https://mahjong.haus">mahjong.haus</a>) collects,
-        how it is used, and the choices you have. The site is run by KabKolor. If you have any questions, contact us
-        at <a href="mailto:@ContactEmail">@ContactEmail</a>.
-    </p>
-
-    <h2>Playing as a guest</h2>
-    <p>
-        You can play without an account. So that a guest can still save a win by signing in afterwards, our server
-        deals and times each guest game and checks the result, just like a signed-in game. A guest game isn't linked to
-        you or your device: it's identified only by a random code kept in your browser. If you sign in on the same
-        device within a day of winning, the game is saved to your account; otherwise it's deleted after a day. Your
-        preferences (see <a href="privacy#storage">Cookies and local storage</a>) are saved only in your own browser.
-    </p>
-
-    <h2>If you create an account</h2>
-    <p>We collect and store:</p>
-    <ul>
-        <li><strong>Your email address</strong>, used to sign you in, confirm your account and reset your password.</li>
-        <li><strong>Your password</strong>, stored only in a securely hashed form that can't be turned back into the password.</li>
-        <li>
-            <strong>Your display name</strong>, which you choose when you create the account and is shown publicly
-            on the leaderboards. It can't be changed afterwards; please don't use your real name if you'd rather not.
-        </li>
-        <li><strong>Your avatar</strong>, if you choose one, which is shown next to your name on the leaderboards.</li>
-        <li>
-            <strong>Google sign-in details</strong>, if you sign in with Google: an identifier Google provides for your
-            account, plus the email address and name Google shares with us. We don't receive your Google password.
-        </li>
-        <li><strong>Your preferences</strong>: the tile set and background you choose.</li>
-    </ul>
-
-    <h2 id="ranked-heading">Ranked games and leaderboards</h2>
-    <p>When you play while signed in, we store:</p>
-    <ul>
-        <li>Each game's layout, start and finish times, result and score, and the number of games you've played and won.</li>
-        <li>
-            The moves of games that reach a leaderboard, kept as proof of the score for as long as the score stays on
-            the leaderboard. We also keep the moves of games our checks reject, for 30 days, so we can look into any
-            problem you report. Other games keep only their result.
-        </li>
-        <li>
-            <strong>Leaderboard entries</strong>: your display name, score, game time and date. Leaderboards are public,
-            so anyone visiting the site can see them. The same goes for replay lists, which rank the best scores of
-            players who replay a leaderboard game's deal; replays keep their moves on the same terms.
-        </li>
-    </ul>
-
-    <h2>How we use your information</h2>
-    <ul>
-        <li>To run the game, your account and the leaderboards.</li>
-        <li>To check that leaderboard scores are genuine.</li>
-        <li>To send account emails (confirmation and password reset). We don't send marketing email.</li>
-        <li>To keep the site secure and working, and to fix problems.</li>
-    </ul>
-    <p>We don't sell your personal information, and we don't share it except as described in this policy.</p>
-
-    <h2 id="advertising-heading">Advertising</h2>
-    <p>
-        The site shows ads from Google AdSense. Guests see more ads than signed-in players.
-    </p>
-    <ul>
-        <li>
-            Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this website
-            or other websites.
-        </li>
-        <li>
-            Google's use of advertising cookies enables it and its partners to serve ads to you based on your visits
-            to this site and/or other sites on the Internet.
-        </li>
-        <li>
-            You can opt out of personalized advertising by visiting
-            <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>. You can also
-            opt out of some third-party vendors' use of cookies for personalized advertising at
-            <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener">www.aboutads.info</a>.
-        </li>
-        <li>
-            Visitors in the European Economic Area, the UK and Switzerland are asked for consent before personalized
-            ads are shown.
-        </li>
-    </ul>
-    <p>
-        Learn more in
-        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses
-        information from sites that use its services</a>.
-    </p>
-
-    <h2>Analytics</h2>
-    <p>
-        We use Cloudflare Web Analytics to understand how many people visit the site, which pages they view and where
-        visitors come from (for example, a search engine or another website). It doesn't use cookies or local storage,
-        doesn't track you across other websites, and doesn't identify you personally. We see only overall totals, such
-        as visits per day, pages, referring sites, and browser, device and country. Learn more in
-        <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare's description
-        of Web Analytics</a>.
-    </p>
-
-    <h2 id="storage">Cookies and local storage</h2>
-    <p>The site itself uses only cookies it needs in order to work:</p>
-    <ul>
-        <li><strong>Sign-in cookies</strong> keep you signed in, and handle signing in with Google.</li>
-        <li><strong>A security cookie</strong> protects forms, such as sign-in and registration, against forgery.</li>
-        <li><strong>Server routing cookies</strong> (<code>ARRAffinity</code>), set by our hosting provider, keep your visit on the same server.</li>
-    </ul>
-    <p>
-        The game also saves your tile set, background, last layout and sound setting in your browser's local storage,
-        so they're remembered next time, along with the code for a guest win waiting to be saved. This stays on your
-        device; clearing your browser's site data removes it.
-    </p>
-    <p>Google's advertising cookies are described under <a href="privacy#advertising-heading">Advertising</a> above.</p>
-
-    <h2>Service providers</h2>
-    <p>We use these providers to run the site:</p>
-    <ul>
-        <li><strong>Microsoft Azure</strong> hosts the website and its database, in the United States, and sends our account emails.</li>
-        <li><strong>Cloudflare</strong> provides the site's domain name service and privacy-friendly visit statistics.</li>
-        <li><strong>Google</strong> provides Google sign-in (if you use it) and advertising.</li>
-    </ul>
-    <p>
-        Like most websites, our hosting provider records technical information about requests, such as IP addresses
-        and browser details, to keep the service running and secure.
-    </p>
-
-    <h2>How long we keep information</h2>
-    <ul>
-        <li>Account information is kept until you delete your account.</li>
-        <li>Stored moves are kept as described under <a href="privacy#ranked-heading">Ranked games and leaderboards</a>.</li>
-        <li>
-            When you delete your account, your sign-in details, email address and preferences are deleted. Your
-            leaderboard entries (display name, score, time and date) stay on the leaderboards, and your game history is
-            kept without being linked to any account. If you'd like your leaderboard entries removed as well, email us
-            at <a href="mailto:@ContactEmail">@ContactEmail</a>.
-        </li>
-    </ul>
-
-    <h2>Your choices and rights</h2>
-    <ul>
-        <li>You can change your display name at any time under <a href="Account/Manage">your account</a>.</li>
-        <li>You can download your personal data, or delete your account, under <a href="Account/Manage/PersonalData">Personal data</a>.</li>
-        <li>You can play as a guest without creating an account.</li>
-        <li>
-            Depending on where you live, you may have rights to access, correct, delete or move your personal
-            information, or to object to how it's used. To make a request, email
+        <p>
+            Esta política explica qué información recopila Mahjong Haus (<a href="https://mahjong.haus">mahjong.haus</a>),
+            cómo se usa y qué opciones tienes. El sitio lo gestiona KabKolor. Si tienes alguna pregunta, escríbenos a
             <a href="mailto:@ContactEmail">@ContactEmail</a>.
-        </li>
-    </ul>
+        </p>
 
-    <h2>Security</h2>
-    <p>
-        The site uses HTTPS encryption, passwords are stored hashed, and access to the database is restricted. No
-        method of transmission or storage is completely secure, but we work to protect your information.
-    </p>
+        <h2>Jugar como invitado</h2>
+        <p>
+            Puedes jugar sin cuenta. Para que un invitado pueda guardar una victoria iniciando sesión después, nuestro
+            servidor reparte y cronometra cada partida de invitado y comprueba el resultado, igual que una partida con la
+            sesión iniciada. Una partida de invitado no está vinculada a ti ni a tu dispositivo: solo se identifica con un
+            código aleatorio que se guarda en tu navegador. Si inicias sesión en el mismo dispositivo en menos de un día
+            después de ganar, la partida se guarda en tu cuenta; si no, se elimina al cabo de un día. Tus preferencias (ver
+            <a href="privacy#storage">Cookies y almacenamiento local</a>) se guardan solo en tu navegador.
+        </p>
 
-    <h2>Children</h2>
-    <p>
-        The site isn't directed at children under 13, and we don't knowingly collect personal information from them.
-        If you believe a child has created an account, contact us and we'll delete it.
-    </p>
+        <h2>Si creas una cuenta</h2>
+        <p>Recopilamos y guardamos:</p>
+        <ul>
+            <li><strong>Tu correo electrónico</strong>, para iniciar tu sesión, confirmar tu cuenta y restablecer tu contraseña.</li>
+            <li><strong>Tu contraseña</strong>, guardada solo de forma cifrada e irreversible, que no se puede convertir de nuevo en la contraseña.</li>
+            <li>
+                <strong>Tu nombre visible</strong>, que eliges al crear la cuenta y que se muestra públicamente en las
+                clasificaciones. No se puede cambiar después; si lo prefieres, no uses tu nombre real.
+            </li>
+            <li><strong>Tu avatar</strong>, si eliges uno, que se muestra junto a tu nombre en las clasificaciones.</li>
+            <li>
+                <strong>Los datos de inicio de sesión con Google</strong>, si inicias sesión con Google: un identificador que
+                Google asigna a tu cuenta, más el correo electrónico y el nombre que Google comparte con nosotros. No recibimos
+                tu contraseña de Google.
+            </li>
+            <li><strong>Tus preferencias</strong>: las fichas y el fondo que elijas.</li>
+        </ul>
 
-    <h2>Changes to this policy</h2>
-    <p>
-        If we change this policy, we'll update it on this page and change the date at the top. Significant changes will
-        be highlighted on the site.
-    </p>
+        <h2 id="ranked-heading">Partidas clasificadas y clasificaciones</h2>
+        <p>Cuando juegas con la sesión iniciada, guardamos:</p>
+        <ul>
+            <li>El tablero, las horas de inicio y fin, el resultado y la puntuación de cada partida, y el número de partidas que jugaste y ganaste.</li>
+            <li>
+                Las jugadas de las partidas que entran en una clasificación, como prueba de la puntuación mientras siga en la
+                clasificación. También guardamos durante 30 días las jugadas de las partidas que nuestras comprobaciones
+                rechazan, para poder revisar cualquier problema que nos comuniques. De las demás partidas solo guardamos el
+                resultado.
+            </li>
+            <li>
+                <strong>Las entradas de las clasificaciones</strong>: tu nombre visible, tu puntuación, la duración y la fecha
+                de la partida. Las clasificaciones son públicas, así que cualquier visitante puede verlas. Lo mismo ocurre con
+                las listas de repeticiones, que clasifican las mejores puntuaciones de quienes repiten el reparto de una
+                partida de la clasificación; las repeticiones guardan sus jugadas en las mismas condiciones.
+            </li>
+        </ul>
 
-    <h2>Contact</h2>
-    <p>KabKolor &middot; <a href="mailto:@ContactEmail">@ContactEmail</a></p>
-</article>
+        <h2>Cómo usamos tu información</h2>
+        <ul>
+            <li>Para que funcionen el juego, tu cuenta y las clasificaciones.</li>
+            <li>Para comprobar que las puntuaciones de las clasificaciones son auténticas.</li>
+            <li>Para enviar los correos de la cuenta (confirmación y restablecimiento de contraseña). No enviamos correos publicitarios.</li>
+            <li>Para mantener el sitio seguro y en funcionamiento, y para solucionar problemas.</li>
+        </ul>
+        <p>No vendemos tu información personal ni la compartimos, salvo como se describe en esta política.</p>
+
+        <h2 id="advertising-heading">Publicidad</h2>
+        <p>
+            El sitio muestra anuncios de Google AdSense. Los invitados ven más anuncios que quienes inician sesión.
+        </p>
+        <ul>
+            <li>
+                Terceros proveedores, incluido Google, usan cookies para mostrar anuncios según tus visitas anteriores a este
+                sitio web o a otros.
+            </li>
+            <li>
+                El uso de cookies publicitarias permite a Google y a sus socios mostrarte anuncios según tus visitas a este
+                sitio o a otros sitios de Internet.
+            </li>
+            <li>
+                Puedes desactivar la publicidad personalizada en la
+                <a href="https://adssettings.google.com" target="_blank" rel="noopener">Configuración de anuncios de Google</a>.
+                También puedes desactivar el uso de cookies de algunos terceros proveedores para publicidad personalizada en
+                <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener">www.aboutads.info</a>.
+            </li>
+            <li>
+                A los visitantes del Espacio Económico Europeo, el Reino Unido y Suiza se les pide su consentimiento antes de
+                mostrar anuncios personalizados.
+            </li>
+        </ul>
+        <p>
+            Más información sobre
+            <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">cómo usa Google
+            la información de los sitios que usan sus servicios</a>.
+        </p>
+
+        <h2>Estadísticas de visitas</h2>
+        <p>
+            Usamos Cloudflare Web Analytics para saber cuántas personas visitan el sitio, qué páginas ven y desde dónde llegan
+            (por ejemplo, un buscador u otro sitio web). No usa cookies ni almacenamiento local, no te sigue por otros sitios
+            web y no te identifica personalmente. Solo vemos totales generales, como visitas por día, páginas, sitios de
+            procedencia, y navegador, dispositivo y país. Más información en la
+            <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">descripción de Web Analytics
+            de Cloudflare</a>.
+        </p>
+
+        <h2 id="storage">Cookies y almacenamiento local</h2>
+        <p>El sitio solo usa las cookies que necesita para funcionar:</p>
+        <ul>
+            <li><strong>Las cookies de inicio de sesión</strong> mantienen tu sesión iniciada y gestionan el inicio de sesión con Google.</li>
+            <li><strong>Una cookie de seguridad</strong> protege los formularios, como el de inicio de sesión y el de registro, contra falsificaciones.</li>
+            <li><strong>Una cookie de idioma</strong> recuerda el idioma que eliges.</li>
+            <li><strong>Las cookies de enrutamiento del servidor</strong> (<code>ARRAffinity</code>), que pone nuestro proveedor de alojamiento, mantienen tu visita en el mismo servidor.</li>
+        </ul>
+        <p>
+            El juego también guarda en el almacenamiento local de tu navegador las fichas, el fondo, el último tablero y la
+            opción de sonido, para recordarlos la próxima vez, junto con el código de una victoria de invitado pendiente de
+            guardar. Esto se queda en tu dispositivo; al borrar los datos del sitio en tu navegador, se elimina.
+        </p>
+        <p>Las cookies publicitarias de Google se describen arriba, en <a href="privacy#advertising-heading">Publicidad</a>.</p>
+
+        <h2>Proveedores de servicios</h2>
+        <p>Usamos estos proveedores para que funcione el sitio:</p>
+        <ul>
+            <li><strong>Microsoft Azure</strong> aloja el sitio web y su base de datos, en Estados Unidos, y envía los correos de la cuenta.</li>
+            <li><strong>Cloudflare</strong> proporciona el servicio de nombres de dominio del sitio y estadísticas de visitas respetuosas con la privacidad.</li>
+            <li><strong>Google</strong> proporciona el inicio de sesión con Google (si lo usas) y la publicidad.</li>
+        </ul>
+        <p>
+            Como la mayoría de los sitios web, nuestro proveedor de alojamiento registra información técnica de las
+            solicitudes, como direcciones IP y datos del navegador, para mantener el servicio en funcionamiento y seguro.
+        </p>
+
+        <h2>Cuánto tiempo guardamos la información</h2>
+        <ul>
+            <li>La información de la cuenta se guarda hasta que elimines tu cuenta.</li>
+            <li>Las jugadas se guardan como se describe en <a href="privacy#ranked-heading">Partidas clasificadas y clasificaciones</a>.</li>
+            <li>
+                Cuando eliminas tu cuenta, se eliminan tus datos de inicio de sesión, tu correo electrónico y tus
+                preferencias. Tus entradas de las clasificaciones (nombre visible, puntuación, duración y fecha) se quedan en
+                las clasificaciones, y tu historial de partidas se conserva sin vincularse a ninguna cuenta. Si también
+                quieres que se eliminen tus entradas de las clasificaciones, escríbenos a
+                <a href="mailto:@ContactEmail">@ContactEmail</a>.
+            </li>
+        </ul>
+
+        <h2>Tus opciones y derechos</h2>
+        <ul>
+            <li>Tu nombre visible no se puede cambiar después de crear la cuenta; tu avatar sí, en <a href="Account/Manage">tu cuenta</a>.</li>
+            <li>Puedes descargar tus datos personales o eliminar tu cuenta en <a href="Account/Manage/PersonalData">Datos personales</a>.</li>
+            <li>Puedes jugar como invitado sin crear una cuenta.</li>
+            <li>
+                Según dónde vivas, puedes tener derecho a acceder a tu información personal, corregirla, eliminarla o
+                trasladarla, o a oponerte a cómo se usa. Para hacer una solicitud, escríbenos a
+                <a href="mailto:@ContactEmail">@ContactEmail</a>.
+            </li>
+        </ul>
+
+        <h2>Seguridad</h2>
+        <p>
+            El sitio usa cifrado HTTPS, las contraseñas se guardan cifradas y el acceso a la base de datos está restringido.
+            Ningún método de transmisión o almacenamiento es totalmente seguro, pero trabajamos para proteger tu información.
+        </p>
+
+        <h2>Menores</h2>
+        <p>
+            El sitio no está dirigido a menores de 13 años y no recopilamos a sabiendas información personal de ellos. Si
+            crees que un menor creó una cuenta, escríbenos y la eliminaremos.
+        </p>
+
+        <h2>Cambios en esta política</h2>
+        <p>
+            Si cambiamos esta política, la actualizaremos en esta página y cambiaremos la fecha de arriba. Los cambios
+            importantes se destacarán en el sitio.
+        </p>
+
+        <h2>Contacto</h2>
+        <p>KabKolor &middot; <a href="mailto:@ContactEmail">@ContactEmail</a></p>
+    </article>
+}
+else
+{
+    <PageTitle>Privacy policy - Mahjong Haus</PageTitle>
+
+    <article class="policy">
+        <h1>Privacy policy</h1>
+        <p class="effective">Effective 28 September 2026</p>
+
+        <p>
+            This policy explains what information Mahjong Haus (<a href="https://mahjong.haus">mahjong.haus</a>) collects,
+            how it is used, and the choices you have. The site is run by KabKolor. If you have any questions, contact us
+            at <a href="mailto:@ContactEmail">@ContactEmail</a>.
+        </p>
+
+        <h2>Playing as a guest</h2>
+        <p>
+            You can play without an account. So that a guest can still save a win by signing in afterwards, our server
+            deals and times each guest game and checks the result, just like a signed-in game. A guest game isn't linked to
+            you or your device: it's identified only by a random code kept in your browser. If you sign in on the same
+            device within a day of winning, the game is saved to your account; otherwise it's deleted after a day. Your
+            preferences (see <a href="privacy#storage">Cookies and local storage</a>) are saved only in your own browser.
+        </p>
+
+        <h2>If you create an account</h2>
+        <p>We collect and store:</p>
+        <ul>
+            <li><strong>Your email address</strong>, used to sign you in, confirm your account and reset your password.</li>
+            <li><strong>Your password</strong>, stored only in a securely hashed form that can't be turned back into the password.</li>
+            <li>
+                <strong>Your display name</strong>, which you choose when you create the account and is shown publicly
+                on the leaderboards. It can't be changed afterwards; please don't use your real name if you'd rather not.
+            </li>
+            <li><strong>Your avatar</strong>, if you choose one, which is shown next to your name on the leaderboards.</li>
+            <li>
+                <strong>Google sign-in details</strong>, if you sign in with Google: an identifier Google provides for your
+                account, plus the email address and name Google shares with us. We don't receive your Google password.
+            </li>
+            <li><strong>Your preferences</strong>: the tile set and background you choose.</li>
+        </ul>
+
+        <h2 id="ranked-heading">Ranked games and leaderboards</h2>
+        <p>When you play while signed in, we store:</p>
+        <ul>
+            <li>Each game's layout, start and finish times, result and score, and the number of games you've played and won.</li>
+            <li>
+                The moves of games that reach a leaderboard, kept as proof of the score for as long as the score stays on
+                the leaderboard. We also keep the moves of games our checks reject, for 30 days, so we can look into any
+                problem you report. Other games keep only their result.
+            </li>
+            <li>
+                <strong>Leaderboard entries</strong>: your display name, score, game time and date. Leaderboards are public,
+                so anyone visiting the site can see them. The same goes for replay lists, which rank the best scores of
+                players who replay a leaderboard game's deal; replays keep their moves on the same terms.
+            </li>
+        </ul>
+
+        <h2>How we use your information</h2>
+        <ul>
+            <li>To run the game, your account and the leaderboards.</li>
+            <li>To check that leaderboard scores are genuine.</li>
+            <li>To send account emails (confirmation and password reset). We don't send marketing email.</li>
+            <li>To keep the site secure and working, and to fix problems.</li>
+        </ul>
+        <p>We don't sell your personal information, and we don't share it except as described in this policy.</p>
+
+        <h2 id="advertising-heading">Advertising</h2>
+        <p>
+            The site shows ads from Google AdSense. Guests see more ads than signed-in players.
+        </p>
+        <ul>
+            <li>
+                Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this website
+                or other websites.
+            </li>
+            <li>
+                Google's use of advertising cookies enables it and its partners to serve ads to you based on your visits
+                to this site and/or other sites on the Internet.
+            </li>
+            <li>
+                You can opt out of personalized advertising by visiting
+                <a href="https://adssettings.google.com" target="_blank" rel="noopener">Google Ads Settings</a>. You can also
+                opt out of some third-party vendors' use of cookies for personalized advertising at
+                <a href="https://www.aboutads.info/choices" target="_blank" rel="noopener">www.aboutads.info</a>.
+            </li>
+            <li>
+                Visitors in the European Economic Area, the UK and Switzerland are asked for consent before personalized
+                ads are shown.
+            </li>
+        </ul>
+        <p>
+            Learn more in
+            <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">how Google uses
+            information from sites that use its services</a>.
+        </p>
+
+        <h2>Analytics</h2>
+        <p>
+            We use Cloudflare Web Analytics to understand how many people visit the site, which pages they view and where
+            visitors come from (for example, a search engine or another website). It doesn't use cookies or local storage,
+            doesn't track you across other websites, and doesn't identify you personally. We see only overall totals, such
+            as visits per day, pages, referring sites, and browser, device and country. Learn more in
+            <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare's description
+            of Web Analytics</a>.
+        </p>
+
+        <h2 id="storage">Cookies and local storage</h2>
+        <p>The site itself uses only cookies it needs in order to work:</p>
+        <ul>
+            <li><strong>Sign-in cookies</strong> keep you signed in, and handle signing in with Google.</li>
+            <li><strong>A security cookie</strong> protects forms, such as sign-in and registration, against forgery.</li>
+            <li><strong>A language cookie</strong> remembers the language you choose.</li>
+            <li><strong>Server routing cookies</strong> (<code>ARRAffinity</code>), set by our hosting provider, keep your visit on the same server.</li>
+        </ul>
+        <p>
+            The game also saves your tile set, background, last layout and sound setting in your browser's local storage,
+            so they're remembered next time, along with the code for a guest win waiting to be saved. This stays on your
+            device; clearing your browser's site data removes it.
+        </p>
+        <p>Google's advertising cookies are described under <a href="privacy#advertising-heading">Advertising</a> above.</p>
+
+        <h2>Service providers</h2>
+        <p>We use these providers to run the site:</p>
+        <ul>
+            <li><strong>Microsoft Azure</strong> hosts the website and its database, in the United States, and sends our account emails.</li>
+            <li><strong>Cloudflare</strong> provides the site's domain name service and privacy-friendly visit statistics.</li>
+            <li><strong>Google</strong> provides Google sign-in (if you use it) and advertising.</li>
+        </ul>
+        <p>
+            Like most websites, our hosting provider records technical information about requests, such as IP addresses
+            and browser details, to keep the service running and secure.
+        </p>
+
+        <h2>How long we keep information</h2>
+        <ul>
+            <li>Account information is kept until you delete your account.</li>
+            <li>Stored moves are kept as described under <a href="privacy#ranked-heading">Ranked games and leaderboards</a>.</li>
+            <li>
+                When you delete your account, your sign-in details, email address and preferences are deleted. Your
+                leaderboard entries (display name, score, time and date) stay on the leaderboards, and your game history is
+                kept without being linked to any account. If you'd like your leaderboard entries removed as well, email us
+                at <a href="mailto:@ContactEmail">@ContactEmail</a>.
+            </li>
+        </ul>
+
+        <h2>Your choices and rights</h2>
+        <ul>
+            <li>Your display name can't be changed once your account is created; your avatar can, under <a href="Account/Manage">your account</a>.</li>
+            <li>You can download your personal data, or delete your account, under <a href="Account/Manage/PersonalData">Personal data</a>.</li>
+            <li>You can play as a guest without creating an account.</li>
+            <li>
+                Depending on where you live, you may have rights to access, correct, delete or move your personal
+                information, or to object to how it's used. To make a request, email
+                <a href="mailto:@ContactEmail">@ContactEmail</a>.
+            </li>
+        </ul>
+
+        <h2>Security</h2>
+        <p>
+            The site uses HTTPS encryption, passwords are stored hashed, and access to the database is restricted. No
+            method of transmission or storage is completely secure, but we work to protect your information.
+        </p>
+
+        <h2>Children</h2>
+        <p>
+            The site isn't directed at children under 13, and we don't knowingly collect personal information from them.
+            If you believe a child has created an account, contact us and we'll delete it.
+        </p>
+
+        <h2>Changes to this policy</h2>
+        <p>
+            If we change this policy, we'll update it on this page and change the date at the top. Significant changes will
+            be highlighted on the site.
+        </p>
+
+        <h2>Contact</h2>
+        <p>KabKolor &middot; <a href="mailto:@ContactEmail">@ContactEmail</a></p>
+    </article>
+}
 
 @code {
     private const string ContactEmail = "karl@kabkolor.com";

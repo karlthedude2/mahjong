@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
+using Mahjong.Web.Client;
 using Mahjong.Web.Data;
+using Microsoft.Extensions.Localization;
 
 namespace Mahjong.Web.Services;
 
@@ -31,7 +33,7 @@ public static class DisplayNames
         int visible = new StringInfo(name).LengthInTextElements;
         if (visible > MaxCharacters || name.Length > ApplicationUser.DisplayNameMaxLength)
         {
-            return $"Display names can be up to {MaxCharacters} characters.";
+            return "Display names can be up to 24 characters.";
         }
 
         bool hasSubstance = false;
@@ -73,10 +75,15 @@ public static class DisplayNames
     };
 }
 
-/// <summary>Checks a display name with <see cref="DisplayNames.Check"/> (for registration forms).</summary>
+/// <summary>
+/// Checks a display name with <see cref="DisplayNames.Check"/> (for registration forms), in the page's
+/// language: its messages are keys in Strings.es.resx.
+/// </summary>
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class ValidDisplayNameAttribute : ValidationAttribute
 {
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) =>
-        DisplayNames.Check(value as string, out _) is { } error ? new ValidationResult(error, [validationContext.MemberName!]) : ValidationResult.Success;
+        DisplayNames.Check(value as string, out _) is { } error
+            ? new ValidationResult((validationContext.GetService(typeof(IStringLocalizer<Strings>)) as IStringLocalizer<Strings>)?[error] ?? error, [validationContext.MemberName!])
+            : ValidationResult.Success;
 }

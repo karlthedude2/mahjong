@@ -1,17 +1,17 @@
 @* Under the display name box: the rules, and emoji buttons that add to the name (for keyboards without an emoji key). *@
 <div class="display-name-help">
     <p>
-        This is how you'll appear on the leaderboards, up to 24 characters. Emoji are welcome.
-        <strong>Choose carefully: it can't be changed later.</strong>
+        @L["This is how you'll appear on the leaderboards, up to 24 characters. Emoji are welcome."]
+        <strong>@L["Choose carefully: it can't be changed later."]</strong>
     </p>
-    <div class="emoji" role="group" aria-label="Add an emoji">
+    <div class="emoji" role="group" aria-label="@L["Add an emoji"]">
         @foreach (var emoji in Emoji)
         {
-            <button type="button" aria-label="Add @emoji"
+            <button type="button" aria-label="@L["Add {0}", emoji]"
                     onclick="(function(){var box=document.getElementById('@TargetId');box.value+='@emoji';box.focus();})()">@emoji</button>
         }
     </div>
-    <p class="tip">On Windows, press <kbd>Win</kbd> + <kbd>.</kbd> for every emoji; on a phone, use the keyboard's emoji key.</p>
+    <p class="tip">@L.Html("On Windows, press <kbd>Win</kbd> + <kbd>.</kbd> for every emoji; on a phone, use the keyboard's emoji key.")</p>
 </div>
 
 @code {

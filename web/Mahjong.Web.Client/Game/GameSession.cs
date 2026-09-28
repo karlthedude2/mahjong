@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Mahjong.Core;
 using Mahjong.Web.Client.Api;
+using Microsoft.Extensions.Localization;
 
 namespace Mahjong.Web.Client.Game;
 
@@ -28,7 +29,7 @@ public enum SessionState
 /// One game in the browser: the board, the clock, the selected tile, and (for signed-in
 /// players) the server round trips that start the game and verify the finished result.
 /// </summary>
-public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims guestClaims) : IDisposable
+public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims guestClaims, IStringLocalizer<Strings> L) : IDisposable
 {
     private readonly Stopwatch playTime = new();
     private Timer? timer;
@@ -252,7 +253,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         CatchUpClock();
         var hint = Game.Hint();
         HintedTiles = hint is { } pair ? new HashSet<int> { pair.First.Id, pair.Second.Id } : null;
-        Message = hint == null ? "There are no pairs to take. Try Shuffle or Undo." : null;
+        Message = hint == null ? L["There are no pairs to take. Try Shuffle or Undo."] : null;
         Changed?.Invoke();
     }
 
@@ -281,8 +282,8 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         if (serverGameId is { } id && !await api.SetPausedAsync(id, pausing, guestToken) && !GoOfflineIfGuest())
         {
             Message = pausing
-                ? "Couldn't pause: the server didn't respond. Check your connection and try again."
-                : "Couldn't resume: the server didn't respond. Check your connection and try again.";
+                ? L["Couldn't pause: the server didn't respond. Check your connection and try again."]
+                : L["Couldn't resume: the server didn't respond. Check your connection and try again."];
             Changed?.Invoke();
             return;
         }
@@ -334,7 +335,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
                 {
                     if (++shuffles > 3)
                     {
-                        EndDemo("The computer couldn't find a way to clear this random deal. Some random deals can't be cleared.");
+                        EndDemo(L["The computer couldn't find a way to clear this random deal. Some random deals can't be cleared."]);
                         return;
                     }
 
@@ -439,7 +440,7 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
 
         if (serverGameId is { } id && !await api.SetPausedAsync(id, paused: false, guestToken) && !GoOfflineIfGuest())
         {
-            Message = "Couldn't start the game: the server didn't respond. Check your connection and try again.";
+            Message = L["Couldn't start the game: the server didn't respond. Check your connection and try again."];
             Changed?.Invoke();
             return false;
         }

@@ -13,12 +13,12 @@
 @inject GuestClaims GuestClaims
 @inject BrowserInterop Browser
 
-<PageTitle>Mahjong</PageTitle>
+<PageTitle>Mahjong Haus</PageTitle>
 
 <div class="play-page @(signedIn ? "signed-in" : "guest")">
     @if (!signedIn)
     {
-        <aside class="ad-rail left" aria-label="Advertisement">
+        <aside class="ad-rail left" aria-label="@L["Advertisement"]">
             <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
         </aside>
     }
@@ -28,85 +28,85 @@
         <div class="play-table">
             <div class="board-column">
                 <div class="layout-title">
-                    @PlayingLayout?.Name
+                    @L.LayoutName(PlayingLayout)
                     @if (Session.Game is { Winnable: false })
                     {
-                        <span class="deal-badge" title="Tiles were dealt at random, so this deal may not be clearable.">Random deal</span>
+                        <span class="deal-badge" title="@L["Tiles were dealt at random, so this deal may not be clearable."]">@L["Random deal"]</span>
                     }
                 </div>
 
                 @if (!signedIn)
                 {
-                    <div class="notice">Playing as a guest. <a href="Account/Login">Sign in</a> to save your scores and stats.</div>
+                    <div class="notice">@L.Html("Playing as a guest. <a href=\"Account/Login\">Sign in</a> to save your scores and stats.")</div>
                 }
 
                 @if (Session.IsDemo && !Session.DemoEnded)
                 {
                     <div class="notice info demo-bar">
-                        <span><strong>Demo:</strong> the computer is playing this deal. It won't go on the leaderboard.</span>
-                        <span class="demo-speed" role="radiogroup" aria-label="Demo speed">
+                        <span>@L.Html("<strong>Demo:</strong> the computer is playing this deal. It won't go on the leaderboard.")</span>
+                        <span class="demo-speed" role="radiogroup" aria-label="@L["Demo speed"]">
                             @foreach (var (label, pace) in DemoSpeeds)
                             {
                                 <button type="button" role="radio" aria-checked="@(Session.DemoPace == pace ? "true" : "false")"
-                                        class="@(Session.DemoPace == pace ? "on" : null)" @onclick="() => Session.DemoPace = pace">@label</button>
+                                        class="@(Session.DemoPace == pace ? "on" : null)" @onclick="() => Session.DemoPace = pace">@L[label]</button>
                             }
                         </span>
-                        <button class="btn btn-sm btn-primary" @onclick="Session.StopDemo">Stop demo</button>
+                        <button class="btn btn-sm btn-primary" @onclick="Session.StopDemo">@L["Stop demo"]</button>
                     </div>
                 }
 
                 @if (Session.IsPractice)
                 {
                     <div class="notice info">
-                        <strong>Practice:</strong> the deal from the demo. This game won't go on the leaderboard.
-                        <button class="btn btn-link btn-sm" @onclick="RequestNewGameAsync">New game</button>
+                        @L.Html("<strong>Practice:</strong> the deal from the demo. This game won't go on the leaderboard.")
+                        <button class="btn btn-link btn-sm" @onclick="RequestNewGameAsync">@L["New game"]</button>
                     </div>
                 }
 
                 @if (claimed != null)
                 {
                     <div class="notice info">
-                        Your guest win on @claimed.Layout (@claimed.Score.ToString("N0")) has been saved to your account.
+                        @L["Your guest win on {0} ({1}) has been saved to your account.", L.LayoutName(claimed.Layout), claimed.Score.ToString("N0")]
                         @if (claimed.Rank is { } claimedRank)
                         {
-                            <span>You're <strong>#@claimedRank</strong> on the <a href="leaderboards?layout=@Uri.EscapeDataString(claimed.Layout)">@claimed.Layout leaderboard</a>!</span>
+                            <span>@L.Html("You're <strong>#{0}</strong> on the <a href=\"leaderboards?layout={1}\">{2} leaderboard</a>!", claimedRank, Uri.EscapeDataString(claimed.Layout), L.LayoutName(claimed.Layout))</span>
                         }
                         else if (claimed.ReplayRank is { } claimedReplayRank)
                         {
-                            <span>You're <strong>#@claimedReplayRank</strong> on that deal's <a href="replays/@claimed.ReplayOf">replay list</a>!</span>
+                            <span>@L.Html("You're <strong>#{0}</strong> on that deal's <a href=\"replays/{1}\">replay list</a>!", claimedReplayRank, claimed.ReplayOf)</span>
                         }
-                        <button class="btn btn-link btn-sm" @onclick="() => claimed = null">OK</button>
+                        <button class="btn btn-link btn-sm" @onclick="() => claimed = null">@L["OK"]</button>
                     </div>
                 }
 
                 @if (replay != null)
                 {
                     <div class="notice info">
-                        Replaying <strong>@replay.OriginalPlayer</strong>'s @replay.Layout deal. Score to beat:
-                        <strong>@replay.OriginalScore.ToString("N0")</strong>. Replays go on this deal's own list, never the main leaderboard.
+                        @L.Html("Replaying <strong>{0}</strong>'s {1} deal. Score to beat: <strong>{2}</strong>. Replays go on this deal's own list, never the main leaderboard.",
+                            replay.OriginalPlayer, L.LayoutName(replay.Layout), replay.OriginalScore.ToString("N0"))
                         @if (!signedIn)
                         {
-                            <span><a href="Account/Login">Sign in</a> to get your score on the list.</span>
+                            <span>@L.Html("<a href=\"Account/Login\">Sign in</a> to get your score on the list.")</span>
                         }
-                        <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">See replay scores</a>
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Back to normal play</button>
+                        <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">@L["See replay scores"]</a>
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Back to normal play"]</button>
                     </div>
                 }
 
                 @if (pendingDealChange)
                 {
                     <div class="notice info">
-                        Your next game will be @(Preferences.GuaranteedWinnable ? "a guaranteed winnable deal" : "a random deal").
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
+                        @(Preferences.GuaranteedWinnable ? L["Your next game will be a guaranteed winnable deal."] : L["Your next game will be a random deal."])
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
                     </div>
                 }
 
                 @if (pendingLayout != null)
                 {
                     <div class="notice info">
-                        Your next game will use the <strong>@pendingLayout.Name</strong> layout.
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">Start it now</button>
-                        <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">Keep @currentLayout?.Name</button>
+                        @L.Html("Your next game will use the <strong>{0}</strong> layout.", L.LayoutName(pendingLayout))
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
+                        <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">@L["Keep {0}", L.LayoutName(currentLayout)]</button>
                     </div>
                 }
 
@@ -123,10 +123,10 @@
                 @if (Session.State == SessionState.NoMovesLeft)
                 {
                     <div class="notice warning">
-                        No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.
+                        @L.Html("No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.")
                         @if (Session.Game is { Winnable: false })
                         {
-                            <span>(Random deals can't always be cleared.)</span>
+                            <span>@L["(Random deals can't always be cleared.)"]</span>
                         }
                     </div>
                 }
@@ -141,7 +141,7 @@
                     <div class="board-area" @ref="boardArea">
                         @if (Session.State == SessionState.Paused)
                         {
-                            <div class="paused">Paused</div>
+                            <div class="paused">@L["Paused"]</div>
                         }
                         else
                         {
@@ -151,33 +151,33 @@
                     </div>
 
                     @* The game's controls: icons with tooltips (data-tip) on a rounded bar under the board. *@
-                    <div class="game-controls" role="toolbar" aria-label="Game controls">
+                    <div class="game-controls" role="toolbar" aria-label="@L["Game controls"]">
                         <button type="button" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)"
-                                aria-label="Shuffle" data-tip="Shuffle (costs 1,000 of the no-shuffle bonus)">
+                                aria-label="@L["Shuffle"]" data-tip="@L["Shuffle (costs 1,000 of the no-shuffle bonus)"]">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M4 7h3.5c3.5 0 5.5 10 9 10H20M4 17h3.5c1.4 0 2.5-1.6 3.4-3.4M13.1 10.4C14 8.6 15.1 7 16.5 7H20M17 4l3 3-3 3M17 14l3 3-3 3" />
                             </svg>
                         </button>
                         <button type="button" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)"
-                                aria-label="Undo" data-tip="Undo">
+                                aria-label="@L["Undo"]" data-tip="@L["Undo"]">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
                             </svg>
                         </button>
                         <button type="button" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)"
-                                aria-label="Redo" data-tip="Redo">
+                                aria-label="@L["Redo"]" data-tip="@L["Redo"]">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
                             </svg>
                         </button>
                         <button type="button" @onclick="Session.HintAsync" disabled="@(!CanPlay)"
-                                aria-label="Hint" data-tip="Hint (costs 500 of the no-shuffle bonus)">
+                                aria-label="@L["Hint"]" data-tip="@L["Hint (costs 500 of the no-shuffle bonus)"]">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
                             </svg>
                         </button>
                         <button type="button" @onclick="RequestDemoAsync" disabled="@(Session.IsDemo || Session.Game == null)"
-                                aria-label="Watch a demo" data-tip="Watch the computer play this deal (not ranked)">
+                                aria-label="@L["Watch a demo"]" data-tip="@L["Watch the computer play this deal (not ranked)"]">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
                                 <circle cx="12" cy="12" r="3" />
@@ -185,7 +185,7 @@
                         </button>
                         @if (Session.State == SessionState.Paused)
                         {
-                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="Resume" data-tip="Resume">
+                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Resume"]" data-tip="@L["Resume"]">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path class="solid" d="M8 5v14l11-7z" />
                                 </svg>
@@ -193,7 +193,7 @@
                         }
                         else
                         {
-                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="Pause" data-tip="Pause">
+                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Pause"]" data-tip="@L["Pause"]">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M9 5v14M15 5v14" />
                                 </svg>
@@ -203,17 +203,17 @@
                 }
                 else
                 {
-                    <div class="loading">Dealing&hellip;</div>
+                    <div class="loading">@L["Dealing…"]</div>
                 }
             </div>
         </div>
     </section>
 
-    <aside class="ad-rail right" aria-label="Advertisement">
+    <aside class="ad-rail right" aria-label="@L["Advertisement"]">
         <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
     </aside>
 
-    <aside class="ad-banner" aria-label="Advertisement">
+    <aside class="ad-banner" aria-label="@L["Advertisement"]">
         <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
     </aside>
 </div>
@@ -222,11 +222,25 @@
 {
     <div class="demo-backdrop" @onclick="() => confirmDemo = false">
         <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="demo-confirm-title" @onclick:stopPropagation="true">
-            <h2 id="demo-confirm-title">Watch a demo?</h2>
-            <p>The computer will play this deal from the start. Your current game ends here and won't be saved.</p>
+            <h2 id="demo-confirm-title">@L["Watch a demo?"]</h2>
+            <p>@L["The computer will play this deal from the start. Your current game ends here and won't be saved."]</p>
             <div class="actions">
-                <button class="btn btn-light" @onclick="() => confirmDemo = false">Keep playing</button>
-                <button class="btn btn-primary" @onclick="StartDemoAsync">Watch the demo</button>
+                <button class="btn btn-light" @onclick="() => confirmDemo = false">@L["Keep playing"]</button>
+                <button class="btn btn-primary" @onclick="StartDemoAsync">@L["Watch the demo"]</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (confirmLanguage)
+{
+    <div class="demo-backdrop" @onclick="() => confirmLanguage = false">
+        <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="language-confirm-title" @onclick:stopPropagation="true">
+            <h2 id="language-confirm-title">@L["Switch language?"]</h2>
+            <p>@L["The page reloads in the other language, and this game ends without being saved."]</p>
+            <div class="actions">
+                <button class="btn btn-light" @onclick="() => confirmLanguage = false">@L["Keep playing"]</button>
+                <button class="btn btn-primary" @onclick="SwitchLanguage">@L["Switch language"]</button>
             </div>
         </div>
     </div>
@@ -236,16 +250,16 @@
 {
     <div class="demo-backdrop">
         <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="demo-done-title">
-            <h2 id="demo-done-title">@(Session.Game?.Board.IsComplete == true ? "Demo finished" : "Demo stopped")</h2>
+            <h2 id="demo-done-title">@(Session.Game?.Board.IsComplete == true ? L["Demo finished"] : L["Demo stopped"])</h2>
             <p>
                 @(Session.DemoNote ?? (Session.Game?.Board.IsComplete == true
-                    ? $"The computer cleared {watched.Layout.Name}. Now try the same deal yourself."
-                    : "You can try this deal yourself from the start."))
-                It's practice, so it won't go on the leaderboard.
+                    ? L["The computer cleared {0}. Now try the same deal yourself.", L.LayoutName(watched.Layout)]
+                    : L["You can try this deal yourself from the start."]))
+                @L["It's practice, so it won't go on the leaderboard."]
             </p>
             <div class="actions">
-                <button class="btn btn-light" @onclick="RequestNewGameAsync">New game</button>
-                <button class="btn btn-primary" @onclick="PracticeAsync">Play this deal</button>
+                <button class="btn btn-light" @onclick="RequestNewGameAsync">@L["New game"]</button>
+                <button class="btn btn-primary" @onclick="PracticeAsync">@L["Play this deal"]</button>
             </div>
         </div>
     </div>
@@ -253,7 +267,7 @@
 
 @if (Session.State == SessionState.Won && !Session.IsDemo && PlayingLayout != null)
 {
-    <ResultsDialog Session="Session" Config="config" LayoutName="@PlayingLayout.Name" OnPlayAgain="PlayAgainAsync" />
+    <ResultsDialog Session="Session" Config="config" LayoutName="@L.LayoutName(PlayingLayout)" OnPlayAgain="PlayAgainAsync" />
 }
 
 @if (showLeaderboard)
@@ -312,6 +326,7 @@
     // Demos: the deal being watched (to practise afterwards), and the speeds on offer (ms per pair).
     private (LayoutDefinition Layout, long Seed, bool Winnable)? demoDeal;
     private bool confirmDemo;
+    private bool confirmLanguage;
     private static readonly (string Label, int Pace)[] DemoSpeeds = [("Slow", 1400), ("Normal", 800), ("Fast", 300)];
 
     private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
@@ -348,7 +363,7 @@
                 return;
             }
 
-            error = "That deal couldn't be found, so here's a new game instead.";
+            error = L["That deal couldn't be found, so here's a new game instead."];
         }
 
         // Guests always start by choosing their settings; signed-in players unless they've turned that off.
@@ -405,6 +420,18 @@
 
             showLeaderboard = true;
         }
+        else if (action == "language")
+        {
+            // Switching reloads the page, so ask first if there's a game to lose.
+            if (GameUnderWay && !Session.IsDemo && !Session.IsPractice)
+            {
+                confirmLanguage = true;
+            }
+            else
+            {
+                SwitchLanguage();
+            }
+        }
         else if (action == "settings")
         {
             settingsForNewGame = false;
@@ -429,6 +456,14 @@
     }
 
     private Task PlayAgainAsync() => Session.IsPractice ? PracticeAsync() : replay != null ? PlayReplayAsync() : RequestNewGameAsync();
+
+    // The other language, via the server (which remembers the choice), reloading this page in it.
+    private void SwitchLanguage()
+    {
+        confirmLanguage = false;
+        string other = Strings.IsSpanish ? "en" : "es";
+        Navigation.NavigateTo($"language/{other}?returnUrl={Uri.EscapeDataString("/" + Navigation.ToBaseRelativePath(Navigation.Uri))}", forceLoad: true);
+    }
 
     // Watch: straight away if nothing's been played, otherwise after asking (the game in progress ends).
     private async Task RequestDemoAsync()
@@ -491,8 +526,8 @@
             if (signedIn)
             {
                 error = e.StatusCode == System.Net.HttpStatusCode.NotFound
-                    ? "This deal is no longer on the leaderboard, so this replay won't be saved."
-                    : "Couldn't reach the server, so this game won't be saved.";
+                    ? L["This deal is no longer on the leaderboard, so this replay won't be saved."]
+                    : L["Couldn't reach the server, so this game won't be saved."];
             }
 
             await Session.StartAsync(replayLayout!, GameMode.Offline, replay);
@@ -500,7 +535,7 @@
 
         if (signedIn && !replay!.CanPlay && error == null)
         {
-            error = "This deal is no longer on the leaderboard, so this replay won't be saved.";
+            error = L["This deal is no longer on the leaderboard, so this replay won't be saved."];
         }
     }
 
@@ -530,7 +565,7 @@
             // If the server can't start the game, still let them play (it just can't be saved).
             if (signedIn)
             {
-                error = "Couldn't reach the server, so this game won't be saved.";
+                error = L["Couldn't reach the server, so this game won't be saved."];
             }
 
             await Session.StartAsync(currentLayout!, GameMode.Offline, randomDeal: !Preferences.GuaranteedWinnable);

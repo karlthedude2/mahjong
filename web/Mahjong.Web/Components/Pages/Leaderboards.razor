@@ -5,46 +5,43 @@
 @using Mahjong.Web.Services
 @inject GameService Games
 
-<PageTitle>Leaderboards</PageTitle>
+<PageTitle>@L["Leaderboards"] - Mahjong Haus</PageTitle>
 
-<h1>Leaderboards</h1>
+<h1>@L["Leaderboards"]</h1>
 <p>
-    The top @GameService.LeaderboardSize verified scores for each layout. <a href="Account/Login">Sign in</a> and play to get on the board.
-    Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on
-    that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong>
-    were won on a randomly dealt board, which isn't guaranteed to be clearable.
+    @L.Html("The top {0} verified scores for each layout. <a href=\"Account/Login\">Sign in</a> and play to get on the board. Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong> were won on a randomly dealt board, which isn't guaranteed to be clearable.", GameService.LeaderboardSize)
 </p>
 
 <ul class="nav nav-pills mb-3">
     <li class="nav-item">
-        <a class="nav-link @(game == GameKind.Solitaire ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(DefaultLayoutName)">Mahjong Solitaire</a>
+        <a class="nav-link @(game == GameKind.Solitaire ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(DefaultLayoutName)">@L["Mahjong Solitaire"]</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link @(game == GameKind.Connect ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)">Connect (Shisen-Sho)</a>
+        <a class="nav-link @(game == GameKind.Connect ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)">@L["Connect (Shisen-Sho)"]</a>
     </li>
 </ul>
 
 <form method="get" class="d-flex gap-2 align-items-center mb-3">
-    <label for="layout" class="form-label mb-0">@(game == GameKind.Connect ? "Board" : "Layout")</label>
+    <label for="layout" class="form-label mb-0">@(game == GameKind.Connect ? L["Board"] : L["Layout"])</label>
     <select id="layout" name="layout" class="form-select w-auto" onchange="this.form.submit()">
         @foreach (var l in Choices)
         {
-            <option value="@l.Name" selected="@(l.Name == selected)">@l.Name</option>
+            <option value="@l.Name" selected="@(l.Name == selected)">@L.LayoutName(l)</option>
         }
     </select>
-    <noscript><button type="submit" class="btn btn-primary">Show</button></noscript>
+    <noscript><button type="submit" class="btn btn-primary">@L["Show"]</button></noscript>
 </form>
 
 @if (entries.Count == 0)
 {
-    <p>No scores on @selected yet. Be the first!</p>
+    <p>@L["No scores on {0} yet. Be the first!", L.LayoutName(selected)]</p>
 }
 else
 {
     <div class="table-responsive">
         <table class="table table-sm">
             <thead>
-                <tr><th scope="col">#</th><th scope="col">Player</th><th scope="col" class="text-end">Score</th><th scope="col" class="text-end" title="How long the game took (pauses not counted)">Time</th><th scope="col" class="text-end">Date</th><th scope="col" class="text-end" title="Play the same deal and try to beat it. Replays are ranked on their own list.">Replay</th></tr>
+                <tr><th scope="col">#</th><th scope="col">@L["Player"]</th><th scope="col" class="text-end">@L["Score"]</th><th scope="col" class="text-end" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</th><th scope="col" class="text-end">@L["Date"]</th><th scope="col" class="text-end" title="@L["Play the same deal and try to beat it. Replays are ranked on their own list."]">@L["Replay"]</th></tr>
             </thead>
             <tbody>
                 @foreach (var entry in entries)
@@ -56,16 +53,16 @@ else
                             @entry.DisplayName
                             @if (entry.RandomDeal)
                             {
-                                <span class="badge bg-secondary ms-1" title="Won on a random deal, which isn't guaranteed to be clearable">Random deal</span>
+                                <span class="badge bg-secondary ms-1" title="@L["Won on a random deal, which isn't guaranteed to be clearable"]">@L["Random deal"]</span>
                             }
                         </td>
                         <td class="text-end">@entry.Score.ToString("N0")</td>
                         <td class="text-end">@entry.TimeText</td>
                         <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
                         <td class="text-end text-nowrap">
-                            <a href="?replay=@entry.GameId" title="Play this exact deal">Play this deal</a>
+                            <a href="?replay=@entry.GameId" title="@L["Play this exact deal"]">@L["Play this deal"]</a>
                             &middot;
-                            <a href="replays/@entry.GameId" title="Best replay scores on this deal">Replays (@entry.ReplayCount)</a>
+                            <a href="replays/@entry.GameId" title="@L["Best replay scores on this deal"]">@L["Replays ({0})", entry.ReplayCount]</a>
                         </td>
                     </tr>
                 }

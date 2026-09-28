@@ -76,6 +76,13 @@ form {
     background: rgba(255, 255, 255, 0.22);
 }
 
+/* The language button: the other language's code, in small capitals. */
+.top-nav ::deep .icon-link.language {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
 .top-nav ::deep .icon-link.register {
     background: var(--accent);
     color: #fff;

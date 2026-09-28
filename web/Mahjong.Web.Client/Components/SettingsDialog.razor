@@ -6,110 +6,110 @@
     <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title"
          @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
         <header>
-            <h2 id="settings-title">Game settings</h2>
-            <button type="button" class="btn-close" aria-label="Close" @onclick="CancelAsync"></button>
+            <h2 id="settings-title">@L["Game settings"]</h2>
+            <button type="button" class="btn-close" aria-label="@L["Close"]" @onclick="CancelAsync"></button>
         </header>
 
         <section>
-            <h3>Game</h3>
-            <div class="segmented" role="radiogroup" aria-label="Game">
+            <h3>@L["Game"]</h3>
+            <div class="segmented" role="radiogroup" aria-label="@L["Game"]">
                 <button type="button" role="radio" aria-checked="@(game == GameKind.Solitaire ? "true" : "false")"
-                        class="@(game == GameKind.Solitaire ? "on" : null)" @onclick="() => game = GameKind.Solitaire">Mahjong Solitaire</button>
+                        class="@(game == GameKind.Solitaire ? "on" : null)" @onclick="() => game = GameKind.Solitaire">@L["Mahjong Solitaire"]</button>
                 <button type="button" role="radio" aria-checked="@(game == GameKind.Connect ? "true" : "false")"
-                        class="@(game == GameKind.Connect ? "on" : null)" @onclick="() => game = GameKind.Connect">Connect (Shisen-Sho)</button>
+                        class="@(game == GameKind.Connect ? "on" : null)" @onclick="() => game = GameKind.Connect">@L["Connect (Shisen-Sho)"]</button>
             </div>
             <p class="hint">
                 @(game == GameKind.Solitaire
-                    ? "Remove matching pairs of free tiles from the stack."
-                    : "Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board.")
+                    ? L["Remove matching pairs of free tiles from the stack."]
+                    : L["Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board."])
             </p>
         </section>
 
         @if (game == GameKind.Solitaire)
         {
             <section>
-                <h3>Layout</h3>
-                <PreviewStrip @key="GameKind.Solitaire" @ref="layoutStrip" Label="Layout" Items="layoutItems" @bind-SelectedId="layoutName" />
+                <h3>@L["Layout"]</h3>
+                <PreviewStrip @key="GameKind.Solitaire" @ref="layoutStrip" Label="@L["Layout"]" Items="layoutItems" @bind-SelectedId="layoutName" />
             </section>
         }
         else
         {
             <section>
-                <h3>Board</h3>
-                <PreviewStrip @key="GameKind.Connect" Label="Board size" Items="boardItems" @bind-SelectedId="boardName" />
+                <h3>@L["Board"]</h3>
+                <PreviewStrip @key="GameKind.Connect" Label="@L["Board size"]" Items="boardItems" @bind-SelectedId="boardName" />
             </section>
 
             <section>
-                <h3>Gravity</h3>
-                <div class="segmented" role="radiogroup" aria-label="Gravity">
+                <h3>@L["Gravity"]</h3>
+                <div class="segmented" role="radiogroup" aria-label="@L["Gravity"]">
                     @foreach (var option in new[] { Gravity.None, Gravity.Down, Gravity.Left })
                     {
                         <button type="button" role="radio" aria-checked="@(gravity == option ? "true" : "false")"
-                                class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option == Gravity.None ? "Off" : option.ToString())</button>
+                                class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option switch { Gravity.Down => L["Down"], Gravity.Left => L["Left"], _ => L["Off"] })</button>
                     }
                 </div>
                 <p class="hint">
                     @(gravity switch
                     {
-                        Gravity.Down => "Tiles fall down to fill the gaps.",
-                        Gravity.Left => "Tiles slide left to fill the gaps.",
-                        _ => "Tiles stay where they are.",
+                        Gravity.Down => L["Tiles fall down to fill the gaps."],
+                        Gravity.Left => L["Tiles slide left to fill the gaps."],
+                        _ => L["Tiles stay where they are."],
                     })
-                    Each setting has its own leaderboard.
+                    @L["Each setting has its own leaderboard."]
                 </p>
             </section>
         }
 
         <section>
-            <h3><label for="tile-set">Tiles</label></h3>
+            <h3><label for="tile-set">@L["Tiles"]</label></h3>
             <select id="tile-set" class="form-select" @bind="tileSetId">
                 @foreach (var set in TileSets.All)
                 {
-                    <option value="@set.Id">@set.Name</option>
+                    <option value="@set.Id">@L[set.Name]</option>
                 }
             </select>
         </section>
 
         <section>
-            <h3>Deal</h3>
+            <h3>@L["Deal"]</h3>
             <div class="deal-row">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" role="switch" id="winnable" @bind="winnable" />
-                    <label class="form-check-label" for="winnable">Guaranteed winnable path</label>
+                    <label class="form-check-label" for="winnable">@L["Guaranteed winnable path"]</label>
                 </div>
                 @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
                 <span class="info @(showDealInfo ? "open" : null)">
-                    <button type="button" class="info-button" aria-label="About guaranteed winnable deals"
+                    <button type="button" class="info-button" aria-label="@L["About guaranteed winnable deals"]"
                             aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <circle cx="12" cy="12" r="9.5" />
                             <path d="M12 11v6M12 7.5v.01" />
                         </svg>
                     </button>
-                    <span class="info-note" role="note">@WinnableNote</span>
+                    <span class="info-note" role="note">@L[WinnableNote]</span>
                 </span>
             </div>
             <p class="hint">
-                @(winnable ? "Every deal can be cleared." : "Tiles are dealt at random, like a real set, so some deals can't be cleared.")
+                @(winnable ? L["Every deal can be cleared."] : L["Tiles are dealt at random, like a real set, so some deals can't be cleared."])
             </p>
         </section>
 
         <section>
-            <h3>Background</h3>
-            <PreviewStrip Label="Background" Items="backgroundItems" @bind-SelectedId="backgroundId" />
+            <h3>@L["Background"]</h3>
+            <PreviewStrip Label="@L["Background"]" Items="backgroundItems" @bind-SelectedId="backgroundId" />
         </section>
 
         <section class="switch-row">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="skip-settings" @bind="skipSettings" />
-                <label class="form-check-label" for="skip-settings">Don't show settings for every new game</label>
+                <label class="form-check-label" for="skip-settings">@L["Don't show settings for every new game"]</label>
             </div>
-            <p class="hint">You can always change these with the settings gear in the header.</p>
+            <p class="hint">@L["You can always change these with the settings gear in the header."]</p>
         </section>
 
         <footer>
-            <button type="button" class="btn btn-light" @onclick="CancelAsync">Cancel</button>
-            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">@(ForNewGame ? "Start game" : "OK")</button>
+            <button type="button" class="btn btn-light" @onclick="CancelAsync">@L["Cancel"]</button>
+            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">@(ForNewGame ? L["Start game"] : L["OK"])</button>
         </footer>
     </div>
 </div>
@@ -158,11 +158,11 @@
     {
         var playing = PlayingLayoutName == null ? null : LayoutCatalog.Find(PlayingLayoutName);
         layoutItems = Layouts
-            .Select(l => new PreviewItem(l.Name, l.Name, LayoutPreviews.Url(l.PreviewName), l.Name == PlayingLayoutName ? "Playing now" : null))
+            .Select(l => new PreviewItem(l.Name, L.LayoutName(l), LayoutPreviews.Url(l.PreviewName), l.Name == PlayingLayoutName ? L["Playing now"] : null))
             .ToList();
         boardItems = ConnectLayouts.BaseBoards
-            .Select(b => new PreviewItem(b.Name, $"{b.Name[(ConnectLayouts.Prefix.Length + 1)..]} ({b.Columns}×{b.Rows})", LayoutPreviews.Url(b.PreviewName),
-                playing?.PreviewName == b.PreviewName ? "Playing now" : null))
+            .Select(b => new PreviewItem(b.Name, $"{L[b.Name[(ConnectLayouts.Prefix.Length + 1)..]]} ({b.Columns}×{b.Rows})", LayoutPreviews.Url(b.PreviewName),
+                playing?.PreviewName == b.PreviewName ? L["Playing now"] : null))
             .ToList();
 
         // Start from the chosen (or playing) layout: its game, and for Connect its board and gravity.
@@ -170,7 +170,7 @@
         game = chosen?.Kind ?? GameKind.Solitaire;
         boardName = chosen?.Kind == GameKind.Connect ? chosen.PreviewName : ConnectLayouts.BaseBoards[0].Name;
         gravity = chosen?.Kind == GameKind.Connect ? chosen.Gravity : Gravity.None;
-        backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, b.Name, b.Url)).ToList();
+        backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, L[b.Name], b.Url)).ToList();
 
         layoutName = chosen?.Kind == GameKind.Solitaire ? chosen.Name : Layouts.FirstOrDefault()?.Name;
         tileSetId = TileSets.Find(TileSetId).Id;
