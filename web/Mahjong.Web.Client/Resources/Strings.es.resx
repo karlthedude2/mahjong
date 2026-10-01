@@ -207,6 +207,7 @@
   <data name="Invalid user" xml:space="preserve"><value>Usuario no válido</value></data>
   <data name="iOS" xml:space="preserve"><value>iOS</value></data>
   <data name="It's practice, so it won't go on the leaderboard." xml:space="preserve"><value>Es de práctica, así que no cuenta para la clasificación.</value></data>
+  <data name="Ivory" xml:space="preserve"><value>Marfil</value></data>
   <data name="Jade Silk" xml:space="preserve"><value>Seda de jade</value></data>
   <data name="Keep playing" xml:space="preserve"><value>Seguir jugando</value></data>
   <data name="Keep {0}" xml:space="preserve"><value>Mantener {0}</value></data>
@@ -231,6 +232,8 @@
   <data name="Manage your account" xml:space="preserve"><value>Administrar tu cuenta</value></data>
   <data name="Manage your external logins" xml:space="preserve"><value>Administrar los inicios de sesión externos</value></data>
   <data name="Manage your passkeys" xml:space="preserve"><value>Administrar tus llaves de acceso</value></data>
+  <data name="Marble" xml:space="preserve"><value>Mármol</value></data>
+  <data name="Material" xml:space="preserve"><value>Material</value></data>
   <data name="Medium" xml:space="preserve"><value>Mediano</value></data>
   <data name="Monkey" xml:space="preserve"><value>Mono</value></data>
   <data name="Mute sound" xml:space="preserve"><value>Silenciar</value></data>

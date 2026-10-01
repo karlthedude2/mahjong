@@ -20,6 +20,10 @@
             <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => NewGameAsync(4)">@L["Small"] (4×4×4)</button>
             <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => NewGameAsync(6)">@L["Large"] (6×6×6)</button>
         </span>
+        <span class="cube-sizes" role="radiogroup" aria-label="@L["Material"]">
+            <button type="button" role="radio" aria-checked="@(stone == "marble" ? "true" : "false")" class="@(stone == "marble" ? "on" : null)" @onclick="@(() => SetStoneAsync("marble"))">@L["Marble"]</button>
+            <button type="button" role="radio" aria-checked="@(stone == "ivory" ? "true" : "false")" class="@(stone == "ivory" ? "on" : null)" @onclick="@(() => SetStoneAsync("ivory"))">@L["Ivory"]</button>
+        </span>
         <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
         <button type="button" class="btn btn-sm btn-primary" @onclick="() => NewGameAsync(size)">@L["New game"]</button>
     </div>
@@ -44,6 +48,7 @@
     private (CubeTile, CubeTile)? hint;
     private string? message;
     private int size = 4;
+    private string stone = "marble";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -52,6 +57,7 @@
             self = DotNetObjectReference.Create(this);
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
             scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            await scene.InvokeVoidAsync("setStone", stone);
             await NewGameAsync(size);
         }
     }
@@ -104,6 +110,15 @@
         }
 
         await RedrawAsync();
+    }
+
+    private async Task SetStoneAsync(string name)
+    {
+        stone = name;
+        if (scene != null)
+        {
+            await scene.InvokeVoidAsync("setStone", stone);
+        }
     }
 
     private async Task HintAsync()

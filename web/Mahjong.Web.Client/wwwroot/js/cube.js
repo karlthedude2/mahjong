@@ -7,20 +7,25 @@ import { RoundedBoxGeometry } from "../lib/three/RoundedBoxGeometry.js";
 import { RoomEnvironment } from "../lib/three/RoomEnvironment.js";
 
 const Spacing = 1.06;
-// The cubes and the background of their faces are one material: polished ivory.
-const Ivory = "#ecdfc2";
 const Colors = { red: "#c0141b", green: "#0d7a2e", blue: "#134ea8", wind: "#1b1b1b", flower: "#b0217a", season: "#b35a00" };
 const Free = new THREE.Color(0xffffff);
 const Blocked = new THREE.Color(0x8c8577);
 const Selected = new THREE.Color(0xf2b632);
 const Hinted = new THREE.Color(0x7fd3ff);
 
-// Square face art for the cube, one PNG per face name (2bams.png, Cdragon.png, ...), drawn over the
-// ivory so a transparent background shows the material. The picture runs over the rounded edges,
-// so keep the symbol about 15% in from each side. Faces without a picture are drawn as text.
+// What the cubes are made of. A stone with a texture is a flat, evenly lit, square picture of the
+// material; each face of each cube shows its own slice of it, so no two faces look alike.
+const Stones = {
+    ivory: { color: "#ecdfc2", roughness: 0.28 },
+    marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
+};
+
+// Square face art for the cube, one PNG per face name (2bams.png, Cdragon.png, ...), with a
+// transparent background so the stone shows through. The picture runs over the rounded edges, so
+// keep the symbol about 15% in from each side. Faces without a picture are drawn as text.
 const ArtFolder = "tilesets/cube/";
 
-// A tile's face, made once per face name: drawn as text at once, then replaced by the face's
+// A tile's face art, made once per face name: drawn as text at once, then replaced by the face's
 // picture if there is one.
 function faceTexture(tile, cache) {
     let texture = cache.get(tile.face);
@@ -32,8 +37,6 @@ function faceTexture(tile, cache) {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = size;
     const g = canvas.getContext("2d");
-    g.fillStyle = Ivory;
-    g.fillRect(0, 0, size, size);
 
     const glyph = tile.glyph;
     const font = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
@@ -52,13 +55,58 @@ function faceTexture(tile, cache) {
 
     const art = new Image();
     art.onload = () => {
-        g.fillStyle = Ivory;
-        g.fillRect(0, 0, size, size);
+        g.clearRect(0, 0, size, size);
         g.drawImage(art, 0, 0, size, size);
         texture.needsUpdate = true;
     };
     art.src = ArtFolder + encodeURIComponent(tile.face) + ".png";
     return texture;
+}
+
+// The cube's material: the stone (a colour, or a slice of its texture), the face art on top, and
+// the tile's tint (dimmed when blocked, gold when selected) over both. One shader for every cube.
+function cubeMaterial(art, stone, blank) {
+    const material = new THREE.MeshStandardMaterial({ roughness: stone.roughness, metalness: 0 });
+    const uniforms = {
+        artMap: { value: art },
+        stoneMap: { value: stone.map ?? blank },
+        useStoneMap: { value: stone.map ? 1 : 0 },
+        stoneColor: { value: new THREE.Color(stone.color) },
+        // Where this cube's slices are cut from the stone.
+        seed: { value: new THREE.Vector2(Math.random(), Math.random()) },
+    };
+    material.userData.uniforms = uniforms;
+    material.customProgramCacheKey = () => "cube-stone";
+    material.onBeforeCompile = shader => {
+        Object.assign(shader.uniforms, uniforms);
+        shader.vertexShader = shader.vertexShader
+            .replace("#include <common>", "#include <common>\nvarying vec2 vFaceUv;\nvarying vec3 vFaceNormal;")
+            .replace("#include <uv_vertex>", "#include <uv_vertex>\nvFaceUv = uv;\nvFaceNormal = normal;");
+        shader.fragmentShader = shader.fragmentShader
+            .replace("#include <common>", `#include <common>
+uniform sampler2D artMap;
+uniform sampler2D stoneMap;
+uniform float useStoneMap;
+uniform vec3 stoneColor;
+uniform vec2 seed;
+varying vec2 vFaceUv;
+varying vec3 vFaceNormal;`)
+            .replace("#include <map_fragment>", `
+vec3 a = abs(vFaceNormal);
+float face = a.x >= a.y && a.x >= a.z ? (vFaceNormal.x > 0.0 ? 0.0 : 1.0)
+    : a.y >= a.z ? (vFaceNormal.y > 0.0 ? 2.0 : 3.0)
+    : (vFaceNormal.z > 0.0 ? 4.0 : 5.0);
+// A slice 45% of the picture across, turned by a quarter turn or more, kept inside the picture so
+// no seam shows.
+vec2 p = vFaceUv - 0.5;
+float turn = mod(face + floor(seed.x * 4.0), 4.0);
+p = turn < 0.5 ? p : turn < 1.5 ? vec2(-p.y, p.x) : turn < 2.5 ? -p : vec2(p.y, -p.x);
+vec2 centre = 0.225 + 0.55 * fract(seed + face * vec2(0.37, 0.61));
+vec3 stone = useStoneMap > 0.5 ? texture2D(stoneMap, centre + p * 0.45).rgb : stoneColor;
+vec4 art = texture2D(artMap, vFaceUv);
+diffuseColor.rgb *= mix(stone, art.rgb, art.a);`);
+    };
+    return material;
 }
 
 export function create(host, dotnet) {
@@ -68,7 +116,7 @@ export function create(host, dotnet) {
     host.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    // Soft light from every side, as in a room, gives the ivory its sheen on the rounded edges.
+    // Soft light from every side, as in a room, gives the stone its sheen on the rounded edges.
     const environment = new THREE.PMREMGenerator(renderer);
     scene.environment = environment.fromScene(new RoomEnvironment(), 0.04).texture;
     scene.environmentIntensity = 0.75;
@@ -87,11 +135,41 @@ export function create(host, dotnet) {
     controls.enablePan = false;
 
     const box = new RoundedBoxGeometry(1, 1, 1, 6, 0.16);
+    const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+    blank.needsUpdate = true;
     const textures = new Map();
     const meshes = new Map();
+    const loader = new THREE.TextureLoader();
+    let stone = Stones.marble;
     let selectedId = null;
     let hinted = new Set();
     let free = new Set();
+
+    // Loads a stone's texture once; the cubes are drawn in its plain colour until it arrives.
+    function useStone(name) {
+        stone = Stones[name] ?? Stones.ivory;
+        if (stone.texture && !stone.map) {
+            const chosen = stone;
+            chosen.map = loader.load(chosen.texture, () => applyStone(chosen));
+            chosen.map.colorSpace = THREE.SRGBColorSpace;
+            chosen.map.anisotropy = 8;
+        }
+        applyStone(stone);
+    }
+
+    function applyStone(chosen) {
+        if (chosen !== stone) {
+            return;
+        }
+        for (const mesh of meshes.values()) {
+            const u = mesh.material.userData.uniforms;
+            const ready = stone.map?.image != null;
+            u.stoneMap.value = ready ? stone.map : blank;
+            u.useStoneMap.value = ready ? 1 : 0;
+            u.stoneColor.value.set(stone.color);
+            mesh.material.roughness = stone.roughness;
+        }
+    }
 
     function tint(mesh) {
         const id = mesh.userData.id;
@@ -162,14 +240,14 @@ export function create(host, dotnet) {
             free = new Set(freeIds);
             const middle = (size - 1) / 2;
             for (const tile of tiles) {
-                const material = new THREE.MeshStandardMaterial({ map: faceTexture(tile, textures), roughness: 0.28, metalness: 0 });
-                const mesh = new THREE.Mesh(box, material);
+                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures), stone, blank));
                 mesh.position.set((tile.x - middle) * Spacing, (tile.y - middle) * Spacing, (tile.z - middle) * Spacing);
                 mesh.userData.id = tile.id;
                 meshes.set(tile.id, mesh);
                 scene.add(mesh);
                 tint(mesh);
             }
+            applyStone(stone);
 
             const distance = size * Spacing * 2.6;
             camera.position.set(distance * 0.6, distance * 0.5, distance * 0.62);
@@ -177,6 +255,11 @@ export function create(host, dotnet) {
             controls.minDistance = size * 1.2;
             controls.maxDistance = size * 5;
             resize();
+        },
+
+        // "ivory" or "marble".
+        setStone(name) {
+            useStone(name);
         },
 
         // After any change: the selected tile (or null), the free tiles, and a hint's tiles.
@@ -203,6 +286,8 @@ export function create(host, dotnet) {
             controls.dispose();
             clear();
             textures.forEach(t => t.dispose());
+            Object.values(Stones).forEach(s => s.map?.dispose());
+            blank.dispose();
             box.dispose();
             scene.environment.dispose();
             environment.dispose();
