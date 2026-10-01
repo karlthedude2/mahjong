@@ -120,6 +120,7 @@
   <data name="Down" xml:space="preserve"><value>Hacia abajo</value></data>
   <data name="Download" xml:space="preserve"><value>Descargar</value></data>
   <data name="Download a two-factor authenticator app like Microsoft Authenticator for" xml:space="preserve"><value>Descarga una aplicación de autenticación como Microsoft Authenticator para</value></data>
+  <data name="Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open." xml:space="preserve"><value>Arrastra para girar el cubo. Una ficha se puede quitar cuando dos de sus lados que se tocan en una arista están libres.</value></data>
   <data name="Dragon" xml:space="preserve"><value>Dragón</value></data>
   <data name="Dragon Mountains" xml:space="preserve"><value>Montañas del Dragón</value></data>
   <data name="Dragon Valley" xml:space="preserve"><value>Valle del Dragón</value></data>
@@ -209,6 +210,7 @@
   <data name="Jade Silk" xml:space="preserve"><value>Seda de jade</value></data>
   <data name="Keep playing" xml:space="preserve"><value>Seguir jugando</value></data>
   <data name="Keep {0}" xml:space="preserve"><value>Mantener {0}</value></data>
+  <data name="Large" xml:space="preserve"><value>Grande</value></data>
   <data name="Layout" xml:space="preserve"><value>Tablero</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Clasificación</value></data>
   <data name="Leaderboards" xml:space="preserve"><value>Clasificaciones</value></data>
@@ -222,6 +224,7 @@
   <data name="Log in with a passkey" xml:space="preserve"><value>Iniciar sesión con una llave de acceso</value></data>
   <data name="log in with a recovery code" xml:space="preserve"><value>iniciar sesión con un código de recuperación</value></data>
   <data name="Mahjong board" xml:space="preserve"><value>Tablero de mahjong</value></data>
+  <data name="Mahjong Cube" xml:space="preserve"><value>Cubo Mahjong</value></data>
   <data name="Mahjong Haus home" xml:space="preserve"><value>Inicio de Mahjong Haus</value></data>
   <data name="Mahjong Solitaire" xml:space="preserve"><value>Mahjong Solitario</value></data>
   <data name="Manage email" xml:space="preserve"><value>Administrar el correo electrónico</value></data>
@@ -240,6 +243,7 @@
   <data name="Next in 1 tile, worth {0}" xml:space="preserve"><value>El próximo en 1 ficha, vale {0}</value></data>
   <data name="Next in {0} tiles, worth {1}" xml:space="preserve"><value>El próximo en {0} fichas, vale {1}</value></data>
   <data name="No more matching pairs. Try &lt;strong&gt;Shuffle&lt;/strong&gt; or &lt;strong&gt;Undo&lt;/strong&gt;." xml:space="preserve"><value>No quedan parejas. Prueba &lt;strong&gt;Mezclar&lt;/strong&gt; o &lt;strong&gt;Deshacer&lt;/strong&gt;.</value></data>
+  <data name="No pairs can be taken. Start a new game." xml:space="preserve"><value>No se puede quitar ningún par. Empieza una partida nueva.</value></data>
   <data name="No passkeys are registered." xml:space="preserve"><value>No hay llaves de acceso registradas.</value></data>
   <data name="No picture yet" xml:space="preserve"><value>Todavía no hay imagen</value></data>
   <data name="No replays yet. Be the first to try this deal." xml:space="preserve"><value>Todavía no hay repeticiones. Sé el primero en probar este reparto.</value></data>
@@ -296,6 +300,7 @@
   <data name="Privacy" xml:space="preserve"><value>Privacidad</value></data>
   <data name="Privacy and cookie policy have not been accepted." xml:space="preserve"><value>No se aceptó la política de privacidad y cookies.</value></data>
   <data name="Profile" xml:space="preserve"><value>Perfil</value></data>
+  <data name="Prototype" xml:space="preserve"><value>Prototipo</value></data>
   <data name="Put these codes in a safe place." xml:space="preserve"><value>Guarda estos códigos en un lugar seguro.</value></data>
   <data name="Pyramid" xml:space="preserve"><value>Pirámide</value></data>
   <data name="Quick Finish" xml:space="preserve"><value>Final rápido</value></data>
@@ -470,6 +475,7 @@
   <data name="You can" xml:space="preserve"><value>Puedes</value></data>
   <data name="You can always change these with the settings gear in the header." xml:space="preserve"><value>Siempre puedes cambiarla con el engranaje de configuración del encabezado.</value></data>
   <data name="You can try this deal yourself from the start." xml:space="preserve"><value>Puedes probar tú este reparto desde el principio.</value></data>
+  <data name="You cleared the cube!" xml:space="preserve"><value>¡Despejaste el cubo!</value></data>
   <data name="You cleared {0}!" xml:space="preserve"><value>¡Completaste {0}!</value></data>
   <data name="You do not have a local username/password for this site. Add a local account so you can log in without an external login." xml:space="preserve"><value>No tienes una contraseña para este sitio. Crea una para poder iniciar sesión sin un servicio externo.</value></data>
   <data name="You do not have access to this resource." xml:space="preserve"><value>No tienes acceso a este recurso.</value></data>

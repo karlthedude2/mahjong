@@ -35,7 +35,8 @@ body {
 }
 
 /* The game uses the full window. */
-.content:has(.play-page) {
+.content:has(.play-page),
+.content:has(.cube-page) {
     max-width: none;
     margin: 0;
     padding: 0;
