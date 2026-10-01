@@ -27,7 +27,7 @@ const ArtFolder = "tilesets/cube/";
 
 // A tile's face art, made once per face name: drawn as text at once, then replaced by the face's
 // picture if there is one.
-function faceTexture(tile, cache) {
+function faceTexture(tile, cache, changed) {
     let texture = cache.get(tile.face);
     if (texture) {
         return texture;
@@ -50,7 +50,7 @@ function faceTexture(tile, cache) {
 
     texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 8;
+    texture.anisotropy = 4;
     cache.set(tile.face, texture);
 
     const art = new Image();
@@ -58,6 +58,7 @@ function faceTexture(tile, cache) {
         g.clearRect(0, 0, size, size);
         g.drawImage(art, 0, 0, size, size);
         texture.needsUpdate = true;
+        changed();
     };
     art.src = ArtFolder + encodeURIComponent(tile.face) + ".png";
     return texture;
@@ -111,7 +112,8 @@ diffuseColor.rgb *= mix(stone, art.rgb, art.a);`);
 
 export function create(host, dotnet) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Sharp enough on high-density screens without drawing four times the pixels.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.NeutralToneMapping;
     host.appendChild(renderer.domElement);
 
@@ -134,13 +136,18 @@ export function create(host, dotnet) {
     controls.dampingFactor = 0.2;
     controls.enablePan = false;
 
-    const box = new RoundedBoxGeometry(1, 1, 1, 6, 0.16);
+    // Slightly rounded edges: 3 steps round each one is smooth at this size, and keeps each cube to
+    // under 600 triangles.
+    const box = new RoundedBoxGeometry(1, 1, 1, 3, 0.06);
     const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
     blank.needsUpdate = true;
     const textures = new Map();
     const meshes = new Map();
     const loader = new THREE.TextureLoader();
     let stone = Stones.marble;
+    // The scene is drawn only when something changes: a turn, a tap, a texture arriving.
+    let dirty = true;
+    const changed = () => { dirty = true; };
     let selectedId = null;
     let hinted = new Set();
     let free = new Set();
@@ -152,7 +159,7 @@ export function create(host, dotnet) {
             const chosen = stone;
             chosen.map = loader.load(chosen.texture, () => applyStone(chosen));
             chosen.map.colorSpace = THREE.SRGBColorSpace;
-            chosen.map.anisotropy = 8;
+            chosen.map.anisotropy = 4;
         }
         applyStone(stone);
     }
@@ -169,11 +176,22 @@ export function create(host, dotnet) {
             u.stoneColor.value.set(stone.color);
             mesh.material.roughness = stone.roughness;
         }
+        changed();
     }
 
     function tint(mesh) {
         const id = mesh.userData.id;
         mesh.material.color.copy(id === selectedId ? Selected : hinted.has(id) ? Hinted : free.has(id) ? Free : Blocked);
+    }
+
+    // Cubes with a neighbour on all six sides can't be seen, so they aren't drawn.
+    function hideBuried() {
+        const at = new Set([...meshes.values()].map(m => m.userData.key));
+        for (const mesh of meshes.values()) {
+            const [x, y, z] = mesh.userData.at;
+            mesh.visible = ![[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+                .every(([dx, dy, dz]) => at.has(`${x + dx},${y + dy},${z + dz}`));
+        }
     }
 
     function clear() {
@@ -190,6 +208,7 @@ export function create(host, dotnet) {
             renderer.setSize(width, height, false);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
+            changed();
         }
     }
     const resized = new ResizeObserver(resize);
@@ -208,7 +227,7 @@ export function create(host, dotnet) {
         const rect = renderer.domElement.getBoundingClientRect();
         const pointer = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
         raycaster.setFromCamera(pointer, camera);
-        const hit = raycaster.intersectObjects([...meshes.values()], false)[0];
+        const hit = raycaster.intersectObjects([...meshes.values()].filter(m => m.visible), false)[0];
         if (hit) {
             dotnet.invokeMethodAsync("OnTileTapped", hit.object.userData.id);
         }
@@ -222,13 +241,16 @@ export function create(host, dotnet) {
             const t = Math.min(1, (time - (item.start ??= time)) / 220);
             item.mesh.scale.setScalar(1 - t);
             if (t >= 1) {
+                dirty = true;
                 scene.remove(item.mesh);
                 item.mesh.material.dispose();
                 shrinking.splice(i, 1);
             }
         }
-        controls.update();
-        renderer.render(scene, camera);
+        if (controls.update() || shrinking.length > 0 || dirty) {
+            dirty = false;
+            renderer.render(scene, camera);
+        }
     });
 
     return {
@@ -240,13 +262,16 @@ export function create(host, dotnet) {
             free = new Set(freeIds);
             const middle = (size - 1) / 2;
             for (const tile of tiles) {
-                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures), stone, blank));
+                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures, changed), stone, blank));
                 mesh.position.set((tile.x - middle) * Spacing, (tile.y - middle) * Spacing, (tile.z - middle) * Spacing);
                 mesh.userData.id = tile.id;
+                mesh.userData.at = [tile.x, tile.y, tile.z];
+                mesh.userData.key = `${tile.x},${tile.y},${tile.z}`;
                 meshes.set(tile.id, mesh);
                 scene.add(mesh);
                 tint(mesh);
             }
+            hideBuried();
             applyStone(stone);
 
             const distance = size * Spacing * 2.6;
@@ -255,6 +280,7 @@ export function create(host, dotnet) {
             controls.minDistance = size * 1.2;
             controls.maxDistance = size * 5;
             resize();
+            changed();
         },
 
         // "ivory" or "marble".
@@ -268,6 +294,7 @@ export function create(host, dotnet) {
             free = new Set(freeIds);
             hinted = new Set(hintIds);
             meshes.forEach(tint);
+            changed();
         },
 
         remove(ids) {
@@ -278,6 +305,7 @@ export function create(host, dotnet) {
                     shrinking.push({ mesh });
                 }
             }
+            hideBuried();
         },
 
         dispose() {
