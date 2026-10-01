@@ -3,6 +3,7 @@
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @implements IAsyncDisposable
 @inject IJSRuntime JS
+@inject HttpClient Http
 
 @*
     Prototype: Mahjong Cube, a 3D game drawn with Three.js (wwwroot/js/cube.js). Not linked from the
@@ -20,11 +21,21 @@
             <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => NewGameAsync(4)">@L["Small"] (4×4×4)</button>
             <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => NewGameAsync(6)">@L["Large"] (6×6×6)</button>
         </span>
-        <span class="cube-sizes" role="radiogroup" aria-label="@L["Material"]">
-            <button type="button" role="radio" aria-checked="@(stone == "marble" ? "true" : "false")" class="@(stone == "marble" ? "on" : null)" @onclick="@(() => SetStoneAsync("marble"))">@L["Marble"]</button>
-            <button type="button" role="radio" aria-checked="@(stone == "darkMarble" ? "true" : "false")" class="@(stone == "darkMarble" ? "on" : null)" @onclick="@(() => SetStoneAsync("darkMarble"))">@L["Dark marble"]</button>
-            <button type="button" role="radio" aria-checked="@(stone == "ivory" ? "true" : "false")" class="@(stone == "ivory" ? "on" : null)" @onclick="@(() => SetStoneAsync("ivory"))">@L["Ivory"]</button>
-        </span>
+        @* Development: pictures dropped into the cube-stones folder are listed too (see DevStoneEndpoints). *@
+        <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? "marble"))">
+            <option value="marble">@L["Marble"]</option>
+            <option value="darkMarble">@L["Dark marble"]</option>
+            <option value="ivory">@L["Ivory"]</option>
+            @if (droppedStones.Count > 0)
+            {
+                <optgroup label="@L["From the cube-stones folder"]">
+                    @foreach (var file in droppedStones)
+                    {
+                        <option value="@(DroppedPrefix + file)">@Path.GetFileNameWithoutExtension(file)</option>
+                    }
+                </optgroup>
+            }
+        </select>
         <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
         <button type="button" class="btn btn-sm btn-primary" @onclick="() => NewGameAsync(size)">@L["New game"]</button>
     </div>
@@ -50,6 +61,10 @@
     private string? message;
     private int size = 4;
     private string stone = "marble";
+    private List<string> droppedStones = [];
+
+    private const string DroppedPrefix = "file:";
+    private const string StoneSetting = "mahjong.cubeStone";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -58,7 +73,16 @@
             self = DotNetObjectReference.Create(this);
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
             scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
-            await scene.InvokeVoidAsync("setStone", stone);
+            droppedStones = await LoadDroppedStonesAsync();
+
+            // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
+            string? saved = await JS.InvokeAsync<string?>("localStorage.getItem", StoneSetting);
+            if (saved is "marble" or "darkMarble" or "ivory" || saved?.StartsWith(DroppedPrefix) == true && droppedStones.Contains(saved[DroppedPrefix.Length..]))
+            {
+                stone = saved;
+            }
+
+            await ShowStoneAsync();
             await NewGameAsync(size);
         }
     }
@@ -116,9 +140,37 @@
     private async Task SetStoneAsync(string name)
     {
         stone = name;
+        await ShowStoneAsync();
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", StoneSetting, stone);
+        }
+        catch (JSException)
+        {
+            // Private windows or blocked storage: the choice just isn't remembered.
+        }
+    }
+
+    private async Task ShowStoneAsync()
+    {
         if (scene != null)
         {
-            await scene.InvokeVoidAsync("setStone", stone);
+            string? url = stone.StartsWith(DroppedPrefix) ? "dev/stones/" + Uri.EscapeDataString(stone[DroppedPrefix.Length..]) : null;
+            await scene.InvokeVoidAsync("setStone", stone, url);
+        }
+    }
+
+    // The pictures in the cube-stones folder; none on the live site, where the list isn't served.
+    private async Task<List<string>> LoadDroppedStonesAsync()
+    {
+        try
+        {
+            var response = await Http.GetAsync("dev/stones");
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<List<string>>() ?? [] : [];
+        }
+        catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException)
+        {
+            return [];
         }
     }
 

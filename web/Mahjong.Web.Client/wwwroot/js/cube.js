@@ -15,12 +15,27 @@ const Hinted = new THREE.Color(0x7fd3ff);
 
 // What the cubes are made of. A stone with a texture is a flat, evenly lit, square picture of the
 // material; each face of each cube shows its own slice of it, so no two faces look alike. On a dark
-// stone ("ink: light"), the drawn symbols are pale with a dark outline so they stand out.
+// stone ("ink: light", worked out from the picture), the drawn symbols are pale with a dark outline
+// so they stand out.
 const Stones = {
     marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
-    darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18, ink: "light" },
+    darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18 },
     ivory: { color: "#ecdfc2", roughness: 0.28 },
 };
+
+// Dark if the picture's average brightness is under 45%, measured on a small copy of it.
+function isDark(image) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 32;
+    const g = canvas.getContext("2d", { willReadFrequently: true });
+    g.drawImage(image, 0, 0, 32, 32);
+    const px = g.getImageData(0, 0, 32, 32).data;
+    let sum = 0;
+    for (let i = 0; i < px.length; i += 4) {
+        sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+    }
+    return sum / (px.length / 4) / 255 < 0.45;
+}
 
 // Square face art for the cube, one PNG per face name (2bams.png, Cdragon.png, ...), with a
 // transparent background so the stone shows through. The picture runs over the rounded edges, so
@@ -166,11 +181,19 @@ export function create(host, dotnet) {
     let free = new Set();
 
     // Loads a stone's texture once; the cubes are drawn in its plain colour until it arrives.
-    function useStone(name) {
+    // A stone by name, or a picture to try (url) under that name. Its symbols are drawn in the
+    // usual colours until the picture arrives and shows whether it's dark.
+    function useStone(name, url) {
+        if (url && !Stones[name]) {
+            Stones[name] = { color: "#9a9a9a", texture: url, roughness: 0.18 };
+        }
         stone = Stones[name] ?? Stones.ivory;
         if (stone.texture && !stone.map) {
             const chosen = stone;
-            chosen.map = loader.load(chosen.texture, () => applyStone(chosen));
+            chosen.map = loader.load(chosen.texture, texture => {
+                chosen.ink = isDark(texture.image) ? "light" : undefined;
+                applyStone(chosen);
+            });
             chosen.map.colorSpace = THREE.SRGBColorSpace;
             chosen.map.anisotropy = 4;
         }
@@ -298,9 +321,9 @@ export function create(host, dotnet) {
             changed();
         },
 
-        // "marble", "darkMarble" or "ivory".
-        setStone(name) {
-            useStone(name);
+        // "marble", "darkMarble", "ivory", or any name with the url of a picture to try.
+        setStone(name, url) {
+            useStone(name, url);
         },
 
         // After any change: the selected tile (or null), the free tiles, and a hint's tiles.
