@@ -14,10 +14,12 @@ const Selected = new THREE.Color(0xf2b632);
 const Hinted = new THREE.Color(0x7fd3ff);
 
 // What the cubes are made of. A stone with a texture is a flat, evenly lit, square picture of the
-// material; each face of each cube shows its own slice of it, so no two faces look alike.
+// material; each face of each cube shows its own slice of it, so no two faces look alike. On a dark
+// stone ("ink: light"), the drawn symbols are pale with a dark outline so they stand out.
 const Stones = {
-    ivory: { color: "#ecdfc2", roughness: 0.28 },
     marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
+    darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18, ink: "light" },
+    ivory: { color: "#ecdfc2", roughness: 0.28 },
 };
 
 // Square face art for the cube, one PNG per face name (2bams.png, Cdragon.png, ...), with a
@@ -25,10 +27,11 @@ const Stones = {
 // keep the symbol about 15% in from each side. Faces without a picture are drawn as text.
 const ArtFolder = "tilesets/cube/";
 
-// A tile's face art, made once per face name: drawn as text at once, then replaced by the face's
-// picture if there is one.
-function faceTexture(tile, cache, changed) {
-    let texture = cache.get(tile.face);
+// A tile's face art, made once per face name and ink: drawn as text at once, then replaced by the
+// face's picture if there is one.
+function faceTexture(tile, cache, changed, ink) {
+    const key = tile.face + "|" + (ink ?? "colour");
+    let texture = cache.get(key);
     if (texture) {
         return texture;
     }
@@ -40,18 +43,28 @@ function faceTexture(tile, cache, changed) {
 
     const glyph = tile.glyph;
     const font = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
-    g.fillStyle = Colors[glyph.color] || Colors.wind;
     g.textAlign = "center";
     g.textBaseline = "middle";
-    g.font = `800 220px ${font}`;
-    g.fillText(glyph.main, size / 2, size * 0.43, size * 0.7);
-    g.font = `700 64px ${font}`;
-    g.fillText(glyph.caption.toUpperCase(), size / 2, size * 0.76, size * 0.7);
+    g.lineJoin = "round";
+    const write = (text, y, weight, px, outline) => {
+        g.font = `${weight} ${px}px ${font}`;
+        if (ink === "light") {
+            g.strokeStyle = "rgba(20, 12, 6, 0.85)";
+            g.lineWidth = outline;
+            g.strokeText(text, size / 2, y, size * 0.7);
+            g.fillStyle = "#f7f0e0";
+        } else {
+            g.fillStyle = Colors[glyph.color] || Colors.wind;
+        }
+        g.fillText(text, size / 2, y, size * 0.7);
+    };
+    write(glyph.main, size * 0.43, 800, 220, 22);
+    write(glyph.caption.toUpperCase(), size * 0.76, 700, 64, 12);
 
     texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
-    cache.set(tile.face, texture);
+    cache.set(key, texture);
 
     const art = new Image();
     art.onload = () => {
@@ -174,6 +187,7 @@ export function create(host, dotnet) {
             u.stoneMap.value = ready ? stone.map : blank;
             u.useStoneMap.value = ready ? 1 : 0;
             u.stoneColor.value.set(stone.color);
+            u.artMap.value = faceTexture(mesh.userData.tile, textures, changed, stone.ink);
             mesh.material.roughness = stone.roughness;
         }
         changed();
@@ -262,7 +276,8 @@ export function create(host, dotnet) {
             free = new Set(freeIds);
             const middle = (size - 1) / 2;
             for (const tile of tiles) {
-                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures, changed), stone, blank));
+                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures, changed, stone.ink), stone, blank));
+                mesh.userData.tile = tile;
                 mesh.position.set((tile.x - middle) * Spacing, (tile.y - middle) * Spacing, (tile.z - middle) * Spacing);
                 mesh.userData.id = tile.id;
                 mesh.userData.at = [tile.x, tile.y, tile.z];
@@ -283,7 +298,7 @@ export function create(host, dotnet) {
             changed();
         },
 
-        // "ivory" or "marble".
+        // "marble", "darkMarble" or "ivory".
         setStone(name) {
             useStone(name);
         },

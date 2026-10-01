@@ -22,6 +22,7 @@
         </span>
         <span class="cube-sizes" role="radiogroup" aria-label="@L["Material"]">
             <button type="button" role="radio" aria-checked="@(stone == "marble" ? "true" : "false")" class="@(stone == "marble" ? "on" : null)" @onclick="@(() => SetStoneAsync("marble"))">@L["Marble"]</button>
+            <button type="button" role="radio" aria-checked="@(stone == "darkMarble" ? "true" : "false")" class="@(stone == "darkMarble" ? "on" : null)" @onclick="@(() => SetStoneAsync("darkMarble"))">@L["Dark marble"]</button>
             <button type="button" role="radio" aria-checked="@(stone == "ivory" ? "true" : "false")" class="@(stone == "ivory" ? "on" : null)" @onclick="@(() => SetStoneAsync("ivory"))">@L["Ivory"]</button>
         </span>
         <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
