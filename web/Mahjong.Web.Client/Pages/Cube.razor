@@ -63,6 +63,9 @@
     private string stone = "marble";
     private List<string> droppedStones = [];
 
+    // Face art dropped into the cube-faces folder, by face name (2bams, Cdragon, ...).
+    private Dictionary<string, string> droppedFaces = new(StringComparer.OrdinalIgnoreCase);
+
     private const string DroppedPrefix = "file:";
     private const string StoneSetting = "mahjong.cubeStone";
 
@@ -73,7 +76,11 @@
             self = DotNetObjectReference.Create(this);
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
             scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
-            droppedStones = await LoadDroppedStonesAsync();
+            droppedStones = await LoadDroppedAsync("dev/stones");
+            foreach (var file in await LoadDroppedAsync("dev/faces"))
+            {
+                droppedFaces[Path.GetFileNameWithoutExtension(file)] = "dev/faces/" + Uri.EscapeDataString(file);
+            }
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
             string? saved = await JS.InvokeAsync<string?>("localStorage.getItem", StoneSetting);
@@ -99,7 +106,13 @@
             var tiles = game.Tiles.Select(t =>
             {
                 var glyph = TileSets.Glyph(t.Face.Name);
-                return new { id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name, glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass } };
+                return new
+                {
+                    id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name,
+                    art = droppedFaces.GetValueOrDefault(t.Face.Name),
+                    index = CornerIndex(t.Face.Name, glyph),
+                    glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
+                };
             });
             await scene.InvokeVoidAsync("setBoard", size, tiles, FreeIds());
         }
@@ -160,12 +173,13 @@
         }
     }
 
-    // The pictures in the cube-stones folder; none on the live site, where the list isn't served.
-    private async Task<List<string>> LoadDroppedStonesAsync()
+    // The pictures in a development folder (cube-stones, cube-faces); none on the live site, where
+    // the lists aren't served.
+    private async Task<List<string>> LoadDroppedAsync(string list)
     {
         try
         {
-            var response = await Http.GetAsync("dev/stones");
+            var response = await Http.GetAsync(list);
             return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<List<string>>() ?? [] : [];
         }
         catch (Exception e) when (e is HttpRequestException or System.Text.Json.JsonException)
@@ -191,6 +205,14 @@
 
         StateHasChanged();
     }
+
+    // What a picture face shows in its corner: the number of a suit, flower or season tile, or a
+    // wind's initial in the page's language (E S W N, or E S O N in Spanish); dragons and the bird
+    // have none.
+    private string? CornerIndex(string face, TileGlyph glyph) =>
+        char.IsDigit(face[0]) ? face[..1]
+        : glyph.ColorClass == "wind" && glyph.Caption.Length > 0 ? L[glyph.Caption].Value[..1].ToUpperInvariant()
+        : null;
 
     private int[] FreeIds() => game == null ? [] : game.Tiles.Where(game.IsFree).Select(t => t.Id).ToArray();
 

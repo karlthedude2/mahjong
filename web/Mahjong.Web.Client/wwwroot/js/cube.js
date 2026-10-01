@@ -37,15 +37,16 @@ function isDark(image) {
     return sum / (px.length / 4) / 255 < 0.45;
 }
 
-// Square face art for the cube, one PNG per face name (2bams.png, Cdragon.png, ...), with a
-// transparent background so the stone shows through. The picture runs over the rounded edges, so
-// keep the symbol about 15% in from each side. Faces without a picture are drawn as text.
-const ArtFolder = "tilesets/cube/";
+// Face art: a picture for a face (tile.art, a URL) replaces its drawn symbol. A square picture
+// with a transparent background suits best, so the stone shows through; other shapes are fitted
+// without stretching. The picture runs over the rounded edges, so keep the symbol about 15% in
+// from each side. A picture face also gets its index (the number, or a wind's letter) in the top
+// left corner, as on a real tile, since the picture may not show it plainly.
 
-// A tile's face art, made once per face name and ink: drawn as text at once, then replaced by the
-// face's picture if there is one.
+// A tile's face, made once per face name, ink and picture: drawn as text at once, then replaced by
+// the face's picture when it arrives.
 function faceTexture(tile, cache, changed, ink) {
-    const key = tile.face + "|" + (ink ?? "colour");
+    const key = [tile.face, ink ?? "colour", tile.art ?? ""].join("|");
     let texture = cache.get(key);
     if (texture) {
         return texture;
@@ -58,37 +59,46 @@ function faceTexture(tile, cache, changed, ink) {
 
     const glyph = tile.glyph;
     const font = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
-    g.textAlign = "center";
     g.textBaseline = "middle";
     g.lineJoin = "round";
-    const write = (text, y, weight, px, outline) => {
+    // Pale with a dark outline on a dark stone, otherwise in the suit's colour.
+    const write = (text, x, y, align, weight, px, outline, maxWidth) => {
         g.font = `${weight} ${px}px ${font}`;
+        g.textAlign = align;
         if (ink === "light") {
             g.strokeStyle = "rgba(20, 12, 6, 0.85)";
             g.lineWidth = outline;
-            g.strokeText(text, size / 2, y, size * 0.7);
+            g.strokeText(text, x, y, maxWidth);
             g.fillStyle = "#f7f0e0";
         } else {
             g.fillStyle = Colors[glyph.color] || Colors.wind;
         }
-        g.fillText(text, size / 2, y, size * 0.7);
+        g.fillText(text, x, y, maxWidth);
     };
-    write(glyph.main, size * 0.43, 800, 220, 22);
-    write(glyph.caption.toUpperCase(), size * 0.76, 700, 64, 12);
+    write(glyph.main, size / 2, size * 0.43, "center", 800, 220, 22, size * 0.7);
+    write(glyph.caption.toUpperCase(), size / 2, size * 0.76, "center", 700, 64, 12, size * 0.7);
 
     texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 4;
     cache.set(key, texture);
 
-    const art = new Image();
-    art.onload = () => {
-        g.clearRect(0, 0, size, size);
-        g.drawImage(art, 0, 0, size, size);
-        texture.needsUpdate = true;
-        changed();
-    };
-    art.src = ArtFolder + encodeURIComponent(tile.face) + ".png";
+    if (tile.art) {
+        const art = new Image();
+        art.onload = () => {
+            g.clearRect(0, 0, size, size);
+            const scale = Math.min(size / art.width, size / art.height);
+            const w = art.width * scale, h = art.height * scale;
+            g.drawImage(art, (size - w) / 2, (size - h) / 2, w, h);
+            if (tile.index) {
+                // Inside the rounded edge, about a fifth of the face tall.
+                write(tile.index, size * 0.09, size * 0.15, "left", 800, 104, 14, size * 0.3);
+            }
+            texture.needsUpdate = true;
+            changed();
+        };
+        art.src = tile.art;
+    }
     return texture;
 }
 
@@ -291,7 +301,7 @@ export function create(host, dotnet) {
     });
 
     return {
-        // A new deal: tiles = [{ id, x, y, z, face, glyph: { main, caption, color } }].
+        // A new deal: tiles = [{ id, x, y, z, face, art?, index?, glyph: { main, caption, color } }].
         setBoard(size, tiles, freeIds) {
             clear();
             selectedId = null;

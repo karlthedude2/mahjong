@@ -150,8 +150,8 @@ app.MapAdditionalIdentityEndpoints();
 app.MapMahjongApi();
 if (app.Environment.IsDevelopment())
 {
-    // The Mahjong Cube prototype's stone textures, dropped into a folder to try them out.
-    app.MapDevStones(config, app.Environment);
+    // The Mahjong Cube prototype's stone textures and face art, dropped into folders to try them out.
+    app.MapDevPictures(config, app.Environment);
 }
 // The health check names the running build (X-App-Version, e.g. "1.0.0+<commit>"), so the
 // deploy can wait for the new version rather than the old one that keeps serving while it starts.

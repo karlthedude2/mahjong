@@ -14,5 +14,6 @@ Thumbs.db
 *.db-shm
 *.db-wal
 
-# Stone textures to try in the Mahjong Cube prototype (development only)
+# Stone textures and face art to try in the Mahjong Cube prototype (development only)
 /cube-stones/
+/cube-faces/

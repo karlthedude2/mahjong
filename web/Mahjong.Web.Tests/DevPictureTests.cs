@@ -2,8 +2,8 @@ using System.Net;
 
 namespace Mahjong.Web.Tests;
 
-/// <summary>The cube-stones folder is a development tool, never served by the live site.</summary>
-public sealed class DevStoneTests : IDisposable
+/// <summary>The cube-stones and cube-faces folders are a development tool, never served by the live site.</summary>
+public sealed class DevPictureTests : IDisposable
 {
     private readonly MahjongAppFactory app = new();
 
@@ -12,7 +12,9 @@ public sealed class DevStoneTests : IDisposable
     [Theory]
     [InlineData("/dev/stones")]
     [InlineData("/dev/stones/marble.png")]
-    public async Task TheStoneFolderIsOnlyServedInDevelopment(string path)
+    [InlineData("/dev/faces")]
+    [InlineData("/dev/faces/2bams.png")]
+    public async Task ThePictureFoldersAreOnlyServedInDevelopment(string path)
     {
         var response = await app.CreateClient().GetAsync(path);
 
