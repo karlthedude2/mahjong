@@ -263,6 +263,7 @@
   <data name="Old password" xml:space="preserve"><value>Contraseña actual</value></data>
   <data name="On Windows, press &lt;kbd&gt;Win&lt;/kbd&gt; + &lt;kbd&gt;.&lt;/kbd&gt; for every emoji; on a phone, use the keyboard's emoji key." xml:space="preserve"><value>En Windows, pulsa &lt;kbd&gt;Win&lt;/kbd&gt; + &lt;kbd&gt;.&lt;/kbd&gt; para ver todos los emoji; en el teléfono, usa la tecla de emoji del teclado.</value></data>
   <data name="Once you have scanned the QR code or input the key above, your two factor authentication app will provide you with a unique code. Enter the code in the confirmation box below." xml:space="preserve"><value>Cuando escanees el código QR o escribas la clave de arriba, tu aplicación de autenticación te dará un código único. Escríbelo en el cuadro de confirmación de abajo.</value></data>
+  <data name="Onyx" xml:space="preserve"><value>Ónix</value></data>
   <data name="Onyx Silk" xml:space="preserve"><value>Seda de ónix</value></data>
   <data name="Optimistic concurrency failure, object has been modified." xml:space="preserve"><value>Los datos cambiaron mientras los guardabas. Vuelve a intentarlo.</value></data>
   <data name="OR" xml:space="preserve"><value>O</value></data>

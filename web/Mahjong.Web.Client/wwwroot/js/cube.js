@@ -21,7 +21,38 @@ const Stones = {
     marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
     darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18 },
     ivory: { color: "#ecdfc2", roughness: 0.28 },
+    onyx: { color: "#141416", generate: onyxPicture, roughness: 0.07 },
 };
+
+// Black onyx, drawn rather than photographed: near-black stone with soft, wavy charcoal bands and
+// the odd faint pale vein, the way onyx is layered. Square and even, like a stone picture.
+function onyxPicture() {
+    const size = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const g = canvas.getContext("2d");
+    const image = g.createImageData(size, size);
+    const px = image.data;
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const u = x / size, v = y / size;
+            // Bands running across the stone at a slant, bent by a few slow waves.
+            const warp = 0.06 * Math.sin(u * 7.1 + v * 2.3) + 0.035 * Math.sin(u * 15.7 - v * 5.9 + 1.3) + 0.015 * Math.sin(u * 37 + v * 23);
+            const t = (v * 0.8 + u * 0.35 + warp) * 9;
+            const band = Math.pow(0.5 + 0.5 * Math.sin(t * Math.PI * 2), 3);
+            const fine = 0.5 + 0.5 * Math.sin(t * Math.PI * 11 + 2 * Math.sin(u * 9));
+            const vein = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 + 0.6)), 60);
+            const level = 14 + 22 * band + 6 * fine * band + 70 * vein;
+            const i = (y * size + x) * 4;
+            px[i] = level;
+            px[i + 1] = level;
+            px[i + 2] = level * 1.06;
+            px[i + 3] = 255;
+        }
+    }
+    g.putImageData(image, 0, 0);
+    return canvas;
+}
 
 // Dark if the picture's average brightness is under 45%, measured on a small copy of it.
 function isDark(image) {
@@ -198,6 +229,13 @@ export function create(host, dotnet) {
             Stones[name] = { color: "#9a9a9a", texture: url, roughness: 0.18 };
         }
         stone = Stones[name] ?? Stones.ivory;
+        if (stone.generate && !stone.map) {
+            const picture = stone.generate();
+            stone.map = new THREE.CanvasTexture(picture);
+            stone.map.colorSpace = THREE.SRGBColorSpace;
+            stone.map.anisotropy = 4;
+            stone.ink = isDark(picture) ? "light" : undefined;
+        }
         if (stone.texture && !stone.map) {
             const chosen = stone;
             chosen.map = loader.load(chosen.texture, texture => {
@@ -331,7 +369,7 @@ export function create(host, dotnet) {
             changed();
         },
 
-        // "marble", "darkMarble", "ivory", or any name with the url of a picture to try.
+        // "marble", "darkMarble", "onyx", "ivory", or any name with the url of a picture to try.
         setStone(name, url) {
             useStone(name, url);
         },

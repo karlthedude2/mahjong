@@ -25,6 +25,7 @@
         <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? "marble"))">
             <option value="marble">@L["Marble"]</option>
             <option value="darkMarble">@L["Dark marble"]</option>
+            <option value="onyx">@L["Onyx"]</option>
             <option value="ivory">@L["Ivory"]</option>
             @if (droppedStones.Count > 0)
             {
@@ -84,7 +85,7 @@
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
             string? saved = await JS.InvokeAsync<string?>("localStorage.getItem", StoneSetting);
-            if (saved is "marble" or "darkMarble" or "ivory" || saved?.StartsWith(DroppedPrefix) == true && droppedStones.Contains(saved[DroppedPrefix.Length..]))
+            if (saved is "marble" or "darkMarble" or "onyx" or "ivory" || saved?.StartsWith(DroppedPrefix) == true && droppedStones.Contains(saved[DroppedPrefix.Length..]))
             {
                 stone = saved;
             }
