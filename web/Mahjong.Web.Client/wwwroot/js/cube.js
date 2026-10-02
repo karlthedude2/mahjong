@@ -4,7 +4,6 @@
 import * as THREE from "../lib/three/three.module.min.js";
 import { OrbitControls } from "../lib/three/OrbitControls.js";
 import { RoundedBoxGeometry } from "../lib/three/RoundedBoxGeometry.js";
-import { RoomEnvironment } from "../lib/three/RoomEnvironment.js";
 
 const Spacing = 1.06;
 const Colors = { red: "#c0141b", green: "#0d7a2e", blue: "#134ea8", wind: "#1b1b1b", flower: "#b0217a", season: "#b35a00" };
@@ -21,11 +20,34 @@ const Hinted = new THREE.Color(0x7fd3ff);
 // the page (Cube:StoneFaces in the server's settings); a stone that isn't configured is judged by
 // how dark its picture is.
 const Stones = {
-    marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
-    darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18 },
-    ivory: { color: "#ecdfc2", roughness: 0.28 },
-    onyx: { color: "#141416", generate: onyxPicture, roughness: 0.07 },
+    marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.3 },
+    darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.32 },
+    ivory: { color: "#ecdfc2", roughness: 0.38 },
+    onyx: { color: "#141416", generate: onyxPicture, roughness: 0.24 },
 };
+
+// The light the stone reflects: a soft studio rather than a room with bright lamps, so a polished
+// face never mirrors a hot spot. A dome that is brightest overhead and dims toward the floor, with
+// one broad, gentle panel above; looking up at a face shows only the dim lower dome.
+function softStudio() {
+    const scene = new THREE.Scene();
+    const dome = new THREE.SphereGeometry(10, 48, 24);
+    const position = dome.attributes.position;
+    const colours = [];
+    for (let i = 0; i < position.count; i++) {
+        const up = position.getY(i) / 10; // 1 overhead, -1 underfoot
+        const level = up >= 0 ? 0.62 + 0.3 * up : 0.62 + 0.32 * up;
+        colours.push(level, level, level * 1.02);
+    }
+    dome.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+    scene.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({ side: THREE.BackSide, vertexColors: true })));
+
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, 1.5, 1.5) }));
+    panel.position.set(-1, 8, 2);
+    panel.lookAt(0, 0, 0);
+    scene.add(panel);
+    return scene;
+}
 
 // Black onyx, drawn rather than photographed: near-black stone with soft, wavy charcoal bands and
 // the odd faint pale vein, the way onyx is layered. Square and even, like a stone picture.
@@ -187,15 +209,18 @@ export function create(host, dotnet) {
     host.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    // Soft light from every side, as in a room, gives the stone its sheen on the rounded edges.
+    // Soft light from every side gives the stone its sheen on the rounded edges (see softStudio).
     const environment = new THREE.PMREMGenerator(renderer);
-    scene.environment = environment.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environmentIntensity = 0.75;
+    const studio = softStudio();
+    scene.environment = environment.fromScene(studio, 0.04).texture;
+    studio.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); });
+    scene.environmentIntensity = 1;
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
     scene.add(camera);
-    // A light that rides with the camera, so the side facing the player is always the brightest.
-    const light = new THREE.DirectionalLight(0xffffff, 1.2);
-    light.position.set(2, 3, 4);
+    // A light that rides with the camera, so the side facing the player is always the brightest. It
+    // comes from above and to the left, so it doesn't bounce straight back into the player's eyes.
+    const light = new THREE.DirectionalLight(0xffffff, 0.9);
+    light.position.set(-4, 5, 2);
     camera.add(light);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -227,7 +252,7 @@ export function create(host, dotnet) {
     // and shows whether it's dark.
     function useStone(name, url, faces) {
         if (url && !Stones[name]) {
-            Stones[name] = { color: "#9a9a9a", texture: url, roughness: 0.18 };
+            Stones[name] = { color: "#9a9a9a", texture: url, roughness: 0.3 };
         }
         stone = Stones[name] ?? Stones.ivory;
         stone.faces = faces === "light" || faces === "dark" ? faces : undefined;
