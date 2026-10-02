@@ -75,8 +75,7 @@ function isDark(image) {
 // { light, dark, any }; "any" serves either set when there's no picture for it. A square picture
 // with a transparent background suits best, so the stone shows through; other shapes are fitted
 // without stretching. The picture runs over the rounded edges, so keep the symbol about 15% in
-// from each side. A picture face also gets its index (the number, or a wind's letter) in the top
-// left corner, as on a real tile, since the picture may not show it plainly.
+// from each side.
 
 // A tile's face for a face set, made once per face name, set and picture: drawn as text at once,
 // then replaced by the face's picture when it arrives.
@@ -95,24 +94,24 @@ function faceTexture(tile, cache, changed, set) {
 
     const glyph = tile.glyph;
     const font = '"Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif';
+    g.textAlign = "center";
     g.textBaseline = "middle";
     g.lineJoin = "round";
     // Pale with a dark outline on a dark stone, otherwise in the suit's colour.
-    const write = (text, x, y, align, weight, px, outline, maxWidth) => {
+    const write = (text, y, weight, px, outline) => {
         g.font = `${weight} ${px}px ${font}`;
-        g.textAlign = align;
         if (set === "dark") {
             g.strokeStyle = "rgba(20, 12, 6, 0.85)";
             g.lineWidth = outline;
-            g.strokeText(text, x, y, maxWidth);
+            g.strokeText(text, size / 2, y, size * 0.7);
             g.fillStyle = "#f7f0e0";
         } else {
             g.fillStyle = Colors[glyph.color] || Colors.wind;
         }
-        g.fillText(text, x, y, maxWidth);
+        g.fillText(text, size / 2, y, size * 0.7);
     };
-    write(glyph.main, size / 2, size * 0.43, "center", 800, 220, 22, size * 0.7);
-    write(glyph.caption.toUpperCase(), size / 2, size * 0.76, "center", 700, 64, 12, size * 0.7);
+    write(glyph.main, size * 0.43, 800, 220, 22);
+    write(glyph.caption.toUpperCase(), size * 0.76, 700, 64, 12);
 
     texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -126,10 +125,6 @@ function faceTexture(tile, cache, changed, set) {
             const scale = Math.min(size / art.width, size / art.height);
             const w = art.width * scale, h = art.height * scale;
             g.drawImage(art, (size - w) / 2, (size - h) / 2, w, h);
-            if (tile.index) {
-                // Inside the rounded edge, about a fifth of the face tall.
-                write(tile.index, size * 0.09, size * 0.15, "left", 800, 104, 14, size * 0.3);
-            }
             texture.needsUpdate = true;
             changed();
         };
@@ -351,7 +346,7 @@ export function create(host, dotnet) {
     });
 
     return {
-        // A new deal: tiles = [{ id, x, y, z, face, art: { light, dark, any }, index?, glyph: { main, caption, color } }].
+        // A new deal: tiles = [{ id, x, y, z, face, art: { light, dark, any }, glyph: { main, caption, color } }].
         setBoard(size, tiles, freeIds) {
             clear();
             selectedId = null;

@@ -140,7 +140,6 @@
                         dark = droppedFaces["dark"].GetValueOrDefault(t.Face.Name),
                         any = droppedFaces["any"].GetValueOrDefault(t.Face.Name),
                     },
-                    index = CornerIndex(t.Face.Name, glyph),
                     glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
                 };
             });
@@ -237,14 +236,6 @@
 
         StateHasChanged();
     }
-
-    // What a picture face shows in its corner: the number of a suit, flower or season tile, or a
-    // wind's initial in the page's language (E S W N, or E S O N in Spanish); dragons and the bird
-    // have none.
-    private string? CornerIndex(string face, TileGlyph glyph) =>
-        char.IsDigit(face[0]) ? face[..1]
-        : glyph.ColorClass == "wind" && glyph.Caption.Length > 0 ? L[glyph.Caption].Value[..1].ToUpperInvariant()
-        : null;
 
     private int[] FreeIds() => game == null ? [] : game.Tiles.Where(game.IsFree).Select(t => t.Id).ToArray();
 
