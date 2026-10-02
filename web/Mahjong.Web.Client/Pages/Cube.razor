@@ -4,6 +4,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject HttpClient Http
+@inject Mahjong.Web.Client.Api.GameApi Api
 
 @*
     Prototype: Mahjong Cube, a 3D game drawn with Three.js (wwwroot/js/cube.js). Not linked from the
@@ -64,8 +65,18 @@
     private string stone = "marble";
     private List<string> droppedStones = [];
 
-    // Face art dropped into the cube-faces folder, by face name (2bams, Cdragon, ...).
-    private Dictionary<string, string> droppedFaces = new(StringComparer.OrdinalIgnoreCase);
+    // Face art dropped into the cube-faces folder, by face set ("light", "dark", or "any" for the
+    // folder itself) and face name (2bams, Cdragon, ...).
+    private readonly Dictionary<string, Dictionary<string, string>> droppedFaces = new()
+    {
+        ["any"] = new(StringComparer.OrdinalIgnoreCase),
+        ["light"] = new(StringComparer.OrdinalIgnoreCase),
+        ["dark"] = new(StringComparer.OrdinalIgnoreCase),
+    };
+
+    // Which face set each stone uses ("light" or "dark"), from the server's configuration
+    // (Cube:StoneFaces); players can't change it.
+    private IReadOnlyDictionary<string, string> stoneFaces = new Dictionary<string, string>();
 
     private const string DroppedPrefix = "file:";
     private const string StoneSetting = "mahjong.cubeStone";
@@ -78,9 +89,22 @@
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
             scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
             droppedStones = await LoadDroppedAsync("dev/stones");
-            foreach (var file in await LoadDroppedAsync("dev/faces"))
+            foreach (var (set, list) in new[] { ("any", "dev/faces"), ("light", "dev/faces/light"), ("dark", "dev/faces/dark") })
             {
-                droppedFaces[Path.GetFileNameWithoutExtension(file)] = "dev/faces/" + Uri.EscapeDataString(file);
+                foreach (var file in await LoadDroppedAsync(list))
+                {
+                    droppedFaces[set][Path.GetFileNameWithoutExtension(file)] = list + "/" + Uri.EscapeDataString(file);
+                }
+            }
+
+            try
+            {
+                var config = await Api.GetConfigAsync();
+                stoneFaces = new Dictionary<string, string>(config.CubeStoneFaces ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase);
+            }
+            catch (HttpRequestException)
+            {
+                // Without the configuration, each stone's faces follow how dark it looks.
             }
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
@@ -110,7 +134,12 @@
                 return new
                 {
                     id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name,
-                    art = droppedFaces.GetValueOrDefault(t.Face.Name),
+                    art = new
+                    {
+                        light = droppedFaces["light"].GetValueOrDefault(t.Face.Name),
+                        dark = droppedFaces["dark"].GetValueOrDefault(t.Face.Name),
+                        any = droppedFaces["any"].GetValueOrDefault(t.Face.Name),
+                    },
                     index = CornerIndex(t.Face.Name, glyph),
                     glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
                 };
@@ -170,7 +199,9 @@
         if (scene != null)
         {
             string? url = stone.StartsWith(DroppedPrefix) ? "dev/stones/" + Uri.EscapeDataString(stone[DroppedPrefix.Length..]) : null;
-            await scene.InvokeVoidAsync("setStone", stone, url);
+            // A built-in stone is configured by its name, a picture being tried by its file name.
+            string? faces = stoneFaces.GetValueOrDefault(stone.StartsWith(DroppedPrefix) ? stone[DroppedPrefix.Length..] : stone);
+            await scene.InvokeVoidAsync("setStone", stone, url, faces);
         }
     }
 

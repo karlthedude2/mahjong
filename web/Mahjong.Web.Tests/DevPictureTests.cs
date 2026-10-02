@@ -14,6 +14,8 @@ public sealed class DevPictureTests : IDisposable
     [InlineData("/dev/stones/marble.png")]
     [InlineData("/dev/faces")]
     [InlineData("/dev/faces/2bams.png")]
+    [InlineData("/dev/faces/dark")]
+    [InlineData("/dev/faces/dark/2bams.png")]
     public async Task ThePictureFoldersAreOnlyServedInDevelopment(string path)
     {
         var response = await app.CreateClient().GetAsync(path);

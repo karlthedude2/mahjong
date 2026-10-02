@@ -14,9 +14,12 @@ const Selected = new THREE.Color(0xf2b632);
 const Hinted = new THREE.Color(0x7fd3ff);
 
 // What the cubes are made of. A stone with a texture is a flat, evenly lit, square picture of the
-// material; each face of each cube shows its own slice of it, so no two faces look alike. On a dark
-// stone ("ink: light", worked out from the picture), the drawn symbols are pale with a dark outline
-// so they stand out.
+// material; each face of each cube shows its own slice of it, so no two faces look alike.
+//
+// Each stone uses one of two face sets: "light" (art made for pale stone) or "dark" (art made for
+// dark stone; drawn symbols are pale with a dark outline). Which one is configuration, passed in by
+// the page (Cube:StoneFaces in the server's settings); a stone that isn't configured is judged by
+// how dark its picture is.
 const Stones = {
     marble: { color: "#ffffff", texture: "textures/marble.jpg", roughness: 0.16 },
     darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.18 },
@@ -68,16 +71,18 @@ function isDark(image) {
     return sum / (px.length / 4) / 255 < 0.45;
 }
 
-// Face art: a picture for a face (tile.art, a URL) replaces its drawn symbol. A square picture
+// Face art: a picture for a face replaces its drawn symbol. tile.art holds URLs for the face sets,
+// { light, dark, any }; "any" serves either set when there's no picture for it. A square picture
 // with a transparent background suits best, so the stone shows through; other shapes are fitted
 // without stretching. The picture runs over the rounded edges, so keep the symbol about 15% in
 // from each side. A picture face also gets its index (the number, or a wind's letter) in the top
 // left corner, as on a real tile, since the picture may not show it plainly.
 
-// A tile's face, made once per face name, ink and picture: drawn as text at once, then replaced by
-// the face's picture when it arrives.
-function faceTexture(tile, cache, changed, ink) {
-    const key = [tile.face, ink ?? "colour", tile.art ?? ""].join("|");
+// A tile's face for a face set, made once per face name, set and picture: drawn as text at once,
+// then replaced by the face's picture when it arrives.
+function faceTexture(tile, cache, changed, set) {
+    const url = tile.art?.[set] ?? tile.art?.any;
+    const key = [tile.face, set, url ?? ""].join("|");
     let texture = cache.get(key);
     if (texture) {
         return texture;
@@ -96,7 +101,7 @@ function faceTexture(tile, cache, changed, ink) {
     const write = (text, x, y, align, weight, px, outline, maxWidth) => {
         g.font = `${weight} ${px}px ${font}`;
         g.textAlign = align;
-        if (ink === "light") {
+        if (set === "dark") {
             g.strokeStyle = "rgba(20, 12, 6, 0.85)";
             g.lineWidth = outline;
             g.strokeText(text, x, y, maxWidth);
@@ -114,7 +119,7 @@ function faceTexture(tile, cache, changed, ink) {
     texture.anisotropy = 4;
     cache.set(key, texture);
 
-    if (tile.art) {
+    if (url) {
         const art = new Image();
         art.onload = () => {
             g.clearRect(0, 0, size, size);
@@ -128,7 +133,7 @@ function faceTexture(tile, cache, changed, ink) {
             texture.needsUpdate = true;
             changed();
         };
-        art.src = tile.art;
+        art.src = url;
     }
     return texture;
 }
@@ -222,30 +227,37 @@ export function create(host, dotnet) {
     let free = new Set();
 
     // Loads a stone's texture once; the cubes are drawn in its plain colour until it arrives.
-    // A stone by name, or a picture to try (url) under that name. Its symbols are drawn in the
-    // usual colours until the picture arrives and shows whether it's dark.
-    function useStone(name, url) {
+    // A stone by name, or a picture to try (url) under that name, with its configured face set
+    // ("light" or "dark") if it has one. Without one, its faces are light until the picture arrives
+    // and shows whether it's dark.
+    function useStone(name, url, faces) {
         if (url && !Stones[name]) {
             Stones[name] = { color: "#9a9a9a", texture: url, roughness: 0.18 };
         }
         stone = Stones[name] ?? Stones.ivory;
+        stone.faces = faces === "light" || faces === "dark" ? faces : undefined;
         if (stone.generate && !stone.map) {
             const picture = stone.generate();
             stone.map = new THREE.CanvasTexture(picture);
             stone.map.colorSpace = THREE.SRGBColorSpace;
             stone.map.anisotropy = 4;
-            stone.ink = isDark(picture) ? "light" : undefined;
+            stone.looks = isDark(picture) ? "dark" : "light";
         }
         if (stone.texture && !stone.map) {
             const chosen = stone;
             chosen.map = loader.load(chosen.texture, texture => {
-                chosen.ink = isDark(texture.image) ? "light" : undefined;
+                chosen.looks = isDark(texture.image) ? "dark" : "light";
                 applyStone(chosen);
             });
             chosen.map.colorSpace = THREE.SRGBColorSpace;
             chosen.map.anisotropy = 4;
         }
         applyStone(stone);
+    }
+
+    // The face set the stone uses: as configured, else as its picture looks.
+    function faceSet() {
+        return stone.faces ?? stone.looks ?? "light";
     }
 
     function applyStone(chosen) {
@@ -258,7 +270,7 @@ export function create(host, dotnet) {
             u.stoneMap.value = ready ? stone.map : blank;
             u.useStoneMap.value = ready ? 1 : 0;
             u.stoneColor.value.set(stone.color);
-            u.artMap.value = faceTexture(mesh.userData.tile, textures, changed, stone.ink);
+            u.artMap.value = faceTexture(mesh.userData.tile, textures, changed, faceSet());
             mesh.material.roughness = stone.roughness;
         }
         changed();
@@ -339,7 +351,7 @@ export function create(host, dotnet) {
     });
 
     return {
-        // A new deal: tiles = [{ id, x, y, z, face, art?, index?, glyph: { main, caption, color } }].
+        // A new deal: tiles = [{ id, x, y, z, face, art: { light, dark, any }, index?, glyph: { main, caption, color } }].
         setBoard(size, tiles, freeIds) {
             clear();
             selectedId = null;
@@ -347,7 +359,7 @@ export function create(host, dotnet) {
             free = new Set(freeIds);
             const middle = (size - 1) / 2;
             for (const tile of tiles) {
-                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures, changed, stone.ink), stone, blank));
+                const mesh = new THREE.Mesh(box, cubeMaterial(faceTexture(tile, textures, changed, faceSet()), stone, blank));
                 mesh.userData.tile = tile;
                 mesh.position.set((tile.x - middle) * Spacing, (tile.y - middle) * Spacing, (tile.z - middle) * Spacing);
                 mesh.userData.id = tile.id;
@@ -369,9 +381,10 @@ export function create(host, dotnet) {
             changed();
         },
 
-        // "marble", "darkMarble", "onyx", "ivory", or any name with the url of a picture to try.
-        setStone(name, url) {
-            useStone(name, url);
+        // "marble", "darkMarble", "onyx", "ivory", or any name with the url of a picture to try;
+        // faces is the stone's configured face set, "light" or "dark", if any.
+        setStone(name, url, faces) {
+            useStone(name, url, faces);
         },
 
         // After any change: the selected tile (or null), the free tiles, and a hint's tiles.

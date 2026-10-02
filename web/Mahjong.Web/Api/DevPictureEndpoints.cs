@@ -7,7 +7,9 @@ namespace Mahjong.Web.Api;
 /// can be tried by dropping it in and refreshing the page.
 /// <list type="bullet">
 /// <item><c>/dev/stones</c>: stone textures, from <c>Cube:StonesFolder</c> or <c>cube-stones</c> at the top of the repository.</item>
-/// <item><c>/dev/faces</c>: face art named after the face (<c>2bams.png</c>), from <c>Cube:FacesFolder</c> or <c>cube-faces</c>.</item>
+/// <item><c>/dev/faces</c>: face art named after the face (<c>2bams.png</c>), from <c>Cube:FacesFolder</c> or <c>cube-faces</c>.
+/// Its <c>light</c> and <c>dark</c> subfolders (<c>/dev/faces/light</c>, <c>/dev/faces/dark</c>) hold the art for stones
+/// configured with light or dark faces; a picture in the folder itself serves either.</item>
 /// </list>
 /// </summary>
 public static class DevPictureEndpoints
@@ -17,7 +19,14 @@ public static class DevPictureEndpoints
     public static void MapDevPictures(this IEndpointRouteBuilder app, IConfiguration config, IWebHostEnvironment environment)
     {
         MapFolder(app, "/dev/stones", Folder(config["Cube:StonesFolder"], "cube-stones", environment));
-        MapFolder(app, "/dev/faces", Folder(config["Cube:FacesFolder"], "cube-faces", environment));
+        string faces = Folder(config["Cube:FacesFolder"], "cube-faces", environment);
+        MapFolder(app, "/dev/faces", faces);
+        foreach (var set in new[] { "light", "dark" })
+        {
+            string folder = Path.Combine(faces, set);
+            Directory.CreateDirectory(folder);
+            MapFolder(app, "/dev/faces/" + set, folder);
+        }
     }
 
     private static string Folder(string? configured, string name, IWebHostEnvironment environment)

@@ -76,4 +76,6 @@ public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, 
 public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null, bool? PreferRandomDeals = null);
 
 /// <summary>Settings the browser needs from the server's configuration.</summary>
-public sealed record ClientConfig(string? AdsClientId, string? AdSlotRail, string? AdSlotBanner, string? AdSlotResults, bool ShowHiddenLayouts);
+/// <param name="CubeStoneFaces">Mahjong Cube: each configured stone's face set, "light" or "dark" (see CubeOptions).</param>
+public sealed record ClientConfig(string? AdsClientId, string? AdSlotRail, string? AdSlotBanner, string? AdSlotResults, bool ShowHiddenLayouts,
+    IReadOnlyDictionary<string, string>? CubeStoneFaces = null);
