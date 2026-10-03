@@ -24,14 +24,15 @@ export function create(host, dotnet) {
     // only its shadow over the page background. The light that follows the camera is dimmed to make
     // room for it.
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Blurred shadows (variance shadow maps), so the edges fade out rather than stop at a line.
+    renderer.shadowMap.type = THREE.VSMShadowMap;
     stage.light.intensity = 0.5;
     const sun = new THREE.DirectionalLight(0xffffff, 0.8);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.radius = 4;
-    sun.shadow.bias = -0.0004;
-    sun.shadow.normalBias = 0.02;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.radius = 14;
+    sun.shadow.blurSamples = 24;
+    sun.shadow.bias = -0.0002;
     scene.add(sun, sun.target);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.6 }));
     floor.rotation.x = -Math.PI / 2;
