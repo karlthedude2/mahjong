@@ -243,7 +243,8 @@ export function createStage(host, fieldOfView) {
 
 // The stone the tiles are made of, and their face art: makes each tile's material, and changes them
 // all when the stone changes. meshes() lists the tiles, each with userData.tile (see faceTexture).
-export function createStoneLook({ meshes, changed, aspect = 1, artOnTop = false }) {
+// onFaceSet, if given, hears which face set ("light" or "dark") the stone uses whenever it's applied.
+export function createStoneLook({ meshes, changed, aspect = 1, artOnTop = false, onFaceSet }) {
     const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
     blank.needsUpdate = true;
     const textures = new Map();
@@ -267,6 +268,7 @@ export function createStoneLook({ meshes, changed, aspect = 1, artOnTop = false 
             u.artMap.value = art(mesh.userData.tile);
             mesh.material.roughness = stone.roughness;
         }
+        onFaceSet?.(faceSet());
         changed();
     }
 

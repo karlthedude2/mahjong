@@ -53,7 +53,71 @@ export function create(host, dotnet) {
     const meshes = new Map();
     let dirty = true;
     const changed = () => { dirty = true; };
-    const look = createStoneLook({ meshes: () => meshes.values(), changed, aspect: Depth / Width, artOnTop: true });
+    const look = createStoneLook({ meshes: () => meshes.values(), changed, aspect: Depth / Width, artOnTop: true, onFaceSet: set => setGlow(set === "dark") });
+
+    // On a dark stone the board's shadow would sink into the background, so the board gets a soft
+    // white glow instead: its outline, blurred, just under the tiles, so it shows evenly round every
+    // edge. It's redrawn as tiles go and come back. The layers still shade one another.
+    const Margin = 2;        // room for the glow past the board, in tile widths
+    const Spread = 0.45;     // how far the glow's shape reaches past each tile, so it shows from above
+    const Blur = 0.55;       // how soft the glow is, in tile widths
+    const haloCanvas = document.createElement("canvas");
+    const haloTexture = new THREE.CanvasTexture(haloCanvas);
+    haloTexture.colorSpace = THREE.SRGBColorSpace;
+    const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: haloTexture, transparent: true, opacity: 0.8, depthWrite: false }));
+    halo.rotation.x = -Math.PI / 2;
+    halo.position.y = -0.002;
+    halo.visible = false;
+    scene.add(halo);
+    let glow = false;
+
+    function setGlow(on) {
+        glow = on;
+        halo.visible = on;
+        floor.visible = !on;
+        drawHalo();
+        changed();
+    }
+
+    function drawHalo() {
+        if (!glow || !frame) {
+            return;
+        }
+        const { centre, across, deep } = frame;
+        const wide = across + 2 * Margin, tall = deep + 2 * Margin;
+        const scale = 512 / wide;
+        haloCanvas.width = 512;
+        haloCanvas.height = Math.round(tall * scale);
+        const g = haloCanvas.getContext("2d");
+        g.clearRect(0, 0, haloCanvas.width, haloCanvas.height);
+        g.filter = `blur(${Blur * scale}px)`;
+        g.fillStyle = "#ffffff";
+        const left = centre.x - wide / 2, top = centre.z - tall / 2;
+        g.beginPath();
+        for (const mesh of meshes.values()) {
+            const p = mesh.position;
+            g.rect((p.x - Width / 2 - Spread - left) * scale, (p.z - Depth / 2 - Spread - top) * scale, (Width + 2 * Spread) * scale, (Depth + 2 * Spread) * scale);
+        }
+        g.fill();
+        haloTexture.needsUpdate = true;
+        halo.position.x = centre.x;
+        halo.position.z = centre.z;
+        halo.scale.set(wide, tall, 1);
+    }
+
+    // The sun stands over the board's upper left and a little behind it, low enough (about 45
+    // degrees) that shadows fall well clear of the tiles, down and to the right, toward the player.
+    function placeSun() {
+        if (!frame) {
+            return;
+        }
+        const { centre, across, deep } = frame;
+        const reach = Math.max(across, deep);
+        sun.target.position.set(centre.x, 0, centre.z);
+        sun.position.set(centre.x - reach * 0.7, reach * 0.9, centre.z - reach * 0.5);
+        Object.assign(sun.shadow.camera, { left: -reach * 0.8, right: reach * 0.8, top: reach * 0.8, bottom: -reach * 0.8, near: 0.5, far: reach * 3 });
+        sun.shadow.camera.updateProjectionMatrix();
+    }
     let faces = {};
     let selectedId = null, hinted = new Set();
 
@@ -78,13 +142,8 @@ export function create(host, dotnet) {
             return;
         }
         const { centre, across, deep } = frame;
-        // The sun stands over the board's upper left and a little behind it, low enough (about 45
-        // degrees) that shadows fall well clear of the tiles, down and to the right, toward the player.
         const reach = Math.max(across, deep);
-        sun.target.position.set(centre.x, 0, centre.z);
-        sun.position.set(centre.x - reach * 0.7, reach * 0.9, centre.z - reach * 0.5);
-        Object.assign(sun.shadow.camera, { left: -reach * 0.8, right: reach * 0.8, top: reach * 0.8, bottom: -reach * 0.8, near: 0.5, far: reach * 3 });
-        sun.shadow.camera.updateProjectionMatrix();
+        placeSun();
         floor.position.x = centre.x;
         floor.position.z = centre.z;
         floor.scale.set(reach * 3, reach * 3, 1);
@@ -225,6 +284,7 @@ export function create(host, dotnet) {
             selectedId = selected;
             hinted = new Set(hintIds);
             meshes.forEach(tint);
+            drawHalo();
             changed();
         },
 
@@ -239,6 +299,9 @@ export function create(host, dotnet) {
             block.dispose();
             floor.geometry.dispose();
             floor.material.dispose();
+            halo.geometry.dispose();
+            halo.material.dispose();
+            haloTexture.dispose();
             sun.shadow.map?.dispose();
             stage.dispose();
         },
