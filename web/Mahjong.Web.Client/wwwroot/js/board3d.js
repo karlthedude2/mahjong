@@ -33,13 +33,15 @@ export function create(host, dotnet) {
     const changed = () => { dirty = true; };
     const look = createStoneLook({ meshes: () => meshes.values(), changed, aspect: Depth / Width, artOnTop: true });
     let faces = {};
-    let selectedId = null, hinted = new Set(), free = new Set();
+    let selectedId = null, hinted = new Set();
 
     const place = (mesh, x, y, z) => mesh.position.set(x * Width / 2, z * Height + Height / 2, y * Depth / 2);
 
+    // Gold when selected, blue for a hint, otherwise as it is. Unlike the cube, blocked tiles aren't
+    // dimmed: on a board, which tiles are covered can be seen.
     function tint(mesh) {
         const id = mesh.userData.id;
-        mesh.material.color.copy(id === selectedId ? Tints.selected : hinted.has(id) ? Tints.hinted : free.has(id) ? Tints.free : Tints.blocked);
+        mesh.material.color.copy(id === selectedId ? Tints.selected : hinted.has(id) ? Tints.hinted : Tints.free);
     }
 
     // Frames the whole layout (not just the tiles left, so the view doesn't jump as tiles go). With
@@ -154,9 +156,9 @@ export function create(host, dotnet) {
             look.use(name, null, faces);
         },
 
-        // The board now: tiles = [[id, x, y, z, faceName], ...], the selected tile, the free ones, and
+        // The board now: tiles = [[id, x, y, z, faceName], ...], the selected tile, and
         // a hint's two. New tiles grow in, gone ones shrink away, and a shuffled face is reprinted.
-        show(tiles, selected, freeIds, hintIds) {
+        show(tiles, selected, hintIds) {
             const seen = new Set();
             let added = false;
             for (const [id, x, y, z, face] of tiles) {
@@ -187,7 +189,6 @@ export function create(host, dotnet) {
                 look.refresh();
             }
             selectedId = selected;
-            free = new Set(freeIds);
             hinted = new Set(hintIds);
             meshes.forEach(tint);
             changed();

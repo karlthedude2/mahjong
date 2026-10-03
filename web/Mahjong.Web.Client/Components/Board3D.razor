@@ -62,8 +62,7 @@
         {
             shownState = state;
             var tiles = Game.Board.Tiles.Select(t => new object[] { t.Id, t.Position.X, t.Position.Y, t.Position.Z, t.Face.Name });
-            var free = Game.Board.Tiles.Where(Game.Board.IsFree).Select(t => t.Id);
-            await scene.InvokeVoidAsync("show", tiles, Selected?.Id, free, Hinted ?? new HashSet<int>());
+            await scene.InvokeVoidAsync("show", tiles, Selected?.Id, Hinted ?? new HashSet<int>());
         }
     }
 
