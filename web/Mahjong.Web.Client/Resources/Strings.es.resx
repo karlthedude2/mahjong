@@ -10,6 +10,10 @@
   <data name="3,000, less 1,000 for each shuffle and 500 for each hint." xml:space="preserve"><value>3000, menos 1000 por cada mezcla y 500 por cada pista.</value></data>
   <data name="30 points for every second left on the bonus clock." xml:space="preserve"><value>30 puntos por cada segundo que quede en el reloj de bonificación.</value></data>
   <data name="30 points per second left on the bonus clock when you finished." xml:space="preserve"><value>30 puntos por cada segundo que quedaba en el reloj de bonificación al terminar.</value></data>
+  <data name="3D Dark Marble" xml:space="preserve"><value>Mármol oscuro 3D</value></data>
+  <data name="3D Ivory" xml:space="preserve"><value>Marfil 3D</value></data>
+  <data name="3D Marble" xml:space="preserve"><value>Mármol 3D</value></data>
+  <data name="3D Onyx" xml:space="preserve"><value>Ónix 3D</value></data>
   <data name="5,000 for a fast finish, dropping in steps after 2:40." xml:space="preserve"><value>5000 por terminar rápido; baja por tramos después de 2:40.</value></data>
   <data name='&lt;a href="Account/Login"&gt;Sign in&lt;/a&gt; to get your score on the list.' xml:space="preserve"><value>&lt;a href="Account/Login"&gt;Inicia sesión&lt;/a&gt; para que tu puntuación entre en la lista.</value></data>
   <data name='&lt;a href="Account/Login"&gt;Sign in&lt;/a&gt; to save your scores, get on the leaderboards and see fewer ads.' xml:space="preserve"><value>&lt;a href="Account/Login"&gt;Inicia sesión&lt;/a&gt; para guardar tus puntuaciones, entrar en las clasificaciones y ver menos anuncios.</value></data>

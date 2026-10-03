@@ -6,10 +6,17 @@ public enum TileSetKind
     Images,
 
     /// <summary>Drawn by the app as bold, colour-coded text; needs no image files.</summary>
-    Glyphs
+    Glyphs,
+
+    /// <summary>
+    /// Stone blocks in 3D (the Board3D component), with the Mahjong Cube's stones and face art. Connect
+    /// boards stay flat and draw these as glyphs.
+    /// </summary>
+    ThreeD
 }
 
-public sealed record TileSetInfo(string Id, string Name, TileSetKind Kind);
+/// <param name="Stone">For a 3D set, the stone its tiles are made of (marble, darkMarble, onyx, ivory).</param>
+public sealed record TileSetInfo(string Id, string Name, TileSetKind Kind, string? Stone = null);
 
 /// <summary>A drawn tile face: a large main symbol, a small caption and a colour class.</summary>
 public sealed record TileGlyph(string Main, string Caption, string ColorClass);
@@ -22,8 +29,12 @@ public static class TileSets
 {
     public static readonly TileSetInfo Classic = new("classic", "Classic", TileSetKind.Images);
     public static readonly TileSetInfo Simple = new("simple", "Simple (high contrast)", TileSetKind.Glyphs);
+    public static readonly TileSetInfo Marble3D = new("3d-marble", "3D Marble", TileSetKind.ThreeD, "marble");
+    public static readonly TileSetInfo DarkMarble3D = new("3d-dark-marble", "3D Dark Marble", TileSetKind.ThreeD, "darkMarble");
+    public static readonly TileSetInfo Onyx3D = new("3d-onyx", "3D Onyx", TileSetKind.ThreeD, "onyx");
+    public static readonly TileSetInfo Ivory3D = new("3d-ivory", "3D Ivory", TileSetKind.ThreeD, "ivory");
 
-    public static IReadOnlyList<TileSetInfo> All { get; } = [Classic, Simple];
+    public static IReadOnlyList<TileSetInfo> All { get; } = [Classic, Simple, Marble3D, DarkMarble3D, Onyx3D, Ivory3D];
 
     public static TileSetInfo Default => Classic;
 

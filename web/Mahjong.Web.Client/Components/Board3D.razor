@@ -1,0 +1,132 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject FaceArt FaceArt
+
+@*
+    The board in 3D (wwwroot/js/board3d.js): the same game as Board, drawn as stone blocks with the
+    Mahjong Cube's stones and face art, for a 3D tile set. It takes the same parameters as Board, and
+    sends the script the board's tiles whenever they, the selection or the hint change.
+*@
+<div class="board3d" @ref="view" role="img" aria-label="@L["Mahjong board"]"></div>
+
+@code {
+    private ElementReference view;
+    private IJSObjectReference? module;
+    private IJSObjectReference? scene;
+    private DotNetObjectReference<Board3D>? self;
+    private string? shownStone;
+    private string? shownState;
+
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    [Parameter] public Tile? Selected { get; set; }
+
+    [Parameter] public TileSetInfo TileSet { get; set; } = TileSets.Marble3D;
+
+    [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
+
+    [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
+
+    // The page redraws every clock tick; only send the board when something on it has changed.
+    protected override bool ShouldRender() => scene == null || State() != shownState || TileSet.Stone != shownStone;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await FaceArt.LoadAsync();
+            self = DotNetObjectReference.Create(this);
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/board3d.js");
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+
+            var positions = Game.Layout.Positions.Select(p => new[] { p.X, p.Y, p.Z });
+            await scene.InvokeVoidAsync("setLayout", positions, AllFaces());
+        }
+
+        if (scene == null)
+        {
+            return;
+        }
+
+        if (TileSet.Stone != shownStone)
+        {
+            shownStone = TileSet.Stone;
+            string stone = shownStone ?? "marble";
+            await scene.InvokeVoidAsync("setStone", stone, FaceArt.StoneFaces(stone));
+        }
+
+        string state = State();
+        if (state != shownState)
+        {
+            shownState = state;
+            var tiles = Game.Board.Tiles.Select(t => new object[] { t.Id, t.Position.X, t.Position.Y, t.Position.Z, t.Face.Name });
+            var free = Game.Board.Tiles.Where(Game.Board.IsFree).Select(t => t.Id);
+            await scene.InvokeVoidAsync("show", tiles, Selected?.Id, free, Hinted ?? new HashSet<int>());
+        }
+    }
+
+    // Every face the game can deal, with its pictures and its drawn symbol.
+    private Dictionary<string, object> AllFaces() => Mahjong.Core.TileSet.Standard.PairFaces
+        .Select(f => f.Name)
+        .Distinct()
+        .ToDictionary(name => name, name =>
+        {
+            var glyph = TileSets.Glyph(name);
+            return (object)new
+            {
+                art = FaceArt.Pictures(name),
+                glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
+            };
+        });
+
+    // What's on the board: each tile's id, place and face, the selection and the hint.
+    private string State()
+    {
+        var text = new System.Text.StringBuilder();
+        foreach (var t in Game.Board.Tiles)
+        {
+            text.Append(t.Id).Append(':').Append(t.Position.X).Append(',').Append(t.Position.Y).Append(',').Append(t.Position.Z).Append(t.Face.Name).Append(';');
+        }
+
+        text.Append('|').Append(Selected?.Id).Append('|');
+        if (Hinted != null)
+        {
+            text.AppendJoin(',', Hinted.Order());
+        }
+
+        return text.ToString();
+    }
+
+    [JSInvokable]
+    public async Task OnTileClicked(int id)
+    {
+        if (Game.Board.Tiles.FirstOrDefault(t => t.Id == id) is { } tile)
+        {
+            await OnTileClick.InvokeAsync(tile);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (scene != null)
+            {
+                await scene.InvokeVoidAsync("dispose");
+                await scene.DisposeAsync();
+            }
+
+            if (module != null)
+            {
+                await module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        self?.Dispose();
+    }
+}

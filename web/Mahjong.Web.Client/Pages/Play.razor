@@ -143,6 +143,12 @@
                         {
                             <div class="paused">@L["Paused"]</div>
                         }
+                        else if (Preferences.TileSet.Kind == TileSetKind.ThreeD && game.Layout.Kind != GameKind.Connect)
+                        {
+                            @* A 3D tile set: the same game drawn as stone blocks. Connect stays flat. *@
+                            <Board3D @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                                     Hinted="Session.HintedTiles" />
+                        }
                         else
                         {
                             <Board @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
