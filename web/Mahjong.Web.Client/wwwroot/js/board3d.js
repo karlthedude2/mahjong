@@ -11,12 +11,33 @@ import { Tints, createStage, createStoneLook } from "./stone.js";
 // A tile's size: a board position is half a tile, so a tile is two positions wide and two deep.
 const Width = 1, Depth = 1.33, Height = 0.62;
 const Gap = 0.04;
-// How far from straight down the board is first seen, and how far it may be tilted and turned.
-const Tilt = 0.5, MaxTilt = 0.95, MaxTurn = 0.6;
+// How far from straight down the board is first seen (about 20 degrees, enough to see the tiles'
+// sides), and how far it may be tilted and turned.
+const Tilt = 0.35, MaxTilt = 0.95, MaxTurn = 0.6;
 
 export function create(host, dotnet) {
     const stage = createStage(host, 35);
     const { renderer, scene, camera } = stage;
+
+    // Shadows, so the board stands off the page: a soft light from the upper left and behind casts
+    // the upper layers' shadows onto the lower ones, and the board's onto an unseen floor that shows
+    // only its shadow over the page background. The light that follows the camera is dimmed to make
+    // room for it.
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.light.intensity = 0.5;
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.radius = 4;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.02;
+    scene.add(sun, sun.target);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShadowMaterial({ opacity: 0.6 }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.001;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -56,6 +77,16 @@ export function create(host, dotnet) {
             return;
         }
         const { centre, across, deep } = frame;
+        // The sun stands over the board's upper left and a little behind it, low enough (about 45
+        // degrees) that shadows fall well clear of the tiles, down and to the right, toward the player.
+        const reach = Math.max(across, deep);
+        sun.target.position.set(centre.x, 0, centre.z);
+        sun.position.set(centre.x - reach * 0.7, reach * 0.9, centre.z - reach * 0.5);
+        Object.assign(sun.shadow.camera, { left: -reach * 0.8, right: reach * 0.8, top: reach * 0.8, bottom: -reach * 0.8, near: 0.5, far: reach * 3 });
+        sun.shadow.camera.updateProjectionMatrix();
+        floor.position.x = centre.x;
+        floor.position.z = centre.z;
+        floor.scale.set(reach * 3, reach * 3, 1);
         const vertical = THREE.MathUtils.degToRad(camera.fov) / 2;
         const horizontal = Math.atan(Math.tan(vertical) * camera.aspect);
         const distance = 1.08 * Math.max(across / 2 / Math.tan(horizontal), deep * Math.cos(Tilt) / 2 / Math.tan(vertical)) + Height * 4;
@@ -167,6 +198,8 @@ export function create(host, dotnet) {
                 const tile = { face, ...faces[face] };
                 if (!mesh) {
                     mesh = new THREE.Mesh(block, look.material(tile));
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
                     mesh.userData = { id, tile };
                     meshes.set(id, mesh);
                     scene.add(mesh);
@@ -203,6 +236,9 @@ export function create(host, dotnet) {
             }
             look.dispose();
             block.dispose();
+            floor.geometry.dispose();
+            floor.material.dispose();
+            sun.shadow.map?.dispose();
             stage.dispose();
         },
     };

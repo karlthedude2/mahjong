@@ -231,7 +231,7 @@ export function createStage(host, fieldOfView) {
     camera.add(light);
 
     return {
-        renderer, scene, camera,
+        renderer, scene, camera, light,
         dispose() {
             scene.environment.dispose();
             environment.dispose();
