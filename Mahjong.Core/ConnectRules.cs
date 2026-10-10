@@ -14,7 +14,13 @@ namespace Mahjong.Core
         /// Connect (Shisen-Sho): a flat grid; matching tiles are removed if a line with at most two
         /// turns joins them through empty cells (it may run around the outside of the board).
         /// </summary>
-        Connect
+        Connect,
+
+        /// <summary>
+        /// Mahjong Cube: a block of tiles turned in 3D. A tile can be taken when two of its sides
+        /// that meet at an edge are open.
+        /// </summary>
+        Cube
     }
 
     /// <summary>Connect variants where the remaining tiles slide to close the gaps.</summary>

@@ -27,14 +27,19 @@ namespace Mahjong.Core
     {
         public const int MaxAttempts = 1000;
 
-        public static DealResult Deal(IReadOnlyCollection<Position> positions, IList<TileFace> pairFaces, Random random)
+        public static DealResult Deal(IReadOnlyCollection<Position> positions, IList<TileFace> pairFaces, Random random) =>
+            Deal(positions, pairFaces, random, BoardRules.IsFree);
+
+        /// <summary>The same, under another game's rule for which tiles are free (Mahjong Cube's).</summary>
+        public static DealResult Deal(IReadOnlyCollection<Position> positions, IList<TileFace> pairFaces, Random random,
+            Func<Position, ISet<Position>, bool> isFree)
         {
             if (positions.Count != pairFaces.Count * 2)
             {
                 throw new ArgumentException($"{positions.Count} positions need {positions.Count / 2} pairs, got {pairFaces.Count}.");
             }
 
-            if (!TryFindRemovalOrder(positions, random, out var order))
+            if (!TryFindRemovalOrder(positions, random, isFree, out var order))
             {
                 throw new InvalidOperationException(
                     $"Could not find a way to clear this layout after {MaxAttempts} attempts.");
@@ -50,11 +55,15 @@ namespace Mahjong.Core
             return new DealResult(faces, order);
         }
 
-        public static bool TryFindRemovalOrder(IReadOnlyCollection<Position> positions, Random random, out List<(Position First, Position Second)> order)
+        public static bool TryFindRemovalOrder(IReadOnlyCollection<Position> positions, Random random, out List<(Position First, Position Second)> order) =>
+            TryFindRemovalOrder(positions, random, BoardRules.IsFree, out order);
+
+        public static bool TryFindRemovalOrder(IReadOnlyCollection<Position> positions, Random random,
+            Func<Position, ISet<Position>, bool> isFree, out List<(Position First, Position Second)> order)
         {
             for (int attempt = 0; attempt < MaxAttempts; attempt++)
             {
-                if (TryRemoveAll(positions, random, out order))
+                if (TryRemoveAll(positions, random, isFree, out order))
                 {
                     return true;
                 }
@@ -64,14 +73,15 @@ namespace Mahjong.Core
             return false;
         }
 
-        private static bool TryRemoveAll(IReadOnlyCollection<Position> positions, Random random, out List<(Position First, Position Second)> order)
+        private static bool TryRemoveAll(IReadOnlyCollection<Position> positions, Random random, Func<Position, ISet<Position>, bool> isFree,
+            out List<(Position First, Position Second)> order)
         {
             var occupied = new HashSet<Position>(positions);
             order = new List<(Position, Position)>(positions.Count / 2);
 
             while (occupied.Count > 0)
             {
-                var free = occupied.Where(p => BoardRules.IsFree(p, occupied)).ToList();
+                var free = occupied.Where(p => isFree(p, occupied)).ToList();
                 if (free.Count < 2)
                 {
                     return false;

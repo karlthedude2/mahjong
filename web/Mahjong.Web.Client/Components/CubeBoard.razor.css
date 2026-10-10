@@ -1,4 +1,4 @@
-/* Mahjong Cube: a slim bar, then the 3D view filling the space, with a line of help under it. */
+/* Mahjong Cube: the 3D view filling the board area, with a line of help under it. */
 .cube-board {
     flex: 1;
     align-self: stretch;
@@ -6,33 +6,6 @@
     flex-direction: column;
     gap: 0.6rem;
     min-height: 0;
-}
-
-/* A see-through bar, like the Play page's controls, so it reads on any background. */
-.cube-bar {
-    align-self: center;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem 1rem;
-    padding: 0.4rem 1rem;
-    border-radius: 1rem;
-    background: rgba(20, 12, 6, 0.55);
-    color: #fff;
-}
-
-.cube-count {
-    font-variant-numeric: tabular-nums;
-}
-
-.cube-message {
-    align-self: center;
-    padding: 0.3rem 1rem;
-    border-radius: 999px;
-    background: rgba(20, 12, 6, 0.7);
-    color: #fff;
-    font-weight: 700;
 }
 
 .cube-view {

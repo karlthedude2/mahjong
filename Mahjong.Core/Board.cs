@@ -29,6 +29,7 @@ namespace Mahjong.Core
             var pairFaces = tileSet.CreatePairs(layout.Positions.Count / 2, random);
             var deal = !winnable ? RandomDealer.Deal(layout.Positions, pairFaces, random)
                 : layout.Kind == GameKind.Connect ? ConnectDealer.Deal(layout, layout.Positions, pairFaces, random)
+                : layout.Kind == GameKind.Cube ? WinnableDealer.Deal(layout.Positions, pairFaces, random, CubeRules.IsFree)
                 : WinnableDealer.Deal(layout.Positions, pairFaces, random);
 
             var board = new Board { LastDeal = deal, winnable = winnable, layout = layout };
@@ -67,9 +68,17 @@ namespace Mahjong.Core
             return tile;
         }
 
-        /// <summary>Whether the tile can be picked: in Connect every tile can; in solitaire only free ones.</summary>
+        /// <summary>
+        /// Whether the tile can be picked: in Connect every tile can; in solitaire and the cube only
+        /// free ones, by each game's rule.
+        /// </summary>
         public bool IsFree(Tile tile) =>
-            Contains(tile) && (layout?.Kind == GameKind.Connect || BoardRules.IsFree(tile.Position, occupied));
+            Contains(tile) && (layout?.Kind switch
+            {
+                GameKind.Connect => true,
+                GameKind.Cube => CubeRules.IsFree(tile.Position, occupied),
+                _ => BoardRules.IsFree(tile.Position, occupied),
+            });
 
         public bool CanRemove(Tile first, Tile second)
         {
@@ -176,6 +185,7 @@ namespace Mahjong.Core
 
             LastDeal = !winnable ? RandomDealer.Deal(tiles.Keys.ToList(), pairFaces, random)
                 : layout?.Kind == GameKind.Connect ? ConnectDealer.Deal(layout, tiles.Keys.ToList(), pairFaces, random)
+                : layout?.Kind == GameKind.Cube ? WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random, CubeRules.IsFree)
                 : WinnableDealer.Deal(tiles.Keys.ToList(), pairFaces, random);
             foreach (var tile in tiles.Values)
             {

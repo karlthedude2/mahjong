@@ -107,8 +107,9 @@ export function create(host, dotnet) {
     });
 
     return {
-        // A new deal: tiles = [{ id, x, y, z, face, art: { light, dark, any }, glyph: { main, caption, color } }].
-        setBoard(size, tiles, freeIds) {
+        // Draws the block: tiles = [{ id, x, y, z, face, art: { light, dark, any }, glyph: { main, caption, color } }].
+        // keepView redraws it as it's being looked at (an undo or a shuffle) instead of a new deal's view.
+        setBoard(size, tiles, freeIds, keepView) {
             clear();
             selectedId = null;
             hinted = new Set();
@@ -128,11 +129,13 @@ export function create(host, dotnet) {
             hideBuried();
             look.refresh();
 
-            const distance = size * Spacing * 2.6;
-            camera.position.set(distance * 0.6, distance * 0.5, distance * 0.62);
-            controls.target.set(0, 0, 0);
-            controls.minDistance = size * 1.2;
-            controls.maxDistance = size * 5;
+            if (!keepView) {
+                const distance = size * Spacing * 2.6;
+                camera.position.set(distance * 0.6, distance * 0.5, distance * 0.62);
+                controls.target.set(0, 0, 0);
+                controls.minDistance = size * 1.2;
+                controls.maxDistance = size * 5;
+            }
             resize();
             changed();
         },

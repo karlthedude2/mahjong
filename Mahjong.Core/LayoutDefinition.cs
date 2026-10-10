@@ -26,6 +26,14 @@ namespace Mahjong.Core
             PreviewName = previewName;
         }
 
+        /// <summary>A Mahjong Cube block: <paramref name="size"/> tiles along each edge.</summary>
+        internal LayoutDefinition(string name, IEnumerable<Position> positions, int size)
+            : this(name, positions)
+        {
+            Kind = GameKind.Cube;
+            Size = size;
+        }
+
         public string Name { get; }
         public IReadOnlyList<Position> Positions { get; }
 
@@ -42,6 +50,9 @@ namespace Mahjong.Core
 
         /// <summary>For Connect: whether (and which way) tiles slide to close gaps.</summary>
         public Gravity Gravity { get; }
+
+        /// <summary>For Mahjong Cube: the tiles along each edge of the block.</summary>
+        public int Size { get; }
 
         /// <summary>
         /// The name the layout's picture goes by. Connect boards share one picture per size, whatever

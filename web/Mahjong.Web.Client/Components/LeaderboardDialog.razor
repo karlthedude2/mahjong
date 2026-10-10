@@ -26,6 +26,12 @@
                         <option value="@l.Name">@L.LayoutName(l)</option>
                     }
                 </optgroup>
+                <optgroup label="@L["Mahjong Cube"]">
+                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Cube))
+                    {
+                        <option value="@l.Name">@L.LayoutName(l)</option>
+                    }
+                </optgroup>
             </select>
         </label>
 

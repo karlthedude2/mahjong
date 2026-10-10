@@ -1,25 +1,15 @@
+@using Mahjong.Core
 @using Mahjong.Web.Client.Game
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject FaceArt FaceArt
 
 @*
-    Mahjong Cube: a cube of tiles drawn with Three.js (wwwroot/js/cube.js), with the tiles left, a
-    hint and a new deal. The game and its rules are CubeGame; the script only draws the block, turns
-    it, and reports which tile was tapped. Casual play: no score or leaderboard yet.
+    Mahjong Cube: a game on a cube layout (Cube Small or Cube Large) drawn with Three.js
+    (wwwroot/js/cube.js). The game, its score and its controls are the page's; this only draws the
+    block, lets it be turned, and reports which tile was tapped.
 *@
 <div class="cube-board">
-    <div class="cube-bar">
-        <span class="cube-count">@L["{0} left", game?.Tiles.Count ?? 0]</span>
-        <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
-        <button type="button" class="btn btn-sm btn-primary" @onclick="NewGameAsync">@L["New game"]</button>
-    </div>
-
-    @if (message != null)
-    {
-        <div class="cube-message">@message</div>
-    }
-
     <div class="cube-view" @ref="view" role="img" aria-label="@L["Mahjong Cube"]"></div>
 
     <p class="cube-help">@L["Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open."]</p>
@@ -30,16 +20,20 @@
     private IJSObjectReference? module;
     private IJSObjectReference? scene;
     private DotNetObjectReference<CubeBoard>? self;
-    private CubeGame? game;
-    private CubeTile? selected;
-    private (CubeTile, CubeTile)? hint;
-    private string? message;
-    private int dealtSize;
+    // The tiles the script is drawing (id → face), and whether it has drawn the block yet.
+    private IReadOnlyDictionary<int, string> drawn = new Dictionary<int, string>();
+    private bool drawnOnce;
+    private string? shownState;
     private (string?, string?) shownStone;
     private bool disposed;
 
-    /// <summary>Tiles along each edge: 4 (Small) or 6 (Large). A change deals a new cube.</summary>
-    [Parameter] public int Size { get; set; } = 4;
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    [Parameter] public Tile? Selected { get; set; }
+
+    [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
+
+    [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
 
     /// <summary>The stone (TileSets.Stones' Stone), or a picture's name with <see cref="StoneUrl"/>.</summary>
     [Parameter] public string Stone { get; set; } = TileSets.DefaultStone.Stone!;
@@ -50,11 +44,15 @@
     /// <summary>The picture's file name when trying one, for its configured face set.</summary>
     [Parameter] public string? StoneFacesKey { get; set; }
 
+    // The page redraws every clock tick; only talk to the script when something on the cube has changed.
+    protected override bool ShouldRender() => scene == null || State() != shownState || (Stone, StoneUrl) != shownStone;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // The page may throw this board away while it's still starting: stop if it has.
+            // A new game replaces the cube (it's keyed to the game), so this one may be thrown away
+            // while it's still starting: after each step, stop if it has been.
             await FaceArt.LoadAsync();
             if (disposed)
             {
@@ -88,86 +86,75 @@
             await scene.InvokeVoidAsync("setStone", Stone, StoneUrl, FaceArt.StoneFaces(StoneFacesKey ?? Stone));
         }
 
-        if (Size != dealtSize)
-        {
-            await NewGameAsync();
-        }
-    }
-
-    private async Task NewGameAsync()
-    {
-        dealtSize = Size;
-        game = CubeGame.Deal(Size, new Random());
-        selected = null;
-        hint = null;
-        message = null;
-        if (scene != null)
-        {
-            var tiles = game.Tiles.Select(t =>
-            {
-                var glyph = TileSets.Glyph(t.Face.Name);
-                return new
-                {
-                    id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name,
-                    art = FaceArt.Pictures(t.Face.Name),
-                    glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
-                };
-            });
-            await scene.InvokeVoidAsync("setBoard", Size, tiles, FreeIds());
-        }
-
-        StateHasChanged();
-    }
-
-    [JSInvokable]
-    public async Task OnTileTapped(int id)
-    {
-        var tile = game?.Tiles.FirstOrDefault(t => t.Id == id);
-        if (game == null || tile == null || !game.IsFree(tile) || scene == null)
+        string state = State();
+        if (state == shownState || disposed || scene == null)
         {
             return;
         }
 
-        if (selected == null || selected == tile)
+        shownState = state;
+        var now = Game.Board.Tiles.ToDictionary(t => t.Id, t => t.Face.Name);
+        var (redraw, removed) = CubeRedraw.Compare(drawn, now);
+        if (redraw)
         {
-            selected = selected == tile ? null : tile;
+            await scene.InvokeVoidAsync("setBoard", Game.Layout.Size, TilesForScript(), FreeIds(), drawnOnce);
+            drawnOnce = true;
         }
-        else if (game.TryRemovePair(selected, tile))
+        else if (removed.Length > 0)
         {
-            await scene.InvokeVoidAsync("remove", new[] { selected.Id, tile.Id });
-            selected = null;
-            hint = null;
-            message = game.IsCleared ? L["You cleared the cube!"].Value
-                : game.FindPair() == null ? L["No pairs can be taken. Start a new game."].Value
-                : null;
-        }
-        else
-        {
-            selected = tile;
+            await scene.InvokeVoidAsync("remove", removed);
         }
 
-        await RedrawAsync();
+        // A pause or a new game may have thrown the cube away while it was being drawn.
+        if (disposed || scene == null)
+        {
+            return;
+        }
+
+        drawn = now;
+        await scene.InvokeVoidAsync("update", Selected?.Id, FreeIds(), Hinted?.ToArray() ?? []);
     }
 
-    private async Task HintAsync()
+    // What's on the cube: each tile's id and face, the selection and the hint.
+    private string State()
     {
-        hint = game?.FindPair();
-        message = hint == null ? L["No pairs can be taken. Start a new game."].Value : null;
-        await RedrawAsync();
-    }
-
-    private async Task RedrawAsync()
-    {
-        if (scene != null)
+        var text = new System.Text.StringBuilder();
+        foreach (var t in Game.Board.Tiles.OrderBy(t => t.Id))
         {
-            int[] hinted = hint is { } pair ? [pair.Item1.Id, pair.Item2.Id] : [];
-            await scene.InvokeVoidAsync("update", selected?.Id, FreeIds(), hinted);
+            text.Append(t.Id).Append(':').Append(t.Face.Name).Append(';');
         }
 
-        StateHasChanged();
+        text.Append('|').Append(Selected?.Id).Append('|');
+        if (Hinted != null)
+        {
+            text.AppendJoin(',', Hinted.Order());
+        }
+
+        return text.ToString();
     }
 
-    private int[] FreeIds() => game == null ? [] : game.Tiles.Where(game.IsFree).Select(t => t.Id).ToArray();
+    // Each tile with its cell, its pictures and its drawn symbol.
+    private List<object> TilesForScript() => Game.Board.Tiles.Select(t =>
+    {
+        var glyph = TileSets.Glyph(t.Face.Name);
+        return (object)new
+        {
+            id = t.Id, x = t.Position.X, y = t.Position.Y, z = t.Position.Z, face = t.Face.Name,
+            art = FaceArt.Pictures(t.Face.Name),
+            glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
+        };
+    }).ToList();
+
+    private int[] FreeIds() => Game.Board.Tiles.Where(Game.Board.IsFree).Select(t => t.Id).ToArray();
+
+    [JSInvokable]
+    public async Task OnTileTapped(int id)
+    {
+        if (Game.Board.FindTile(id) is { } tile)
+        {
+            await OnTileClick.InvokeAsync(tile);
+        }
+    }
 
     public async ValueTask DisposeAsync()
     {

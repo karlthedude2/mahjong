@@ -24,7 +24,6 @@ public static partial class LayoutPreviews
 public sealed record PreviewItem(string Id, string Name, string ImageUrl, string? Badge = null);
 
 /// <summary>What the player chose in the settings dialog.</summary>
-/// <param name="CubeSize">Set when Mahjong Cube was chosen (4 or 6); the layout and tile set then stay as they were.</param>
-/// <param name="StoneId">With <paramref name="CubeSize"/>: the stone chosen for the cube.</param>
+/// <param name="StoneId">For Mahjong Cube: the stone chosen for it (the tile set of the other games stays as it was).</param>
 public sealed record SettingsChoice(string LayoutName, string TileSetId, string BackgroundId, bool SkipSettings, bool GuaranteedWinnable,
-    int? CubeSize = null, string? StoneId = null);
+    string? StoneId = null);
