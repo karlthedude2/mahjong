@@ -25,11 +25,15 @@ namespace Mahjong.Core
         /// <summary>The Connect (Shisen-Sho) boards. They're kept apart from the solitaire layouts above.</summary>
         public static IReadOnlyList<LayoutDefinition> Connect => ConnectLayouts.All;
 
-        /// <summary>A solitaire layout or Connect board by name.</summary>
+        /// <summary>Mahjong Cube's blocks. Like the Connect boards, they're kept apart from the solitaire layouts.</summary>
+        public static IReadOnlyList<LayoutDefinition> Cube => CubeLayouts.All;
+
+        /// <summary>A solitaire layout, Connect board or cube by name.</summary>
         public static LayoutDefinition Find(string name)
         {
             return layouts.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? ConnectLayouts.All.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase));
+                ?? ConnectLayouts.All.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? CubeLayouts.All.FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
