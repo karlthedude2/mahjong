@@ -1,14 +1,13 @@
 @page "/cube"
 @using Mahjong.Web.Client.Game
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
-@implements IAsyncDisposable
 @inject IJSRuntime JS
 @inject FaceArt FaceArt
 
 @*
-    Prototype: Mahjong Cube, a 3D game drawn with Three.js (wwwroot/js/cube.js). Not linked from the
-    menus yet. The game and its rules are CubeGame; the script only draws the block, turns it, and
-    reports which tile was tapped.
+    Test bench for Mahjong Cube (the game itself is the CubeBoard component, played from the Play
+    page's Mahjong Cube tab). Not linked from the menus. Here the size and stone can be switched
+    quickly, and in development, stone pictures dropped into the cube-stones folder can be tried.
 *@
 
 <PageTitle>@L["Mahjong Cube"]</PageTitle>
@@ -16,13 +15,11 @@
 <section class="cube-page">
     <div class="cube-bar">
         <span class="cube-title">@L["Mahjong Cube"] <span class="badge">@L["Prototype"]</span></span>
-        <span class="cube-count">@L["{0} left", game?.Tiles.Count ?? 0]</span>
         <span class="cube-sizes" role="radiogroup" aria-label="@L["Board size"]">
-            <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => NewGameAsync(4)">@L["Small"] (4×4×4)</button>
-            <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => NewGameAsync(6)">@L["Large"] (6×6×6)</button>
+            <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => size = 4">@L["Small"] (4×4×4)</button>
+            <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => size = 6">@L["Large"] (6×6×6)</button>
         </span>
-        @* Development: pictures dropped into the cube-stones folder are listed too (see DevStoneEndpoints). *@
-        @* The same stones as Mahjong 3D (TileSets.Stones). *@
+        @* The same stones as Mahjong 3D (TileSets.Stones), and in development the cube-stones folder's pictures. *@
         <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? DefaultStone))">
             @foreach (var set in TileSets.Stones)
             {
@@ -38,46 +35,33 @@
                 </optgroup>
             }
         </select>
-        <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
-        <button type="button" class="btn btn-sm btn-primary" @onclick="() => NewGameAsync(size)">@L["New game"]</button>
     </div>
 
-    @if (message != null)
+    @if (loaded)
     {
-        <div class="cube-message">@message</div>
+        <CubeBoard Size="size" Stone="@stone" StoneUrl="@StoneUrl" StoneFacesKey="@StoneFacesKey" />
     }
-
-    <div class="cube-view" @ref="view" role="img" aria-label="@L["Mahjong Cube"]"></div>
-
-    <p class="cube-help">@L["Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open."]</p>
 </section>
 
 @code {
-    private ElementReference view;
-    private IJSObjectReference? module;
-    private IJSObjectReference? scene;
-    private DotNetObjectReference<Cube>? self;
-    private CubeGame? game;
-    private CubeTile? selected;
-    private (CubeTile, CubeTile)? hint;
-    private string? message;
     private int size = 4;
     private static readonly string DefaultStone = TileSets.DefaultStone.Stone!;
     private string stone = DefaultStone;
     private List<string> droppedStones = [];
+    private bool loaded;
 
     private const string DroppedPrefix = "file:";
     private const string StoneSetting = "mahjong.cubeStone";
+
+    // A picture being tried is shown from the cube-stones folder and configured by its file name.
+    private string? StoneUrl => stone.StartsWith(DroppedPrefix) ? "dev/stones/" + Uri.EscapeDataString(stone[DroppedPrefix.Length..]) : null;
+
+    private string? StoneFacesKey => stone.StartsWith(DroppedPrefix) ? stone[DroppedPrefix.Length..] : null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            self = DotNetObjectReference.Create(this);
-            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
-            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
-            // Face art and each stone's face set (see FaceArt), and stone pictures to try.
-            await FaceArt.LoadAsync();
             droppedStones = await FaceArt.ListAsync("dev/stones");
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
@@ -87,70 +71,14 @@
                 stone = saved;
             }
 
-            await ShowStoneAsync();
-            await NewGameAsync(size);
+            loaded = true;
+            StateHasChanged();
         }
-    }
-
-    private async Task NewGameAsync(int newSize)
-    {
-        size = newSize;
-        game = CubeGame.Deal(size, new Random());
-        selected = null;
-        hint = null;
-        message = null;
-        if (scene != null)
-        {
-            var tiles = game.Tiles.Select(t =>
-            {
-                var glyph = TileSets.Glyph(t.Face.Name);
-                return new
-                {
-                    id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name,
-                    art = FaceArt.Pictures(t.Face.Name),
-                    glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
-                };
-            });
-            await scene.InvokeVoidAsync("setBoard", size, tiles, FreeIds());
-        }
-
-        StateHasChanged();
-    }
-
-    [JSInvokable]
-    public async Task OnTileTapped(int id)
-    {
-        var tile = game?.Tiles.FirstOrDefault(t => t.Id == id);
-        if (game == null || tile == null || !game.IsFree(tile))
-        {
-            return;
-        }
-
-        if (selected == null || selected == tile)
-        {
-            selected = selected == tile ? null : tile;
-        }
-        else if (game.TryRemovePair(selected, tile))
-        {
-            await scene!.InvokeVoidAsync("remove", new[] { selected.Id, tile.Id });
-            selected = null;
-            hint = null;
-            message = game.IsCleared ? L["You cleared the cube!"].Value
-                : game.FindPair() == null ? L["No pairs can be taken. Start a new game."].Value
-                : null;
-        }
-        else
-        {
-            selected = tile;
-        }
-
-        await RedrawAsync();
     }
 
     private async Task SetStoneAsync(string name)
     {
         stone = name;
-        await ShowStoneAsync();
         try
         {
             await JS.InvokeVoidAsync("localStorage.setItem", StoneSetting, stone);
@@ -159,58 +87,5 @@
         {
             // Private windows or blocked storage: the choice just isn't remembered.
         }
-    }
-
-    private async Task ShowStoneAsync()
-    {
-        if (scene != null)
-        {
-            string? url = stone.StartsWith(DroppedPrefix) ? "dev/stones/" + Uri.EscapeDataString(stone[DroppedPrefix.Length..]) : null;
-            // A built-in stone is configured by its name, a picture being tried by its file name.
-            string? faces = FaceArt.StoneFaces(stone.StartsWith(DroppedPrefix) ? stone[DroppedPrefix.Length..] : stone);
-            await scene.InvokeVoidAsync("setStone", stone, url, faces);
-        }
-    }
-
-    private async Task HintAsync()
-    {
-        hint = game?.FindPair();
-        message = hint == null ? L["No pairs can be taken. Start a new game."].Value : null;
-        await RedrawAsync();
-    }
-
-    private async Task RedrawAsync()
-    {
-        if (scene != null)
-        {
-            int[] hinted = hint is { } pair ? [pair.Item1.Id, pair.Item2.Id] : [];
-            await scene.InvokeVoidAsync("update", selected?.Id, FreeIds(), hinted);
-        }
-
-        StateHasChanged();
-    }
-
-    private int[] FreeIds() => game == null ? [] : game.Tiles.Where(game.IsFree).Select(t => t.Id).ToArray();
-
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            if (scene != null)
-            {
-                await scene.InvokeVoidAsync("dispose");
-                await scene.DisposeAsync();
-            }
-
-            if (module != null)
-            {
-                await module.DisposeAsync();
-            }
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-
-        self?.Dispose();
     }
 }

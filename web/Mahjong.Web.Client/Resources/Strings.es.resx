@@ -397,6 +397,7 @@
   <data name="Stop demo" xml:space="preserve"><value>Detener la demostración</value></data>
   <data name="Switch language" xml:space="preserve"><value>Cambiar de idioma</value></data>
   <data name="Switch language?" xml:space="preserve"><value>¿Cambiar de idioma?</value></data>
+  <data name="Take matching pairs from a cube you can turn. A tile can be taken when two of its sides that meet at an edge are open." xml:space="preserve"><value>Quita parejas iguales de un cubo que puedes girar. Una ficha se puede quitar cuando dos de sus lados que se tocan en una arista están libres.</value></data>
   <data name="Teddy Picnic" xml:space="preserve"><value>Picnic de ositos</value></data>
   <data name="Temple" xml:space="preserve"><value>Templo</value></data>
   <data name="Test" xml:space="preserve"><value>Prueba</value></data>
@@ -512,6 +513,7 @@
   <data name="Your name" xml:space="preserve"><value>Tu nombre</value></data>
   <data name="Your next game will be a guaranteed winnable deal." xml:space="preserve"><value>Tu próxima partida tendrá un reparto con solución garantizada.</value></data>
   <data name="Your next game will be a random deal." xml:space="preserve"><value>Tu próxima partida tendrá un reparto al azar.</value></data>
+  <data name="Your next game will be Mahjong Cube." xml:space="preserve"><value>Tu próxima partida será Cubo Mahjong.</value></data>
   <data name="Your next game will use the &lt;strong&gt;{0}&lt;/strong&gt; layout." xml:space="preserve"><value>Tu próxima partida usará el tablero &lt;strong&gt;{0}&lt;/strong&gt;.</value></data>
   <data name="Your password has been changed" xml:space="preserve"><value>Se cambió tu contraseña</value></data>
   <data name="Your password has been reset. Please" xml:space="preserve"><value>Se restableció tu contraseña. Por favor,</value></data>

@@ -28,7 +28,14 @@
         <div class="play-table">
             <div class="board-column">
                 <div class="layout-title">
-                    @L.LayoutName(PlayingLayout)
+                    @if (cubeSize is { } titleSize)
+                    {
+                        <text>@L["Mahjong Cube"] · @(titleSize == 6 ? L["Large"] : L["Small"])</text>
+                    }
+                    else
+                    {
+                        <text>@L.LayoutName(PlayingLayout)</text>
+                    }
                     @if (Session.Game is { Winnable: false })
                     {
                         <span class="deal-badge" title="@L["Tiles were dealt at random, so this deal may not be clearable."]">@L["Random deal"]</span>
@@ -101,6 +108,15 @@
                     </div>
                 }
 
+                @if (pendingCubeSize != null)
+                {
+                    <div class="notice info">
+                        @L["Your next game will be Mahjong Cube."]
+                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
+                        <button class="btn btn-link btn-sm" @onclick="() => pendingCubeSize = null">@L["Keep {0}", L.LayoutName(currentLayout)]</button>
+                    </div>
+                }
+
                 @if (pendingLayout != null)
                 {
                     <div class="notice info">
@@ -131,7 +147,11 @@
                     </div>
                 }
 
-                @if (Session.Game is { } game)
+                @if (cubeSize is { } size)
+                {
+                    <CubeBoard @key="cubeDeal" Size="size" Stone="@Preferences.LastStone.Stone" />
+                }
+                else if (Session.Game is { } game)
                 {
                     @* As wide as the board is drawn (see matchBoardWidth in mahjong.js). *@
                     <div class="score-bar" @ref="scoreBar">
@@ -288,6 +308,7 @@
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
                     TileSetId="@Preferences.TileSet.Id" FlatTileSetId="@Preferences.LastFlat.Id" StoneId="@Preferences.LastStone.Id" BackgroundId="@Preferences.Background.Id"
+                    CubeSize="@(pendingCubeSize ?? cubeSize)"
                     SkipSettings="Preferences.SkipSettings" GuaranteedWinnable="Preferences.GuaranteedWinnable" ForNewGame="settingsForNewGame"
                     OnApply="ApplySettingsAsync" OnCancel="CancelSettingsAsync" />
 }
@@ -311,6 +332,11 @@
     private bool settingsForNewGame;
     // The deal setting was changed mid-game; it applies from the next game.
     private bool pendingDealChange;
+    // Mahjong Cube's size while the cube is being played (instead of a session game), and a cube
+    // chosen mid-game, kept for the next game. cubeDeal changes for each new cube.
+    private int? cubeSize;
+    private int? pendingCubeSize;
+    private int cubeDeal;
     private DotNetObjectReference<Play>? selfReference;
     private ElementReference scoreBar;
     private ElementReference boardArea;
@@ -375,6 +401,9 @@
 
             error = L["That deal couldn't be found, so here's a new game instead."];
         }
+
+        // Back to the cube if it was the last game played.
+        cubeSize = Preferences.CubeSize;
 
         // Guests always start by choosing their settings; signed-in players unless they've turned that off.
         if (!signedIn || !Preferences.SkipSettings)
@@ -557,6 +586,26 @@
         LeaveReplay();
         demoDeal = null;
 
+        if (pendingCubeSize != null)
+        {
+            cubeSize = pendingCubeSize;
+            pendingCubeSize = null;
+        }
+
+        if (cubeSize != null)
+        {
+            // Mahjong Cube: no session game; the board's width watcher goes with the board.
+            pendingLayout = null;
+            pendingDealChange = false;
+            error = null;
+            Session.Clear();
+            _ = boardWidthWatcher?.InvokeVoidAsync("dispose").AsTask();
+            boardWidthWatcher = null;
+            cubeDeal++;
+            await Preferences.SetCubeSizeAsync(cubeSize);
+            return;
+        }
+
         if (pendingLayout != null)
         {
             currentLayout = pendingLayout;
@@ -606,6 +655,21 @@
         if (choice.BackgroundId != Preferences.Background.Id)
         {
             await Preferences.SetBackgroundAsync(Backgrounds.Find(choice.BackgroundId));
+        }
+
+        if (choice.CubeSize is { } size)
+        {
+            await ApplyCubeAsync(size, TileSets.Find(choice.StoneId));
+            return;
+        }
+
+        // Another game chosen: leaving the cube (which has no score to lose) deals it straight away.
+        pendingCubeSize = null;
+        if (cubeSize != null)
+        {
+            cubeSize = null;
+            await Preferences.SetCubeSizeAsync(null);
+            settingsForNewGame = true;
         }
 
         var layout = AllLayouts.FirstOrDefault(l => l.Name == choice.LayoutName);
@@ -660,13 +724,46 @@
         }
     }
 
+    // Mahjong Cube chosen. Its stone changes straight away. A new cube is dealt for a new game, a new
+    // size, or when nothing's under way; a game of Solitaire or Connect under way finishes first.
+    private async Task ApplyCubeAsync(int size, TileSetInfo stone)
+    {
+        if (stone.Kind == TileSetKind.ThreeD && stone != Preferences.LastStone)
+        {
+            await Preferences.SetStoneAsync(stone);
+        }
+
+        bool forNewGame = settingsForNewGame;
+        settingsForNewGame = false;
+        if (cubeSize != null)
+        {
+            if (forNewGame || size != cubeSize)
+            {
+                cubeSize = size;
+                await NewGameAsync();
+            }
+
+            return;
+        }
+
+        if (GameUnderWay && !forNewGame)
+        {
+            pendingLayout = null;
+            pendingCubeSize = size;
+            return;
+        }
+
+        cubeSize = size;
+        await NewGameAsync();
+    }
+
     // Cancel keeps the game on the board; if there isn't one yet (the dialog opened as the page
     // loaded), deal one with the current settings.
     private async Task CancelSettingsAsync()
     {
         showSettings = false;
         settingsForNewGame = false;
-        if (Session.Game == null)
+        if (Session.Game == null && cubeSize == null)
         {
             await NewGameAsync();
         }
