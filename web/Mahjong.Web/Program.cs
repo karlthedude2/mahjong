@@ -91,6 +91,7 @@ else
 builder.Services.Configure<AdsOptions>(config.GetSection(AdsOptions.Section));
 builder.Services.Configure<AnalyticsOptions>(config.GetSection(AnalyticsOptions.Section));
 builder.Services.Configure<GameOptions>(config.GetSection(GameOptions.Section));
+builder.Services.Configure<CubeOptions>(config.GetSection(CubeOptions.Section));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<GameRecordCleanup>();
@@ -148,6 +149,11 @@ app.MapRazorComponents<App>()
 
 app.MapAdditionalIdentityEndpoints();
 app.MapMahjongApi();
+if (app.Environment.IsDevelopment())
+{
+    // The Mahjong Cube prototype's stone textures and face art, dropped into folders to try them out.
+    app.MapDevPictures(config, app.Environment);
+}
 // The health check names the running build (X-App-Version, e.g. "1.0.0+<commit>"), so the
 // deploy can wait for the new version rather than the old one that keeps serving while it starts.
 var appVersion = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";

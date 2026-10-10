@@ -46,8 +46,9 @@ public static partial class ApiEndpoints
 
         var api = app.MapGroup("/api");
 
-        api.MapGet("/client-config", (IOptions<AdsOptions> ads, IOptions<GameOptions> game) =>
-            new ClientConfig(ads.Value.ClientId, ads.Value.RailSlot, ads.Value.BannerSlot, ads.Value.ResultsSlot, game.Value.ShowHiddenLayouts));
+        api.MapGet("/client-config", (IOptions<AdsOptions> ads, IOptions<GameOptions> game, IOptions<CubeOptions> cube) =>
+            new ClientConfig(ads.Value.ClientId, ads.Value.RailSlot, ads.Value.BannerSlot, ads.Value.ResultsSlot, game.Value.ShowHiddenLayouts,
+                cube.Value.CleanStoneFaces(), ads.Value.Show));
 
         api.MapGet("/leaderboards/{layout}", async (string layout, GameService games) =>
             Results.Ok(await games.GetLeaderboardAsync(layout)));

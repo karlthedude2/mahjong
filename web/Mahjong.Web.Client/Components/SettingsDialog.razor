@@ -13,19 +13,23 @@
         <section>
             <h3>@L["Game"]</h3>
             <div class="segmented" role="radiogroup" aria-label="@L["Game"]">
-                <button type="button" role="radio" aria-checked="@(game == GameKind.Solitaire ? "true" : "false")"
-                        class="@(game == GameKind.Solitaire ? "on" : null)" @onclick="() => game = GameKind.Solitaire">@L["Mahjong Solitaire"]</button>
-                <button type="button" role="radio" aria-checked="@(game == GameKind.Connect ? "true" : "false")"
-                        class="@(game == GameKind.Connect ? "on" : null)" @onclick="() => game = GameKind.Connect">@L["Connect (Shisen-Sho)"]</button>
+                @foreach (var (option, name) in Tabs)
+                {
+                    <button type="button" role="radio" aria-checked="@(tab == option ? "true" : "false")"
+                            class="@(tab == option ? "on" : null)" @onclick="() => tab = option">@L[name]</button>
+                }
             </div>
             <p class="hint">
-                @(game == GameKind.Solitaire
-                    ? L["Remove matching pairs of free tiles from the stack."]
-                    : L["Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board."])
+                @(tab switch
+                {
+                    GameTab.ThreeD => L["Mahjong Solitaire with stone tiles you can tilt and turn."],
+                    GameTab.Connect => L["Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board."],
+                    _ => L["Remove matching pairs of free tiles from the stack."],
+                })
             </p>
         </section>
 
-        @if (game == GameKind.Solitaire)
+        @if (tab != GameTab.Connect)
         {
             <section>
                 <h3>@L["Layout"]</h3>
@@ -61,13 +65,26 @@
         }
 
         <section>
-            <h3><label for="tile-set">@L["Tiles"]</label></h3>
-            <select id="tile-set" class="form-select" @bind="tileSetId">
-                @foreach (var set in TileSets.All)
-                {
-                    <option value="@set.Id">@L[set.Name]</option>
-                }
-            </select>
+            @if (tab == GameTab.ThreeD)
+            {
+                <h3><label for="stone">@L["Stone"]</label></h3>
+                <select id="stone" class="form-select" @bind="stoneId">
+                    @foreach (var set in TileSets.Stones)
+                    {
+                        <option value="@set.Id">@L[set.Name]</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <h3><label for="tile-set">@L["Tiles"]</label></h3>
+                <select id="tile-set" class="form-select" @bind="flatId">
+                    @foreach (var set in TileSets.Flat)
+                    {
+                        <option value="@set.Id">@L[set.Name]</option>
+                    }
+                </select>
+            }
         </section>
 
         <section>
@@ -118,12 +135,26 @@
     private PreviewStrip? layoutStrip;
     private IReadOnlyList<PreviewItem> layoutItems = [];
     private IReadOnlyList<PreviewItem> boardItems = [];
-    private GameKind game;
+    /// <summary>
+    /// The dialog's game tabs. Mahjong 3D is Mahjong Solitaire drawn in stone (it shares its layouts
+    /// and leaderboards); which one is played follows the tile set chosen.
+    /// </summary>
+    private enum GameTab { Solitaire, ThreeD, Connect }
+
+    private static readonly (GameTab Tab, string Name)[] Tabs =
+    [
+        (GameTab.Solitaire, "Mahjong Solitaire"),
+        (GameTab.ThreeD, "Mahjong 3D"),
+        (GameTab.Connect, "Connect (Shisen-Sho)"),
+    ];
+
+    private GameTab tab;
     private string? boardName;
     private Gravity gravity;
     private IReadOnlyList<PreviewItem> backgroundItems = [];
     private string? layoutName;
-    private string tileSetId = TileSets.Default.Id;
+    private string flatId = TileSets.Default.Id;
+    private string stoneId = TileSets.DefaultStone.Id;
     private string backgroundId = Backgrounds.Default.Id;
     private bool skipSettings;
     private bool winnable = true;
@@ -140,6 +171,11 @@
     [Parameter] public string? LayoutName { get; set; }
 
     [Parameter] public string? TileSetId { get; set; }
+
+    /// <summary>The last flat set and stone chosen, so switching tabs keeps each choice.</summary>
+    [Parameter] public string? FlatTileSetId { get; set; }
+
+    [Parameter] public string? StoneId { get; set; }
 
     [Parameter] public string? BackgroundId { get; set; }
 
@@ -167,13 +203,15 @@
 
         // Start from the chosen (or playing) layout: its game, and for Connect its board and gravity.
         var chosen = LayoutCatalog.Find(LayoutName ?? PlayingLayoutName ?? "");
-        game = chosen?.Kind ?? GameKind.Solitaire;
+        var tileSet = TileSets.Find(TileSetId);
+        tab = chosen?.Kind == GameKind.Connect ? GameTab.Connect : tileSet.Kind == TileSetKind.ThreeD ? GameTab.ThreeD : GameTab.Solitaire;
         boardName = chosen?.Kind == GameKind.Connect ? chosen.PreviewName : ConnectLayouts.BaseBoards[0].Name;
         gravity = chosen?.Kind == GameKind.Connect ? chosen.Gravity : Gravity.None;
         backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, L[b.Name], b.Url)).ToList();
 
         layoutName = chosen?.Kind == GameKind.Solitaire ? chosen.Name : Layouts.FirstOrDefault()?.Name;
-        tileSetId = TileSets.Find(TileSetId).Id;
+        flatId = TileSets.Flat.FirstOrDefault(s => s.Id == FlatTileSetId)?.Id ?? TileSets.Default.Id;
+        stoneId = TileSets.Stones.FirstOrDefault(s => s.Id == StoneId)?.Id ?? TileSets.DefaultStone.Id;
         backgroundId = Backgrounds.Find(BackgroundId).Id;
         skipSettings = SkipSettings;
         winnable = GuaranteedWinnable;
@@ -199,9 +237,10 @@
 
     private Task ApplyAsync()
     {
-        string chosen = game == GameKind.Connect
+        string chosen = tab == GameTab.Connect
             ? ConnectLayouts.WithGravity(LayoutCatalog.Find(boardName!)!, gravity).Name
             : layoutName ?? PlayingLayoutName ?? "";
+        string tileSetId = tab == GameTab.ThreeD ? stoneId : flatId;
         return OnApply.InvokeAsync(new SettingsChoice(chosen, tileSetId, backgroundId, skipSettings, winnable));
     }
 }

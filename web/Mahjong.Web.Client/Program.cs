@@ -19,6 +19,7 @@ builder.Services.AddScoped<PlayerPreferences>();
 builder.Services.AddScoped<ITileEffects, SoundTileEffects>();
 builder.Services.AddScoped<GuestClaims>();
 builder.Services.AddScoped<GameSession>();
+builder.Services.AddScoped<FaceArt>();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
 // Speak the page's language: the server chose it (the player's choice, else the browser's) and

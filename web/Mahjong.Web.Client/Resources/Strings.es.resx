@@ -4,14 +4,8 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="(Random deals can't always be cleared.)" xml:space="preserve"><value>(Los repartos al azar no siempre se pueden completar).</value></data>
-  <data name="20 tiles inside one 30-second window: 100 points per second left." xml:space="preserve"><value>20 fichas en una ventana de 30 segundos: 100 puntos por cada segundo que quede.</value></data>
-  <data name="2fa has been disabled. You can reenable 2fa when you setup an authenticator app" xml:space="preserve"><value>Se desactivó la verificación en dos pasos. Puedes volver a activarla cuando configures una aplicación de autenticación.</value></data>
-  <data name="3,000, less 1,000 for each shuffle and 500 for each hint." xml:space="preserve"><value>3000, menos 1000 por cada mezcla y 500 por cada pista.</value></data>
-  <data name="30 points for every second left on the bonus clock." xml:space="preserve"><value>30 puntos por cada segundo que quede en el reloj de bonificación.</value></data>
-  <data name="30 points per second left on the bonus clock when you finished." xml:space="preserve"><value>30 puntos por cada segundo que quedaba en el reloj de bonificación al terminar.</value></data>
-  <data name="5,000 for a fast finish, dropping in steps after 2:40." xml:space="preserve"><value>5000 por terminar rápido; baja por tramos después de 2:40.</value></data>
   <data name='&lt;a href="Account/Login"&gt;Sign in&lt;/a&gt; to get your score on the list.' xml:space="preserve"><value>&lt;a href="Account/Login"&gt;Inicia sesión&lt;/a&gt; para que tu puntuación entre en la lista.</value></data>
+  <data name='&lt;a href="Account/Login"&gt;Sign in&lt;/a&gt; to save your scores and get on the leaderboards.' xml:space="preserve"><value>&lt;a href="Account/Login"&gt;Inicia sesión&lt;/a&gt; para guardar tus puntuaciones y entrar en las clasificaciones.</value></data>
   <data name='&lt;a href="Account/Login"&gt;Sign in&lt;/a&gt; to save your scores, get on the leaderboards and see fewer ads.' xml:space="preserve"><value>&lt;a href="Account/Login"&gt;Inicia sesión&lt;/a&gt; para guardar tus puntuaciones, entrar en las clasificaciones y ver menos anuncios.</value></data>
   <data name="&lt;p&gt;Welcome to Mahjong Haus!&lt;/p&gt;&lt;p&gt;Please &lt;a href='{0}'&gt;confirm your email address&lt;/a&gt; to finish creating your account.&lt;/p&gt;" xml:space="preserve"><value>&lt;p&gt;¡Te damos la bienvenida a Mahjong Haus!&lt;/p&gt;&lt;p&gt;&lt;a href='{0}'&gt;Confirma tu correo electrónico&lt;/a&gt; para terminar de crear tu cuenta.&lt;/p&gt;</value></data>
   <data name="&lt;p&gt;You can &lt;a href='{0}'&gt;reset your password here&lt;/a&gt;. If you didn't ask for this, you can ignore this email.&lt;/p&gt;" xml:space="preserve"><value>&lt;p&gt;Puedes &lt;a href='{0}'&gt;restablecer tu contraseña aquí&lt;/a&gt;. Si no lo pediste, puedes ignorar este correo.&lt;/p&gt;</value></data>
@@ -21,6 +15,13 @@
   <data name="&lt;strong&gt;Save this score:&lt;/strong&gt; &lt;a href=&quot;Account/Login&quot;&gt;sign in&lt;/a&gt; or &lt;a href=&quot;Account/Register&quot;&gt;create an account&lt;/a&gt; within a day, on this device, and it goes on the leaderboard as if you'd been signed in." xml:space="preserve"><value>&lt;strong&gt;Guarda esta puntuación:&lt;/strong&gt; &lt;a href="Account/Login"&gt;inicia sesión&lt;/a&gt; o &lt;a href="Account/Register"&gt;crea una cuenta&lt;/a&gt; en menos de un día, en este dispositivo, y entrará en la clasificación como si hubieras jugado con tu sesión iniciada.</value></data>
   <data name="&lt;strong&gt;Save this score:&lt;/strong&gt; &lt;a href=&quot;Account/Login&quot;&gt;sign in&lt;/a&gt; or &lt;a href=&quot;Account/Register&quot;&gt;create an account&lt;/a&gt; within a day, on this device, and it goes on this deal's replay list as if you'd been signed in." xml:space="preserve"><value>&lt;strong&gt;Guarda esta puntuación:&lt;/strong&gt; &lt;a href="Account/Login"&gt;inicia sesión&lt;/a&gt; o &lt;a href="Account/Register"&gt;crea una cuenta&lt;/a&gt; en menos de un día, en este dispositivo, y entrará en la lista de repeticiones de este reparto como si hubieras jugado con tu sesión iniciada.</value></data>
   <data name="&lt;strong&gt;{0}&lt;/strong&gt;'s original score was {1}." xml:space="preserve"><value>La puntuación original de &lt;strong&gt;{0}&lt;/strong&gt; era {1}.</value></data>
+  <data name="(Random deals can't always be cleared.)" xml:space="preserve"><value>(Los repartos al azar no siempre se pueden completar).</value></data>
+  <data name="20 tiles inside one 30-second window: 100 points per second left." xml:space="preserve"><value>20 fichas en una ventana de 30 segundos: 100 puntos por cada segundo que quede.</value></data>
+  <data name="2fa has been disabled. You can reenable 2fa when you setup an authenticator app" xml:space="preserve"><value>Se desactivó la verificación en dos pasos. Puedes volver a activarla cuando configures una aplicación de autenticación.</value></data>
+  <data name="3,000, less 1,000 for each shuffle and 500 for each hint." xml:space="preserve"><value>3000, menos 1000 por cada mezcla y 500 por cada pista.</value></data>
+  <data name="30 points for every second left on the bonus clock." xml:space="preserve"><value>30 puntos por cada segundo que quede en el reloj de bonificación.</value></data>
+  <data name="30 points per second left on the bonus clock when you finished." xml:space="preserve"><value>30 puntos por cada segundo que quedaba en el reloj de bonificación al terminar.</value></data>
+  <data name="5,000 for a fast finish, dropping in steps after 2:40." xml:space="preserve"><value>5000 por terminar rápido; baja por tramos después de 2:40.</value></data>
   <data name="A user with this login already exists." xml:space="preserve"><value>Ya existe un usuario con este inicio de sesión.</value></data>
   <data name="About guaranteed winnable deals" xml:space="preserve"><value>Acerca de los repartos con solución garantizada</value></data>
   <data name="Access denied" xml:space="preserve"><value>Acceso denegado</value></data>
@@ -50,6 +51,7 @@
   <data name="Bam" xml:space="preserve"><value>BAMBÚ</value></data>
   <data name="Beat the original" xml:space="preserve"><value>Superó la original</value></data>
   <data name="before you can log in with a recovery code." xml:space="preserve"><value>antes de poder iniciar sesión con un código de recuperación.</value></data>
+  <data name="Beige" xml:space="preserve"><value>Beige</value></data>
   <data name="Best" xml:space="preserve"><value>Mejor</value></data>
   <data name="Best replay scores on this deal" xml:space="preserve"><value>Mejores puntuaciones de repeticiones de este reparto</value></data>
   <data name="Best scores" xml:space="preserve"><value>Mejores puntuaciones</value></data>
@@ -120,6 +122,7 @@
   <data name="Down" xml:space="preserve"><value>Hacia abajo</value></data>
   <data name="Download" xml:space="preserve"><value>Descargar</value></data>
   <data name="Download a two-factor authenticator app like Microsoft Authenticator for" xml:space="preserve"><value>Descarga una aplicación de autenticación como Microsoft Authenticator para</value></data>
+  <data name="Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open." xml:space="preserve"><value>Arrastra para girar el cubo. Una ficha se puede quitar cuando dos de sus lados que se tocan en una arista están libres.</value></data>
   <data name="Dragon" xml:space="preserve"><value>Dragón</value></data>
   <data name="Dragon Mountains" xml:space="preserve"><value>Montañas del Dragón</value></data>
   <data name="Dragon Valley" xml:space="preserve"><value>Valle del Dragón</value></data>
@@ -179,6 +182,7 @@
   <data name="Forgot password confirmation" xml:space="preserve"><value>Confirmación de contraseña olvidada</value></data>
   <data name="Forgot your password?" xml:space="preserve"><value>¿Olvidaste tu contraseña?</value></data>
   <data name="Fortress" xml:space="preserve"><value>Fortaleza</value></data>
+  <data name="From the cube-stones folder" xml:space="preserve"><value>De la carpeta cube-stones</value></data>
   <data name="Game" xml:space="preserve"><value>Juego</value></data>
   <data name="Game controls" xml:space="preserve"><value>Controles del juego</value></data>
   <data name="Game settings" xml:space="preserve"><value>Configuración del juego</value></data>
@@ -206,9 +210,11 @@
   <data name="Invalid user" xml:space="preserve"><value>Usuario no válido</value></data>
   <data name="iOS" xml:space="preserve"><value>iOS</value></data>
   <data name="It's practice, so it won't go on the leaderboard." xml:space="preserve"><value>Es de práctica, así que no cuenta para la clasificación.</value></data>
+  <data name="Ivory" xml:space="preserve"><value>Marfil</value></data>
   <data name="Jade Silk" xml:space="preserve"><value>Seda de jade</value></data>
   <data name="Keep playing" xml:space="preserve"><value>Seguir jugando</value></data>
   <data name="Keep {0}" xml:space="preserve"><value>Mantener {0}</value></data>
+  <data name="Large" xml:space="preserve"><value>Grande</value></data>
   <data name="Layout" xml:space="preserve"><value>Tablero</value></data>
   <data name="Leaderboard" xml:space="preserve"><value>Clasificación</value></data>
   <data name="Leaderboards" xml:space="preserve"><value>Clasificaciones</value></data>
@@ -221,13 +227,18 @@
   <data name="Log in using your {0} account" xml:space="preserve"><value>Iniciar sesión con tu cuenta de {0}</value></data>
   <data name="Log in with a passkey" xml:space="preserve"><value>Iniciar sesión con una llave de acceso</value></data>
   <data name="log in with a recovery code" xml:space="preserve"><value>iniciar sesión con un código de recuperación</value></data>
+  <data name="Mahjong 3D" xml:space="preserve"><value>Mahjong 3D</value></data>
   <data name="Mahjong board" xml:space="preserve"><value>Tablero de mahjong</value></data>
+  <data name="Mahjong Cube" xml:space="preserve"><value>Cubo Mahjong</value></data>
   <data name="Mahjong Haus home" xml:space="preserve"><value>Inicio de Mahjong Haus</value></data>
   <data name="Mahjong Solitaire" xml:space="preserve"><value>Mahjong Solitario</value></data>
+  <data name="Mahjong Solitaire with stone tiles you can tilt and turn." xml:space="preserve"><value>Mahjong Solitario con fichas de piedra que puedes inclinar y girar.</value></data>
   <data name="Manage email" xml:space="preserve"><value>Administrar el correo electrónico</value></data>
   <data name="Manage your account" xml:space="preserve"><value>Administrar tu cuenta</value></data>
   <data name="Manage your external logins" xml:space="preserve"><value>Administrar los inicios de sesión externos</value></data>
   <data name="Manage your passkeys" xml:space="preserve"><value>Administrar tus llaves de acceso</value></data>
+  <data name="Marble" xml:space="preserve"><value>Mármol</value></data>
+  <data name="Material" xml:space="preserve"><value>Material</value></data>
   <data name="Medium" xml:space="preserve"><value>Mediano</value></data>
   <data name="Monkey" xml:space="preserve"><value>Mono</value></data>
   <data name="Mute sound" xml:space="preserve"><value>Silenciar</value></data>
@@ -240,6 +251,7 @@
   <data name="Next in 1 tile, worth {0}" xml:space="preserve"><value>El próximo en 1 ficha, vale {0}</value></data>
   <data name="Next in {0} tiles, worth {1}" xml:space="preserve"><value>El próximo en {0} fichas, vale {1}</value></data>
   <data name="No more matching pairs. Try &lt;strong&gt;Shuffle&lt;/strong&gt; or &lt;strong&gt;Undo&lt;/strong&gt;." xml:space="preserve"><value>No quedan parejas. Prueba &lt;strong&gt;Mezclar&lt;/strong&gt; o &lt;strong&gt;Deshacer&lt;/strong&gt;.</value></data>
+  <data name="No pairs can be taken. Start a new game." xml:space="preserve"><value>No se puede quitar ningún par. Empieza una partida nueva.</value></data>
   <data name="No passkeys are registered." xml:space="preserve"><value>No hay llaves de acceso registradas.</value></data>
   <data name="No picture yet" xml:space="preserve"><value>Todavía no hay imagen</value></data>
   <data name="No replays yet. Be the first to try this deal." xml:space="preserve"><value>Todavía no hay repeticiones. Sé el primero en probar este reparto.</value></data>
@@ -254,6 +266,7 @@
   <data name="Old password" xml:space="preserve"><value>Contraseña actual</value></data>
   <data name="On Windows, press &lt;kbd&gt;Win&lt;/kbd&gt; + &lt;kbd&gt;.&lt;/kbd&gt; for every emoji; on a phone, use the keyboard's emoji key." xml:space="preserve"><value>En Windows, pulsa &lt;kbd&gt;Win&lt;/kbd&gt; + &lt;kbd&gt;.&lt;/kbd&gt; para ver todos los emoji; en el teléfono, usa la tecla de emoji del teclado.</value></data>
   <data name="Once you have scanned the QR code or input the key above, your two factor authentication app will provide you with a unique code. Enter the code in the confirmation box below." xml:space="preserve"><value>Cuando escanees el código QR o escribas la clave de arriba, tu aplicación de autenticación te dará un código único. Escríbelo en el cuadro de confirmación de abajo.</value></data>
+  <data name="Onyx" xml:space="preserve"><value>Ónix</value></data>
   <data name="Onyx Silk" xml:space="preserve"><value>Seda de ónix</value></data>
   <data name="Optimistic concurrency failure, object has been modified." xml:space="preserve"><value>Los datos cambiaron mientras los guardabas. Vuelve a intentarlo.</value></data>
   <data name="OR" xml:space="preserve"><value>O</value></data>
@@ -296,6 +309,7 @@
   <data name="Privacy" xml:space="preserve"><value>Privacidad</value></data>
   <data name="Privacy and cookie policy have not been accepted." xml:space="preserve"><value>No se aceptó la política de privacidad y cookies.</value></data>
   <data name="Profile" xml:space="preserve"><value>Perfil</value></data>
+  <data name="Prototype" xml:space="preserve"><value>Prototipo</value></data>
   <data name="Put these codes in a safe place." xml:space="preserve"><value>Guarda estos códigos en un lugar seguro.</value></data>
   <data name="Pyramid" xml:space="preserve"><value>Pirámide</value></data>
   <data name="Quick Finish" xml:space="preserve"><value>Final rápido</value></data>
@@ -379,6 +393,7 @@
   <data name="Starts at 3,000; each shuffle costs 1,000 and each hint 500." xml:space="preserve"><value>Empieza en 3000; cada mezcla cuesta 1000 y cada pista 500.</value></data>
   <data name="Starts at 5,000 and drops in steps after 2:40." xml:space="preserve"><value>Empieza en 5000 y baja por tramos después de 2:40.</value></data>
   <data name="Starts on your first move" xml:space="preserve"><value>Empieza con tu primera jugada</value></data>
+  <data name="Stone" xml:space="preserve"><value>Piedra</value></data>
   <data name="Stop demo" xml:space="preserve"><value>Detener la demostración</value></data>
   <data name="Switch language" xml:space="preserve"><value>Cambiar de idioma</value></data>
   <data name="Switch language?" xml:space="preserve"><value>¿Cambiar de idioma?</value></data>
@@ -470,6 +485,7 @@
   <data name="You can" xml:space="preserve"><value>Puedes</value></data>
   <data name="You can always change these with the settings gear in the header." xml:space="preserve"><value>Siempre puedes cambiarla con el engranaje de configuración del encabezado.</value></data>
   <data name="You can try this deal yourself from the start." xml:space="preserve"><value>Puedes probar tú este reparto desde el principio.</value></data>
+  <data name="You cleared the cube!" xml:space="preserve"><value>¡Despejaste el cubo!</value></data>
   <data name="You cleared {0}!" xml:space="preserve"><value>¡Completaste {0}!</value></data>
   <data name="You do not have a local username/password for this site. Add a local account so you can log in without an external login." xml:space="preserve"><value>No tienes una contraseña para este sitio. Crea una para poder iniciar sesión sin un servicio externo.</value></data>
   <data name="You do not have access to this resource." xml:space="preserve"><value>No tienes acceso a este recurso.</value></data>

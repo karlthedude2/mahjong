@@ -10,6 +10,8 @@ namespace Mahjong.Web.Client.Game;
 public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 {
     private const string TileSetKey = "tileSet";
+    private const string FlatTileSetKey = "flatTileSet";
+    private const string StoneKey = "stone";
     private const string BackgroundKey = "background";
     private const string LayoutKey = "layout";
     private const string SkipSettingsKey = "skipSettings";
@@ -18,6 +20,12 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     private bool signedIn;
 
     public TileSetInfo TileSet { get; private set; } = TileSets.Default;
+
+    /// <summary>The last flat set chosen (Mahjong Solitaire, Connect), kept while playing in 3D.</summary>
+    public TileSetInfo LastFlat { get; private set; } = TileSets.Default;
+
+    /// <summary>The last stone chosen (Mahjong 3D), kept while playing a flat board.</summary>
+    public TileSetInfo LastStone { get; private set; } = TileSets.DefaultStone;
 
     public BackgroundInfo Background { get; private set; } = Backgrounds.Default;
 
@@ -55,6 +63,10 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
             }
         }
 
+        // The other kind's last choice is kept in this browser only (the profile has one tile set).
+        LastFlat = TileSet.Kind == TileSetKind.ThreeD ? FlatOrDefault(await browser.GetSettingAsync(FlatTileSetKey)) : TileSet;
+        LastStone = TileSet.Kind == TileSetKind.ThreeD ? TileSet : StoneOrDefault(await browser.GetSettingAsync(StoneKey));
+
         // Keep the page (and the copy the page head reads on the next visit) in step.
         await browser.SetSettingAsync(BackgroundKey, Background.Id);
         await browser.SetBackgroundAsync(Background.Url);
@@ -64,6 +76,17 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     {
         TileSet = set;
         await browser.SetSettingAsync(TileSetKey, set.Id);
+        if (set.Kind == TileSetKind.ThreeD)
+        {
+            LastStone = set;
+            await browser.SetSettingAsync(StoneKey, set.Id);
+        }
+        else
+        {
+            LastFlat = set;
+            await browser.SetSettingAsync(FlatTileSetKey, set.Id);
+        }
+
         if (signedIn)
         {
             await api.UpdateProfileAsync(new UpdateProfileRequest(null, set.Id, null));
@@ -100,6 +123,10 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
             await api.UpdateProfileAsync(new UpdateProfileRequest(null, null, null, PreferRandomDeals: !winnable));
         }
     }
+
+    private static TileSetInfo FlatOrDefault(string? id) => TileSets.Flat.FirstOrDefault(s => s.Id == id) ?? TileSets.Default;
+
+    private static TileSetInfo StoneOrDefault(string? id) => TileSets.Stones.FirstOrDefault(s => s.Id == id) ?? TileSets.DefaultStone;
 
     public async Task SetLastLayoutAsync(string layout)
     {

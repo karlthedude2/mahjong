@@ -40,7 +40,7 @@
     </script>
     <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" />
     <link rel="icon" type="image/png" href="favicon.png" sizes="96x96" />
-    @if (!string.IsNullOrEmpty(Ads.Value.ClientId))
+    @if (Ads.Value.Show && !string.IsNullOrEmpty(Ads.Value.ClientId))
     {
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=@Ads.Value.ClientId" crossorigin="anonymous"></script>
     }
