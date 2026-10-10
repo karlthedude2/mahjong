@@ -101,32 +101,29 @@
             }
         </section>
 
-        @if (tab != GameTab.Cube)
-        {
-            <section>
-                <h3>@L["Deal"]</h3>
-                <div class="deal-row">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="winnable" @bind="winnable" />
-                        <label class="form-check-label" for="winnable">@L["Guaranteed winnable path"]</label>
-                    </div>
-                    @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
-                    <span class="info @(showDealInfo ? "open" : null)">
-                        <button type="button" class="info-button" aria-label="@L["About guaranteed winnable deals"]"
-                                aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9.5" />
-                                <path d="M12 11v6M12 7.5v.01" />
-                            </svg>
-                        </button>
-                        <span class="info-note" role="note">@L[WinnableNote]</span>
-                    </span>
+        <section>
+            <h3>@L["Deal"]</h3>
+            <div class="deal-row">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="winnable" @bind="winnable" />
+                    <label class="form-check-label" for="winnable">@L["Guaranteed winnable path"]</label>
                 </div>
-                <p class="hint">
-                    @(winnable ? L["Every deal can be cleared."] : L["Tiles are dealt at random, like a real set, so some deals can't be cleared."])
-                </p>
-            </section>
-        }
+                @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
+                <span class="info @(showDealInfo ? "open" : null)">
+                    <button type="button" class="info-button" aria-label="@L["About guaranteed winnable deals"]"
+                            aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9.5" />
+                            <path d="M12 11v6M12 7.5v.01" />
+                        </svg>
+                    </button>
+                    <span class="info-note" role="note">@L[WinnableNote]</span>
+                </span>
+            </div>
+            <p class="hint">
+                @(winnable ? L["Every deal can be cleared."] : L["Tiles are dealt at random, like a real set, so some deals can't be cleared."])
+            </p>
+        </section>
 
         <section>
             <h3>@L["Background"]</h3>
@@ -155,7 +152,7 @@
     /// <summary>
     /// The dialog's game tabs. Mahjong 3D is Mahjong Solitaire drawn in stone (it shares its layouts
     /// and leaderboards); which one is played follows the tile set chosen. Mahjong Cube is a game of
-    /// its own (casual: no score yet), with a size and the same stones.
+    /// its own with a size (Cube Small or Cube Large), its own leaderboards and the same stones.
     /// </summary>
     private enum GameTab { Solitaire, ThreeD, Cube, Connect }
 
@@ -199,9 +196,6 @@
 
     [Parameter] public string? StoneId { get; set; }
 
-    /// <summary>Mahjong Cube's size when the cube is the game being played (the dialog opens on its tab).</summary>
-    [Parameter] public int? CubeSize { get; set; }
-
     [Parameter] public string? BackgroundId { get; set; }
 
     [Parameter] public bool SkipSettings { get; set; }
@@ -229,11 +223,11 @@
         // Start from the chosen (or playing) layout: its game, and for Connect its board and gravity.
         var chosen = LayoutCatalog.Find(LayoutName ?? PlayingLayoutName ?? "");
         var tileSet = TileSets.Find(TileSetId);
-        tab = CubeSize != null ? GameTab.Cube
+        tab = chosen?.Kind == GameKind.Cube ? GameTab.Cube
             : chosen?.Kind == GameKind.Connect ? GameTab.Connect
             : tileSet.Kind == TileSetKind.ThreeD ? GameTab.ThreeD
             : GameTab.Solitaire;
-        cubeSize = CubeSize ?? 4;
+        cubeSize = chosen?.Kind == GameKind.Cube ? chosen.Size : 4;
         boardName = chosen?.Kind == GameKind.Connect ? chosen.PreviewName : ConnectLayouts.BaseBoards[0].Name;
         gravity = chosen?.Kind == GameKind.Connect ? chosen.Gravity : Gravity.None;
         backgroundItems = Backgrounds.All.Select(b => new PreviewItem(b.Id, L[b.Name], b.Url)).ToList();
@@ -271,7 +265,9 @@
             : layoutName ?? PlayingLayoutName ?? "";
         if (tab == GameTab.Cube)
         {
-            return OnApply.InvokeAsync(new SettingsChoice(chosen, TileSets.Find(TileSetId).Id, backgroundId, skipSettings, winnable, cubeSize, stoneId));
+            // The block of the chosen size, in the chosen stone; the other games' tile set stays as it is.
+            return OnApply.InvokeAsync(new SettingsChoice(CubeLayouts.ForSize(cubeSize).Name, TileSets.Find(TileSetId).Id, backgroundId, skipSettings, winnable,
+                StoneId: stoneId));
         }
 
         string tileSetId = tab == GameTab.ThreeD ? stoneId : flatId;

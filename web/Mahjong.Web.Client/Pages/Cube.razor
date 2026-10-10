@@ -1,12 +1,13 @@
 @page "/cube"
+@using Mahjong.Core
 @using Mahjong.Web.Client.Game
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject IJSRuntime JS
 @inject FaceArt FaceArt
 
 @*
-    Test bench for Mahjong Cube (the game itself is the CubeBoard component, played from the Play
-    page's Mahjong Cube tab). Not linked from the menus. Here the size and stone can be switched
+    Test bench for Mahjong Cube (the scored game is played from the Play page's Mahjong Cube tab,
+    through the same CubeBoard). Not linked from the menus. Here the size and stone can be switched
     quickly, and in development, stone pictures dropped into the cube-stones folder can be tried.
 *@
 
@@ -16,9 +17,11 @@
     <div class="cube-bar">
         <span class="cube-title">@L["Mahjong Cube"] <span class="badge">@L["Prototype"]</span></span>
         <span class="cube-sizes" role="radiogroup" aria-label="@L["Board size"]">
-            <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => size = 4">@L["Small"] (4×4×4)</button>
-            <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => size = 6">@L["Large"] (6×6×6)</button>
+            <button type="button" role="radio" aria-checked="@(size == 4 ? "true" : "false")" class="@(size == 4 ? "on" : null)" @onclick="() => SetSize(4)">@L["Small"] (4×4×4)</button>
+            <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => SetSize(6)">@L["Large"] (6×6×6)</button>
         </span>
+        <span>@L["{0} left", game.Board.Count]</span>
+        <button type="button" class="btn btn-sm btn-primary" @onclick="NewGame">@L["New game"]</button>
         @* The same stones as Mahjong 3D (TileSets.Stones), and in development the cube-stones folder's pictures. *@
         <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? DefaultStone))">
             @foreach (var set in TileSets.Stones)
@@ -39,12 +42,48 @@
 
     @if (loaded)
     {
-        <CubeBoard Size="size" Stone="@stone" StoneUrl="@StoneUrl" StoneFacesKey="@StoneFacesKey" />
+        <CubeBoard @key="game" Game="game" Selected="selected" OnTileClick="Click" Stone="@stone" StoneUrl="@StoneUrl" StoneFacesKey="@StoneFacesKey" />
     }
 </section>
 
 @code {
     private int size = 4;
+    // A plain game on the block: no clock, score or server, just taking pairs.
+    private MahjongGame game = new(CubeLayouts.ForSize(4));
+    private Tile? selected;
+
+    private void SetSize(int newSize)
+    {
+        size = newSize;
+        NewGame();
+    }
+
+    private void NewGame()
+    {
+        game = new MahjongGame(CubeLayouts.ForSize(size));
+        selected = null;
+    }
+
+    private void Click(Tile tile)
+    {
+        if (!game.Board.IsFree(tile))
+        {
+            return;
+        }
+
+        if (selected == null || selected == tile)
+        {
+            selected = selected == tile ? null : tile;
+        }
+        else if (game.TryRemovePair(selected, tile))
+        {
+            selected = null;
+        }
+        else
+        {
+            selected = tile;
+        }
+    }
     private static readonly string DefaultStone = TileSets.DefaultStone.Stone!;
     private string stone = DefaultStone;
     private List<string> droppedStones = [];

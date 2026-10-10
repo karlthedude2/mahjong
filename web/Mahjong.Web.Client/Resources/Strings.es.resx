@@ -252,7 +252,6 @@
   <data name="Next in 1 tile, worth {0}" xml:space="preserve"><value>El próximo en 1 ficha, vale {0}</value></data>
   <data name="Next in {0} tiles, worth {1}" xml:space="preserve"><value>El próximo en {0} fichas, vale {1}</value></data>
   <data name="No more matching pairs. Try &lt;strong&gt;Shuffle&lt;/strong&gt; or &lt;strong&gt;Undo&lt;/strong&gt;." xml:space="preserve"><value>No quedan parejas. Prueba &lt;strong&gt;Mezclar&lt;/strong&gt; o &lt;strong&gt;Deshacer&lt;/strong&gt;.</value></data>
-  <data name="No pairs can be taken. Start a new game." xml:space="preserve"><value>No se puede quitar ningún par. Empieza una partida nueva.</value></data>
   <data name="No passkeys are registered." xml:space="preserve"><value>No hay llaves de acceso registradas.</value></data>
   <data name="No picture yet" xml:space="preserve"><value>Todavía no hay imagen</value></data>
   <data name="No replays yet. Be the first to try this deal." xml:space="preserve"><value>Todavía no hay repeticiones. Sé el primero en probar este reparto.</value></data>
@@ -487,7 +486,6 @@
   <data name="You can" xml:space="preserve"><value>Puedes</value></data>
   <data name="You can always change these with the settings gear in the header." xml:space="preserve"><value>Siempre puedes cambiarla con el engranaje de configuración del encabezado.</value></data>
   <data name="You can try this deal yourself from the start." xml:space="preserve"><value>Puedes probar tú este reparto desde el principio.</value></data>
-  <data name="You cleared the cube!" xml:space="preserve"><value>¡Despejaste el cubo!</value></data>
   <data name="You cleared {0}!" xml:space="preserve"><value>¡Completaste {0}!</value></data>
   <data name="You do not have a local username/password for this site. Add a local account so you can log in without an external login." xml:space="preserve"><value>No tienes una contraseña para este sitio. Crea una para poder iniciar sesión sin un servicio externo.</value></data>
   <data name="You do not have access to this resource." xml:space="preserve"><value>No tienes acceso a este recurso.</value></data>
@@ -514,7 +512,6 @@
   <data name="Your name" xml:space="preserve"><value>Tu nombre</value></data>
   <data name="Your next game will be a guaranteed winnable deal." xml:space="preserve"><value>Tu próxima partida tendrá un reparto con solución garantizada.</value></data>
   <data name="Your next game will be a random deal." xml:space="preserve"><value>Tu próxima partida tendrá un reparto al azar.</value></data>
-  <data name="Your next game will be Mahjong Cube." xml:space="preserve"><value>Tu próxima partida será Cubo Mahjong.</value></data>
   <data name="Your next game will use the &lt;strong&gt;{0}&lt;/strong&gt; layout." xml:space="preserve"><value>Tu próxima partida usará el tablero &lt;strong&gt;{0}&lt;/strong&gt;.</value></data>
   <data name="Your password has been changed" xml:space="preserve"><value>Se cambió tu contraseña</value></data>
   <data name="Your password has been reset. Please" xml:space="preserve"><value>Se restableció tu contraseña. Por favor,</value></data>

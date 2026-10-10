@@ -144,25 +144,6 @@ public sealed class GameSession(GameApi api, ITileEffects effects, GuestClaims g
         EndDemo(null);
     }
 
-    /// <summary>Ends whatever game or demo is on, leaving no game (for Mahjong Cube, which isn't a session game).</summary>
-    public void Clear()
-    {
-        Reset();
-        StopClock();
-        Game = null;
-        Selected = null;
-        Message = null;
-        LastPath = null;
-        HintedTiles = null;
-        Result = null;
-        Replay = null;
-        serverGameId = null;
-        guestToken = null;
-        ClockStarted = false;
-        State = SessionState.NotStarted;
-        Changed?.Invoke();
-    }
-
     private void Reset()
     {
         demo?.Cancel();

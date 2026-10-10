@@ -12,7 +12,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     private const string TileSetKey = "tileSet";
     private const string FlatTileSetKey = "flatTileSet";
     private const string StoneKey = "stone";
-    private const string CubeKey = "cube";
     private const string BackgroundKey = "background";
     private const string LayoutKey = "layout";
     private const string SkipSettingsKey = "skipSettings";
@@ -32,9 +31,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 
     public string? LastLayout { get; private set; }
 
-    /// <summary>Mahjong Cube's size (4 or 6) if the cube was the last game played, else null.</summary>
-    public int? CubeSize { get; private set; }
-
     /// <summary>True if the settings dialog shouldn't open for each new game ("Don't show settings for every new game").</summary>
     public bool SkipSettings { get; private set; }
 
@@ -47,7 +43,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         TileSet = TileSets.Find(await browser.GetSettingAsync(TileSetKey));
         Background = Backgrounds.Find(await browser.GetSettingAsync(BackgroundKey));
         LastLayout = await browser.GetSettingAsync(LayoutKey);
-        CubeSize = await browser.GetSettingAsync(CubeKey) switch { "4" => 4, "6" => 6, _ => null };
         SkipSettings = await browser.GetSettingAsync(SkipSettingsKey) == "on";
         GuaranteedWinnable = await browser.GetSettingAsync(WinnableKey) != "off";
 
@@ -134,13 +129,6 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     {
         LastStone = stone;
         await browser.SetSettingAsync(StoneKey, stone.Id);
-    }
-
-    /// <summary>Mahjong Cube as the last game (its size), or null when another game is chosen.</summary>
-    public async Task SetCubeSizeAsync(int? size)
-    {
-        CubeSize = size;
-        await browser.SetSettingAsync(CubeKey, size?.ToString() ?? "");
     }
 
     private static TileSetInfo FlatOrDefault(string? id) => TileSets.Flat.FirstOrDefault(s => s.Id == id) ?? TileSets.Default;
