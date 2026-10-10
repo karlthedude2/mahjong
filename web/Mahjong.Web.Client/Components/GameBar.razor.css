@@ -1,0 +1,160 @@
+/* A dark bar joined to the site header: the game's name and its numbers, centred on one line. */
+.game-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem 1.4rem;
+    padding: 0.35rem 1rem;
+    background: rgba(20, 12, 6, 0.6);
+    backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1.15;
+}
+
+.game-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.deal-badge {
+    margin-left: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(184, 50, 31, 0.85);
+    font-size: 0.7rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.rule {
+    width: 1px;
+    align-self: stretch;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: help;
+}
+
+.label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.value.small {
+    font-size: 0.95rem;
+}
+
+/* Before the first move the clock hasn't started. */
+.item.waiting .value {
+    opacity: 0.55;
+}
+
+.speed {
+    min-width: 7.5rem;
+    align-items: stretch;
+    gap: 0.3rem;
+}
+
+.speed .label {
+    text-align: center;
+}
+
+.meter {
+    height: 0.4rem;
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.meter-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.2s ease;
+}
+
+/* The finish clock: a button that opens the list of finish bonuses under it. */
+.finish-wrap {
+    position: relative;
+}
+
+.finish {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.finish.expired {
+    opacity: 0.5;
+}
+
+.finish-list {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 50%;
+    transform: translateX(50%);
+    z-index: 20;
+    min-width: 12rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.6rem;
+    background: rgba(20, 12, 6, 0.92);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    font-size: 0.8rem;
+}
+
+.finish-list div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Phones: the name on its own line, the numbers smaller on the line under it. */
+@media (max-width: 800px) {
+    .game-bar {
+        gap: 0.25rem 0.9rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    .game-name {
+        flex-basis: 100%;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+
+    .rule {
+        display: none;
+    }
+
+    .value {
+        font-size: 1rem;
+    }
+
+    .value.small {
+        font-size: 0.85rem;
+    }
+
+    .speed {
+        min-width: 4.5rem;
+    }
+}

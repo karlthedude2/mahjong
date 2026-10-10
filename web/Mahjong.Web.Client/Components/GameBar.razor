@@ -1,0 +1,86 @@
+@using Mahjong.Core
+
+@*
+    The bar under the site header while a game is on: the game's name, score, time, the speed
+    bonus's progress, the next pace bonus and the finish-bonus clock, centred on one line (two on
+    phones). Hovering an item explains it; the finish clock opens a list of its bonuses.
+*@
+@{
+    var card = Game.Scoring.Card;
+    var clock = Game.Scoring.Clock;
+    int tilesToPace = Scoring.TilesPerBonus - card.TilesTowardPaceBonus;
+    bool finishLive = Game.Scoring.EarnsFinalBonus;
+}
+
+<section class="game-bar" aria-label="@L["Score"]">
+    <div class="game-name">
+        @Name
+        @if (!Game.Winnable)
+        {
+            <span class="deal-badge" title="@L["Tiles were dealt at random, so this deal may not be clearable."]">@L["Random deal"]</span>
+        }
+    </div>
+
+    <span class="rule" aria-hidden="true"></span>
+
+    <div class="item">
+        <span class="label">@L["Score"]</span>
+        <span class="value">@card.Score.ToString("N0")</span>
+    </div>
+
+    <div class="item @(ClockStarted ? null : "waiting")" title="@(ClockStarted ? null : L["Starts on your first move"].Value)">
+        <span class="label">@L["Time"]</span>
+        <span class="value">@clock.ClockText</span>
+    </div>
+
+    <span class="rule" aria-hidden="true"></span>
+
+    <div class="item speed"
+         title="@($"{L["Remove 20 tiles inside one 30-second window to earn 100 points for every second still left in it."]}\n{L["{0} of 20 tiles · {1} s left · worth {2} now", card.SpeedWindowTiles, clock.SpeedWindowSeconds, (Scoring.SpeedBonusPerSecond * clock.SpeedWindowSeconds).ToString("N0")]}")">
+        <span class="label">@L["Speed Bonus"]</span>
+        <div class="meter" role="progressbar" aria-label="@L["Speed Bonus"]" aria-valuemin="0" aria-valuemax="20" aria-valuenow="@card.SpeedWindowTiles">
+            <div class="meter-fill" style="width: @(card.SpeedWindowTiles * 100 / Scoring.TilesPerBonus)%"></div>
+        </div>
+    </div>
+
+    <div class="item"
+         title="@($"{L["Every 20 tiles you remove adds the seconds left on the 5-minute bonus clock."]}\n{(tilesToPace == 1 ? L["Next in 1 tile, worth {0}", clock.BonusClockSeconds] : L["Next in {0} tiles, worth {1}", tilesToPace, clock.BonusClockSeconds])}")">
+        <span class="label">@L["Pace Bonus"]</span>
+        <span class="value small">@(tilesToPace == 1 ? L["in 1 tile"] : L["in {0} tiles", tilesToPace])</span>
+    </div>
+
+    <div class="finish-wrap">
+        <button type="button" class="item finish @(finishLive ? null : "expired")" aria-expanded="@(showFinish ? "true" : "false")"
+                title="@L["Paid when you clear the board, but only if you finish before the 5-minute bonus clock runs out."]"
+                @onclick="() => showFinish = !showFinish">
+            <span class="label">@L["Finish"]</span>
+            <span class="value small">@(finishLive ? L["{0} left", $"{clock.BonusClockSeconds / 60}:{clock.BonusClockSeconds % 60:00}"] : L["clock ran out"])</span>
+        </button>
+        @if (showFinish)
+        {
+            <div class="finish-list" role="note">
+                @if (finishLive)
+                {
+                    <div title="@L["30 points for every second left on the bonus clock."]"><span>@L["Time Left"]</span><span>@Game.Scoring.TimeBonusNow.ToString("N0")</span></div>
+                    <div title="@L["Starts at 5,000 and drops in steps after 2:40."]"><span>@L["Quick Finish"]</span><span>@clock.QuickFinishBonus.ToString("N0")</span></div>
+                    <div title="@L["Starts at 3,000; each shuffle costs 1,000 and each hint 500."]"><span>@L["No Shuffle"]</span><span>@Game.Scoring.NoShuffleBonusNow.ToString("N0")</span></div>
+                }
+                else
+                {
+                    <div>@L["Finish bonuses are only paid for games under 5 minutes."]</div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private bool showFinish;
+
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    /// <summary>The game's name as players see it.</summary>
+    [Parameter] public string? Name { get; set; }
+
+    [Parameter] public bool ClockStarted { get; set; } = true;
+}

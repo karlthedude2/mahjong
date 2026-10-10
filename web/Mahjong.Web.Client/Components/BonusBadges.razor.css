@@ -1,0 +1,61 @@
+/* Over the top of the board, centred; it never takes clicks meant for the tiles. */
+.bonus-badge {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    z-index: 15;
+    padding: 0.5rem 1.25rem;
+    border: 3px solid #fff3c4;
+    border-radius: 999px;
+    background: linear-gradient(#ffd75e, #f0a20b);
+    box-shadow: 0 0 0 4px rgba(255, 200, 40, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+    color: #3a2300;
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    animation: bonus-pop 2.2s ease-out forwards;
+}
+
+.bonus-badge small {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.bonus-badge.pace {
+    border-color: #d9f3ff;
+    background: linear-gradient(#9fe3ff, #2f8fd8);
+    box-shadow: 0 0 0 4px rgba(80, 180, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+    color: #062a44;
+}
+
+/* Jumps out, flashes twice, then floats up and fades. */
+@keyframes bonus-pop {
+    0% { opacity: 0; transform: translateX(-50%) scale(0.3); }
+    12% { opacity: 1; transform: translateX(-50%) scale(1.25); }
+    20% { transform: translateX(-50%) scale(1); filter: brightness(1.6); }
+    30% { filter: brightness(1); }
+    40% { filter: brightness(1.6); }
+    50% { filter: brightness(1); }
+    80% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-1.5rem) scale(0.9); }
+}
+
+/* Players who asked for less motion get a plain fade in and out. */
+@keyframes bonus-fade {
+    0% { opacity: 0; transform: translateX(-50%); }
+    15%, 80% { opacity: 1; transform: translateX(-50%); }
+    100% { opacity: 0; transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bonus-badge {
+        animation-name: bonus-fade;
+    }
+}
