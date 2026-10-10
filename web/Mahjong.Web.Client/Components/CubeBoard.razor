@@ -87,7 +87,7 @@
         }
 
         string state = State();
-        if (state == shownState)
+        if (state == shownState || disposed || scene == null)
         {
             return;
         }
@@ -103,6 +103,12 @@
         else if (removed.Length > 0)
         {
             await scene.InvokeVoidAsync("remove", removed);
+        }
+
+        // A pause or a new game may have thrown the cube away while it was being drawn.
+        if (disposed || scene == null)
+        {
+            return;
         }
 
         drawn = now;
