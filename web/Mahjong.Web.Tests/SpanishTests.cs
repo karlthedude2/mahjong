@@ -62,7 +62,7 @@ public sealed partial class SpanishTests : IDisposable
     public void NamesChosenInTheGameHaveSpanishTranslations()
     {
         var recorder = new RecordingLocalizer();
-        foreach (var layout in LayoutCatalog.Visible.Concat(ConnectLayouts.All))
+        foreach (var layout in LayoutCatalog.Visible.Concat(ConnectLayouts.All).Concat(CubeLayouts.All))
         {
             recorder.LayoutName(layout);
         }

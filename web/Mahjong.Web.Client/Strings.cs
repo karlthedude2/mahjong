@@ -52,6 +52,11 @@ public static class LocalizerExtensions
             return "";
         }
 
+        if (layout.Kind == GameKind.Cube)
+        {
+            return localizer["Mahjong Cube · {0}", localizer[layout.Name[(CubeLayouts.Prefix.Length + 1)..]]];
+        }
+
         if (layout.Kind != GameKind.Connect)
         {
             return localizer[layout.Name];

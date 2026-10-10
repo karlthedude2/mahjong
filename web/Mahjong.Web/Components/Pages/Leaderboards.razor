@@ -19,10 +19,13 @@
     <li class="nav-item">
         <a class="nav-link @(game == GameKind.Connect ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)">@L["Connect (Shisen-Sho)"]</a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link @(game == GameKind.Cube ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Cube[0].Name)">@L["Mahjong Cube"]</a>
+    </li>
 </ul>
 
 <form method="get" class="d-flex gap-2 align-items-center mb-3">
-    <label for="layout" class="form-label mb-0">@(game == GameKind.Connect ? L["Board"] : L["Layout"])</label>
+    <label for="layout" class="form-label mb-0">@(game switch { GameKind.Connect => L["Board"], GameKind.Cube => L["Board size"], _ => L["Layout"] })</label>
     <select id="layout" name="layout" class="form-select w-auto" onchange="this.form.submit()">
         @foreach (var l in Choices)
         {
@@ -78,15 +81,20 @@ else
     private GameKind game;
     private IReadOnlyList<LeaderboardEntry> entries = [];
 
-    // The layouts (or Connect boards) of the game being shown.
-    private IEnumerable<LayoutDefinition> Choices => game == GameKind.Connect ? LayoutCatalog.Connect : LayoutCatalog.Visible;
+    // The layouts (or Connect boards, or cubes) of the game being shown.
+    private IEnumerable<LayoutDefinition> Choices => game switch
+    {
+        GameKind.Connect => LayoutCatalog.Connect,
+        GameKind.Cube => LayoutCatalog.Cube,
+        _ => LayoutCatalog.Visible,
+    };
 
     [SupplyParameterFromQuery]
     private string? Layout { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var layout = LayoutCatalog.Visible.Concat(LayoutCatalog.Connect).FirstOrDefault(l => l.Name == Layout)
+        var layout = LayoutCatalog.Visible.Concat(LayoutCatalog.Connect).Concat(LayoutCatalog.Cube).FirstOrDefault(l => l.Name == Layout)
             ?? LayoutCatalog.Find(DefaultLayoutName)!;
         selected = layout.Name;
         game = layout.Kind;
