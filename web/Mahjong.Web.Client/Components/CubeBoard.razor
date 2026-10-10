@@ -1,0 +1,203 @@
+@using Mahjong.Web.Client.Game
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject FaceArt FaceArt
+
+@*
+    Mahjong Cube: a cube of tiles drawn with Three.js (wwwroot/js/cube.js), with the tiles left, a
+    hint and a new deal. The game and its rules are CubeGame; the script only draws the block, turns
+    it, and reports which tile was tapped. Casual play: no score or leaderboard yet.
+*@
+<div class="cube-board">
+    <div class="cube-bar">
+        <span class="cube-count">@L["{0} left", game?.Tiles.Count ?? 0]</span>
+        <button type="button" class="btn btn-sm btn-light" @onclick="HintAsync" disabled="@(game is null || game.IsCleared)">@L["Hint"]</button>
+        <button type="button" class="btn btn-sm btn-primary" @onclick="NewGameAsync">@L["New game"]</button>
+    </div>
+
+    @if (message != null)
+    {
+        <div class="cube-message">@message</div>
+    }
+
+    <div class="cube-view" @ref="view" role="img" aria-label="@L["Mahjong Cube"]"></div>
+
+    <p class="cube-help">@L["Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open."]</p>
+</div>
+
+@code {
+    private ElementReference view;
+    private IJSObjectReference? module;
+    private IJSObjectReference? scene;
+    private DotNetObjectReference<CubeBoard>? self;
+    private CubeGame? game;
+    private CubeTile? selected;
+    private (CubeTile, CubeTile)? hint;
+    private string? message;
+    private int dealtSize;
+    private (string?, string?) shownStone;
+    private bool disposed;
+
+    /// <summary>Tiles along each edge: 4 (Small) or 6 (Large). A change deals a new cube.</summary>
+    [Parameter] public int Size { get; set; } = 4;
+
+    /// <summary>The stone (TileSets.Stones' Stone), or a picture's name with <see cref="StoneUrl"/>.</summary>
+    [Parameter] public string Stone { get; set; } = TileSets.DefaultStone.Stone!;
+
+    /// <summary>Development: a stone picture to try, from the cube-stones folder.</summary>
+    [Parameter] public string? StoneUrl { get; set; }
+
+    /// <summary>The picture's file name when trying one, for its configured face set.</summary>
+    [Parameter] public string? StoneFacesKey { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // The page may throw this board away while it's still starting: stop if it has.
+            await FaceArt.LoadAsync();
+            if (disposed)
+            {
+                return;
+            }
+
+            self = DotNetObjectReference.Create(this);
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/cube.js");
+            if (disposed)
+            {
+                await ReleaseAsync();
+                return;
+            }
+
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            if (disposed)
+            {
+                await ReleaseAsync();
+                return;
+            }
+        }
+
+        if (scene == null)
+        {
+            return;
+        }
+
+        if ((Stone, StoneUrl) != shownStone)
+        {
+            shownStone = (Stone, StoneUrl);
+            await scene.InvokeVoidAsync("setStone", Stone, StoneUrl, FaceArt.StoneFaces(StoneFacesKey ?? Stone));
+        }
+
+        if (Size != dealtSize)
+        {
+            await NewGameAsync();
+        }
+    }
+
+    private async Task NewGameAsync()
+    {
+        dealtSize = Size;
+        game = CubeGame.Deal(Size, new Random());
+        selected = null;
+        hint = null;
+        message = null;
+        if (scene != null)
+        {
+            var tiles = game.Tiles.Select(t =>
+            {
+                var glyph = TileSets.Glyph(t.Face.Name);
+                return new
+                {
+                    id = t.Id, x = t.X, y = t.Y, z = t.Z, face = t.Face.Name,
+                    art = FaceArt.Pictures(t.Face.Name),
+                    glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
+                };
+            });
+            await scene.InvokeVoidAsync("setBoard", Size, tiles, FreeIds());
+        }
+
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public async Task OnTileTapped(int id)
+    {
+        var tile = game?.Tiles.FirstOrDefault(t => t.Id == id);
+        if (game == null || tile == null || !game.IsFree(tile) || scene == null)
+        {
+            return;
+        }
+
+        if (selected == null || selected == tile)
+        {
+            selected = selected == tile ? null : tile;
+        }
+        else if (game.TryRemovePair(selected, tile))
+        {
+            await scene.InvokeVoidAsync("remove", new[] { selected.Id, tile.Id });
+            selected = null;
+            hint = null;
+            message = game.IsCleared ? L["You cleared the cube!"].Value
+                : game.FindPair() == null ? L["No pairs can be taken. Start a new game."].Value
+                : null;
+        }
+        else
+        {
+            selected = tile;
+        }
+
+        await RedrawAsync();
+    }
+
+    private async Task HintAsync()
+    {
+        hint = game?.FindPair();
+        message = hint == null ? L["No pairs can be taken. Start a new game."].Value : null;
+        await RedrawAsync();
+    }
+
+    private async Task RedrawAsync()
+    {
+        if (scene != null)
+        {
+            int[] hinted = hint is { } pair ? [pair.Item1.Id, pair.Item2.Id] : [];
+            await scene.InvokeVoidAsync("update", selected?.Id, FreeIds(), hinted);
+        }
+
+        StateHasChanged();
+    }
+
+    private int[] FreeIds() => game == null ? [] : game.Tiles.Where(game.IsFree).Select(t => t.Id).ToArray();
+
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        await ReleaseAsync();
+    }
+
+    // Lets go of the script's cube and the module; safe to call more than once.
+    private async Task ReleaseAsync()
+    {
+        var (releasedScene, releasedModule) = (scene, module);
+        (scene, module) = (null, null);
+        try
+        {
+            if (releasedScene != null)
+            {
+                await releasedScene.InvokeVoidAsync("dispose");
+                await releasedScene.DisposeAsync();
+            }
+
+            if (releasedModule != null)
+            {
+                await releasedModule.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        self?.Dispose();
+        self = null;
+    }
+}
