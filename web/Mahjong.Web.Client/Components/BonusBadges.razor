@@ -1,0 +1,83 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+@implements IDisposable
+
+@*
+    A badge that pops out over the board when a speed or pace bonus is earned: it grows, flashes
+    and floats away. Two earned on one move are shown one after the other. A new game starts a fresh
+    watch (this isn't keyed to the game: the board next to it already is).
+*@
+@if (showing is { } bonus)
+{
+    <div class="bonus-badge @(bonus.Kind == BonusKind.Pace ? "pace" : "speed")" @key="shown" role="status">
+        +@bonus.Points.ToString("N0")
+        <small>@(bonus.Kind == BonusKind.Pace ? L["Pace Bonus!"] : L["Speed Bonus!"])</small>
+    </div>
+}
+
+@code {
+    // How long each badge is shown: the length of its animation.
+    private static readonly TimeSpan ShowFor = TimeSpan.FromMilliseconds(2200);
+
+    private BonusWatch watch = new();
+    private MahjongGame? watched;
+    private readonly Queue<EarnedBonus> waiting = new();
+    private readonly CancellationTokenSource stop = new();
+    private EarnedBonus? showing;
+    private int shown;
+    private bool running;
+
+    [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        if (Game != watched)
+        {
+            watched = Game;
+            watch = new BonusWatch();
+            waiting.Clear();
+        }
+
+        foreach (var bonus in watch.Update(Game.Scoring.Card.SpeedBonusTotal, Game.Scoring.Card.PaceBonusTotal))
+        {
+            waiting.Enqueue(bonus);
+        }
+
+        if (!running && waiting.Count > 0)
+        {
+            _ = ShowAllAsync();
+        }
+    }
+
+    private async Task ShowAllAsync()
+    {
+        running = true;
+        try
+        {
+            while (waiting.TryDequeue(out var next))
+            {
+                showing = next;
+                shown++;
+                StateHasChanged();
+                await Task.Delay(ShowFor, stop.Token);
+            }
+
+            showing = null;
+            StateHasChanged();
+        }
+        catch (TaskCanceledException)
+        {
+            // The game was replaced or the page closed.
+        }
+        finally
+        {
+            running = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        stop.Cancel();
+        stop.Dispose();
+    }
+}

@@ -127,8 +127,6 @@
   <data name="Dragon Mountains" xml:space="preserve"><value>Montañas del Dragón</value></data>
   <data name="Dragon Valley" xml:space="preserve"><value>Valle del Dragón</value></data>
   <data name="Each setting has its own leaderboard." xml:space="preserve"><value>Cada opción tiene su propia clasificación.</value></data>
-  <data name="Earned: {0}" xml:space="preserve"><value>Ganado: {0}</value></data>
-  <data name="Earned: {0} × = {1}" xml:space="preserve"><value>Ganado: {0} × = {1}</value></data>
   <data name="East" xml:space="preserve"><value>ESTE</value></data>
   <data name="Email" xml:space="preserve"><value>Correo electrónico</value></data>
   <data name="Email '{0}' is already taken." xml:space="preserve"><value>El correo electrónico '{0}' ya está registrado.</value></data>
@@ -174,7 +172,7 @@
   <data name="External logins" xml:space="preserve"><value>Inicios de sesión externos</value></data>
   <data name="Face value of every tile you removed." xml:space="preserve"><value>El valor de cada ficha que retiraste.</value></data>
   <data name="Fast" xml:space="preserve"><value>Rápida</value></data>
-  <data name="Finish Bonuses" xml:space="preserve"><value>Bonos finales</value></data>
+  <data name="Finish" xml:space="preserve"><value>Final</value></data>
   <data name="Finish bonuses are only paid for games under 5 minutes." xml:space="preserve"><value>Los bonos finales solo se pagan en partidas de menos de 5 minutos.</value></data>
   <data name="Flower" xml:space="preserve"><value>FLOR</value></data>
   <data name="for how to configure a real email sender. Normally this would be emailed:" xml:space="preserve"><value>para configurarlo. Normalmente esto se enviaría por correo:</value></data>
@@ -204,6 +202,8 @@
   <data name="If you contact us about this, please mention this code:" xml:space="preserve"><value>Si nos escribes por esto, menciona este código:</value></data>
   <data name="If you lose your device and don't have the recovery codes you will lose access to your account." xml:space="preserve"><value>Si pierdes tu dispositivo y no tienes los códigos de recuperación, perderás el acceso a tu cuenta.</value></data>
   <data name="If you reset your authenticator key your authenticator app will not work until you reconfigure it." xml:space="preserve"><value>Si restableces la clave del autenticador, tu aplicación de autenticación no funcionará hasta que la vuelvas a configurar.</value></data>
+  <data name="in 1 tile" xml:space="preserve"><value>en 1 ficha</value></data>
+  <data name="in {0} tiles" xml:space="preserve"><value>en {0} fichas</value></data>
   <data name="Incorrect password." xml:space="preserve"><value>La contraseña no es correcta.</value></data>
   <data name="Invalid password reset" xml:space="preserve"><value>Restablecimiento de contraseña no válido</value></data>
   <data name="Invalid token." xml:space="preserve"><value>El código no es válido.</value></data>
@@ -274,6 +274,7 @@
   <data name="Original score (first play)" xml:space="preserve"><value>Puntuación original (primera partida)</value></data>
   <data name="Ox" xml:space="preserve"><value>Buey</value></data>
   <data name="Pace Bonus" xml:space="preserve"><value>Bono de ritmo</value></data>
+  <data name="Pace Bonus!" xml:space="preserve"><value>¡Bono de ritmo!</value></data>
   <data name="Page not found" xml:space="preserve"><value>Página no encontrada</value></data>
   <data name="Paid when you clear the board, but only if you finish before the 5-minute bonus clock runs out." xml:space="preserve"><value>Se pagan al completar el tablero, pero solo si terminas antes de que se acabe el reloj de bonificación de 5 minutos.</value></data>
   <data name="Passkey deleted successfully." xml:space="preserve"><value>Se eliminó la llave de acceso.</value></data>
@@ -386,6 +387,7 @@
   <data name="Sorry, there's nothing here. &lt;a href=&quot;&quot;&gt;Back to the game&lt;/a&gt;" xml:space="preserve"><value>Lo sentimos, aquí no hay nada. &lt;a href=""&gt;Volver al juego&lt;/a&gt;</value></data>
   <data name="South" xml:space="preserve"><value>SUR</value></data>
   <data name="Speed Bonus" xml:space="preserve"><value>Bono de velocidad</value></data>
+  <data name="Speed Bonus!" xml:space="preserve"><value>¡Bono de velocidad!</value></data>
   <data name="Spider" xml:space="preserve"><value>Araña</value></data>
   <data name="Standard Turtle" xml:space="preserve"><value>Tortuga clásica</value></data>
   <data name="Start game" xml:space="preserve"><value>Empezar partida</value></data>

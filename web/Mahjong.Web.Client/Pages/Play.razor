@@ -15,222 +15,218 @@
 
 <PageTitle>Mahjong Haus</PageTitle>
 
-<div class="play-page @(signedIn ? "signed-in" : "guest") @(showAds ? "" : "no-ads")">
-    @if (showAds && !signedIn)
+<div class="play-shell">
+    @if (Session.Game is { } barGame)
     {
-        <aside class="ad-rail left" aria-label="@L["Advertisement"]">
-            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
-        </aside>
+        @* The game's name and numbers, in a bar joined to the site header. *@
+        <GameBar Game="barGame" Name="@L.LayoutName(PlayingLayout)" ClockStarted="Session.ClockStarted" />
     }
 
-    <section class="game">
-        @* The board column: title, messages, the score bar, then the board and its controls. *@
-        <div class="play-table">
-            <div class="board-column">
-                <div class="layout-title">
-                    <text>@L.LayoutName(PlayingLayout)</text>
-                    @if (Session.Game is { Winnable: false })
+    <div class="play-page @(signedIn ? "signed-in" : "guest") @(showAds ? "" : "no-ads")">
+        @if (showAds && !signedIn)
+        {
+            <aside class="ad-rail left" aria-label="@L["Advertisement"]">
+                <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+            </aside>
+        }
+
+        <section class="game">
+            @* The board column: title, messages, the score bar, then the board and its controls. *@
+            <div class="play-table">
+                <div class="board-column">
+                    @if (!signedIn)
                     {
-                        <span class="deal-badge" title="@L["Tiles were dealt at random, so this deal may not be clearable."]">@L["Random deal"]</span>
+                        <div class="notice">@L.Html("Playing as a guest. <a href=\"Account/Login\">Sign in</a> to save your scores and stats.")</div>
+                    }
+
+                    @if (Session.IsDemo && !Session.DemoEnded)
+                    {
+                        <div class="notice info demo-bar">
+                            <span>@L.Html("<strong>Demo:</strong> the computer is playing this deal. It won't go on the leaderboard.")</span>
+                            <span class="demo-speed" role="radiogroup" aria-label="@L["Demo speed"]">
+                                @foreach (var (label, pace) in DemoSpeeds)
+                                {
+                                    <button type="button" role="radio" aria-checked="@(Session.DemoPace == pace ? "true" : "false")"
+                                            class="@(Session.DemoPace == pace ? "on" : null)" @onclick="() => Session.DemoPace = pace">@L[label]</button>
+                                }
+                            </span>
+                            <button class="btn btn-sm btn-primary" @onclick="Session.StopDemo">@L["Stop demo"]</button>
+                        </div>
+                    }
+
+                    @if (Session.IsPractice)
+                    {
+                        <div class="notice info">
+                            @L.Html("<strong>Practice:</strong> the deal from the demo. This game won't go on the leaderboard.")
+                            <button class="btn btn-link btn-sm" @onclick="RequestNewGameAsync">@L["New game"]</button>
+                        </div>
+                    }
+
+                    @if (claimed != null)
+                    {
+                        <div class="notice info">
+                            @L["Your guest win on {0} ({1}) has been saved to your account.", L.LayoutName(claimed.Layout), claimed.Score.ToString("N0")]
+                            @if (claimed.Rank is { } claimedRank)
+                            {
+                                <span>@L.Html("You're <strong>#{0}</strong> on the <a href=\"leaderboards?layout={1}\">{2} leaderboard</a>!", claimedRank, Uri.EscapeDataString(claimed.Layout), L.LayoutName(claimed.Layout))</span>
+                            }
+                            else if (claimed.ReplayRank is { } claimedReplayRank)
+                            {
+                                <span>@L.Html("You're <strong>#{0}</strong> on that deal's <a href=\"replays/{1}\">replay list</a>!", claimedReplayRank, claimed.ReplayOf)</span>
+                            }
+                            <button class="btn btn-link btn-sm" @onclick="() => claimed = null">@L["OK"]</button>
+                        </div>
+                    }
+
+                    @if (replay != null)
+                    {
+                        <div class="notice info">
+                            @L.Html("Replaying <strong>{0}</strong>'s {1} deal. Score to beat: <strong>{2}</strong>. Replays go on this deal's own list, never the main leaderboard.",
+                                replay.OriginalPlayer, L.LayoutName(replay.Layout), replay.OriginalScore.ToString("N0"))
+                            @if (!signedIn)
+                            {
+                                <span>@L.Html("<a href=\"Account/Login\">Sign in</a> to get your score on the list.")</span>
+                            }
+                            <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">@L["See replay scores"]</a>
+                            <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Back to normal play"]</button>
+                        </div>
+                    }
+
+                    @if (pendingDealChange)
+                    {
+                        <div class="notice info">
+                            @(Preferences.GuaranteedWinnable ? L["Your next game will be a guaranteed winnable deal."] : L["Your next game will be a random deal."])
+                            <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
+                        </div>
+                    }
+
+                    @if (pendingLayout != null)
+                    {
+                        <div class="notice info">
+                            @L.Html("Your next game will use the <strong>{0}</strong> layout.", L.LayoutName(pendingLayout))
+                            <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
+                            <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">@L["Keep {0}", L.LayoutName(currentLayout)]</button>
+                        </div>
+                    }
+
+                    @if (error != null)
+                    {
+                        <div class="notice warning">@error</div>
+                    }
+
+                    @if (Session.Message != null)
+                    {
+                        <div class="notice warning">@Session.Message</div>
+                    }
+
+                    @if (Session.State == SessionState.NoMovesLeft)
+                    {
+                        <div class="notice warning">
+                            @L.Html("No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.")
+                            @if (Session.Game is { Winnable: false })
+                            {
+                                <span>@L["(Random deals can't always be cleared.)"]</span>
+                            }
+                        </div>
+                    }
+
+                    @if (Session.Game is { } game)
+                    {
+                        <div class="board-area">
+                            <BonusBadges Game="game" />
+                            @if (Session.State == SessionState.Paused)
+                            {
+                                <div class="paused">@L["Paused"]</div>
+                            }
+                            else if (game.Layout.Kind == GameKind.Cube)
+                            {
+                                @* Mahjong Cube: always drawn in stone, in the stone chosen for 3D. *@
+                                <CubeBoard @key="game" Game="game" Selected="Session.Selected" Hinted="Session.HintedTiles" OnTileClick="Session.ClickAsync"
+                                           Stone="@(Preferences.LastStone.Stone!)" />
+                            }
+                            else if (Preferences.TileSet.Kind == TileSetKind.ThreeD && game.Layout.Kind != GameKind.Connect)
+                            {
+                                @* A 3D tile set: the same game drawn as stone blocks. Connect stays flat. *@
+                                <Board3D @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                                         Hinted="Session.HintedTiles" />
+                            }
+                            else
+                            {
+                                <Board @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                                   Path="Session.LastPath" Hinted="Session.HintedTiles" />
+                            }
+                        </div>
+
+                        @* The game's controls: icons with tooltips (data-tip) on a rounded bar under the board. *@
+                        <div class="game-controls" role="toolbar" aria-label="@L["Game controls"]">
+                            <button type="button" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)"
+                                    aria-label="@L["Shuffle"]" data-tip="@L["Shuffle (costs 1,000 of the no-shuffle bonus)"]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 7h3.5c3.5 0 5.5 10 9 10H20M4 17h3.5c1.4 0 2.5-1.6 3.4-3.4M13.1 10.4C14 8.6 15.1 7 16.5 7H20M17 4l3 3-3 3M17 14l3 3-3 3" />
+                                </svg>
+                            </button>
+                            <button type="button" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)"
+                                    aria-label="@L["Undo"]" data-tip="@L["Undo"]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                                </svg>
+                            </button>
+                            <button type="button" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)"
+                                    aria-label="@L["Redo"]" data-tip="@L["Redo"]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+                                </svg>
+                            </button>
+                            <button type="button" @onclick="Session.HintAsync" disabled="@(!CanPlay)"
+                                    aria-label="@L["Hint"]" data-tip="@L["Hint (costs 500 of the no-shuffle bonus)"]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
+                                </svg>
+                            </button>
+                            <button type="button" @onclick="RequestDemoAsync" disabled="@(Session.IsDemo || Session.Game == null)"
+                                    aria-label="@L["Watch a demo"]" data-tip="@L["Watch the computer play this deal (not ranked)"]">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                            @if (Session.State == SessionState.Paused)
+                            {
+                                <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Resume"]" data-tip="@L["Resume"]">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path class="solid" d="M8 5v14l11-7z" />
+                                    </svg>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Pause"]" data-tip="@L["Pause"]">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M9 5v14M15 5v14" />
+                                    </svg>
+                                </button>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="loading">@L["Dealing…"]</div>
                     }
                 </div>
-
-                @if (!signedIn)
-                {
-                    <div class="notice">@L.Html("Playing as a guest. <a href=\"Account/Login\">Sign in</a> to save your scores and stats.")</div>
-                }
-
-                @if (Session.IsDemo && !Session.DemoEnded)
-                {
-                    <div class="notice info demo-bar">
-                        <span>@L.Html("<strong>Demo:</strong> the computer is playing this deal. It won't go on the leaderboard.")</span>
-                        <span class="demo-speed" role="radiogroup" aria-label="@L["Demo speed"]">
-                            @foreach (var (label, pace) in DemoSpeeds)
-                            {
-                                <button type="button" role="radio" aria-checked="@(Session.DemoPace == pace ? "true" : "false")"
-                                        class="@(Session.DemoPace == pace ? "on" : null)" @onclick="() => Session.DemoPace = pace">@L[label]</button>
-                            }
-                        </span>
-                        <button class="btn btn-sm btn-primary" @onclick="Session.StopDemo">@L["Stop demo"]</button>
-                    </div>
-                }
-
-                @if (Session.IsPractice)
-                {
-                    <div class="notice info">
-                        @L.Html("<strong>Practice:</strong> the deal from the demo. This game won't go on the leaderboard.")
-                        <button class="btn btn-link btn-sm" @onclick="RequestNewGameAsync">@L["New game"]</button>
-                    </div>
-                }
-
-                @if (claimed != null)
-                {
-                    <div class="notice info">
-                        @L["Your guest win on {0} ({1}) has been saved to your account.", L.LayoutName(claimed.Layout), claimed.Score.ToString("N0")]
-                        @if (claimed.Rank is { } claimedRank)
-                        {
-                            <span>@L.Html("You're <strong>#{0}</strong> on the <a href=\"leaderboards?layout={1}\">{2} leaderboard</a>!", claimedRank, Uri.EscapeDataString(claimed.Layout), L.LayoutName(claimed.Layout))</span>
-                        }
-                        else if (claimed.ReplayRank is { } claimedReplayRank)
-                        {
-                            <span>@L.Html("You're <strong>#{0}</strong> on that deal's <a href=\"replays/{1}\">replay list</a>!", claimedReplayRank, claimed.ReplayOf)</span>
-                        }
-                        <button class="btn btn-link btn-sm" @onclick="() => claimed = null">@L["OK"]</button>
-                    </div>
-                }
-
-                @if (replay != null)
-                {
-                    <div class="notice info">
-                        @L.Html("Replaying <strong>{0}</strong>'s {1} deal. Score to beat: <strong>{2}</strong>. Replays go on this deal's own list, never the main leaderboard.",
-                            replay.OriginalPlayer, L.LayoutName(replay.Layout), replay.OriginalScore.ToString("N0"))
-                        @if (!signedIn)
-                        {
-                            <span>@L.Html("<a href=\"Account/Login\">Sign in</a> to get your score on the list.")</span>
-                        }
-                        <a class="btn btn-link btn-sm" href="replays/@replay.OriginalGameId">@L["See replay scores"]</a>
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Back to normal play"]</button>
-                    </div>
-                }
-
-                @if (pendingDealChange)
-                {
-                    <div class="notice info">
-                        @(Preferences.GuaranteedWinnable ? L["Your next game will be a guaranteed winnable deal."] : L["Your next game will be a random deal."])
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
-                    </div>
-                }
-
-                @if (pendingLayout != null)
-                {
-                    <div class="notice info">
-                        @L.Html("Your next game will use the <strong>{0}</strong> layout.", L.LayoutName(pendingLayout))
-                        <button class="btn btn-link btn-sm" @onclick="NewGameAsync">@L["Start it now"]</button>
-                        <button class="btn btn-link btn-sm" @onclick="() => pendingLayout = null">@L["Keep {0}", L.LayoutName(currentLayout)]</button>
-                    </div>
-                }
-
-                @if (error != null)
-                {
-                    <div class="notice warning">@error</div>
-                }
-
-                @if (Session.Message != null)
-                {
-                    <div class="notice warning">@Session.Message</div>
-                }
-
-                @if (Session.State == SessionState.NoMovesLeft)
-                {
-                    <div class="notice warning">
-                        @L.Html("No more matching pairs. Try <strong>Shuffle</strong> or <strong>Undo</strong>.")
-                        @if (Session.Game is { Winnable: false })
-                        {
-                            <span>@L["(Random deals can't always be cleared.)"]</span>
-                        }
-                    </div>
-                }
-
-                @if (Session.Game is { } game)
-                {
-                    @* As wide as the board is drawn (see matchBoardWidth in mahjong.js). *@
-                    <div class="score-bar" @ref="scoreBar">
-                        <ScorePanel Game="game" ClockStarted="Session.ClockStarted" />
-                    </div>
-
-                    <div class="board-area" @ref="boardArea">
-                        @if (Session.State == SessionState.Paused)
-                        {
-                            <div class="paused">@L["Paused"]</div>
-                        }
-                        else if (game.Layout.Kind == GameKind.Cube)
-                        {
-                            @* Mahjong Cube: always drawn in stone, in the stone chosen for 3D. *@
-                            <CubeBoard @key="game" Game="game" Selected="Session.Selected" Hinted="Session.HintedTiles" OnTileClick="Session.ClickAsync"
-                                       Stone="@(Preferences.LastStone.Stone!)" />
-                        }
-                        else if (Preferences.TileSet.Kind == TileSetKind.ThreeD && game.Layout.Kind != GameKind.Connect)
-                        {
-                            @* A 3D tile set: the same game drawn as stone blocks. Connect stays flat. *@
-                            <Board3D @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
-                                     Hinted="Session.HintedTiles" />
-                        }
-                        else
-                        {
-                            <Board @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
-                               Path="Session.LastPath" Hinted="Session.HintedTiles" />
-                        }
-                    </div>
-
-                    @* The game's controls: icons with tooltips (data-tip) on a rounded bar under the board. *@
-                    <div class="game-controls" role="toolbar" aria-label="@L["Game controls"]">
-                        <button type="button" @onclick="Session.ShuffleAsync" disabled="@(!CanPlay)"
-                                aria-label="@L["Shuffle"]" data-tip="@L["Shuffle (costs 1,000 of the no-shuffle bonus)"]">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 7h3.5c3.5 0 5.5 10 9 10H20M4 17h3.5c1.4 0 2.5-1.6 3.4-3.4M13.1 10.4C14 8.6 15.1 7 16.5 7H20M17 4l3 3-3 3M17 14l3 3-3 3" />
-                            </svg>
-                        </button>
-                        <button type="button" @onclick="Session.UndoAsync" disabled="@(!CanPlay || Session.Game?.CanUndo != true)"
-                                aria-label="@L["Undo"]" data-tip="@L["Undo"]">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
-                            </svg>
-                        </button>
-                        <button type="button" @onclick="Session.RedoAsync" disabled="@(!CanPlay || Session.Game?.CanRedo != true)"
-                                aria-label="@L["Redo"]" data-tip="@L["Redo"]">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
-                            </svg>
-                        </button>
-                        <button type="button" @onclick="Session.HintAsync" disabled="@(!CanPlay)"
-                                aria-label="@L["Hint"]" data-tip="@L["Hint (costs 500 of the no-shuffle bonus)"]">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1.1 1.3 1.1 2.2h5c0-.9.5-1.7 1.1-2.2A6 6 0 0 0 12 3z" />
-                            </svg>
-                        </button>
-                        <button type="button" @onclick="RequestDemoAsync" disabled="@(Session.IsDemo || Session.Game == null)"
-                                aria-label="@L["Watch a demo"]" data-tip="@L["Watch the computer play this deal (not ranked)"]">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
-                                <circle cx="12" cy="12" r="3" />
-                            </svg>
-                        </button>
-                        @if (Session.State == SessionState.Paused)
-                        {
-                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Resume"]" data-tip="@L["Resume"]">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path class="solid" d="M8 5v14l11-7z" />
-                                </svg>
-                            </button>
-                        }
-                        else
-                        {
-                            <button type="button" @onclick="Session.TogglePauseAsync" disabled="@(!Session.CanPause)" aria-label="@L["Pause"]" data-tip="@L["Pause"]">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M9 5v14M15 5v14" />
-                                </svg>
-                            </button>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="loading">@L["Dealing…"]</div>
-                }
             </div>
-        </div>
-    </section>
+        </section>
 
-    @if (showAds)
-    {
-        <aside class="ad-rail right" aria-label="@L["Advertisement"]">
-            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
-        </aside>
+        @if (showAds)
+        {
+            <aside class="ad-rail right" aria-label="@L["Advertisement"]">
+                <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+            </aside>
 
-        <aside class="ad-banner" aria-label="@L["Advertisement"]">
-            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
-        </aside>
-    }
+            <aside class="ad-banner" aria-label="@L["Advertisement"]">
+                <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
+            </aside>
+        }
+    </div>
 </div>
 
 @if (confirmDemo)
@@ -318,9 +314,6 @@
     // The deal setting was changed mid-game; it applies from the next game.
     private bool pendingDealChange;
     private DotNetObjectReference<Play>? selfReference;
-    private ElementReference scoreBar;
-    private ElementReference boardArea;
-    private IJSObjectReference? boardWidthWatcher;
     private string? error;
     // The leaderboard deal being replayed (from ?replay=<game id>), or null in normal play.
     private ReplayInfo? replay;
@@ -409,12 +402,6 @@
         {
             selfReference = DotNetObjectReference.Create(this);
             await Browser.SetPlayActionsAsync(selfReference);
-        }
-
-        // The score bar and board appear with the first game; from then on they stay.
-        if (boardWidthWatcher == null && Session.Game != null && boardArea.Context != null)
-        {
-            boardWidthWatcher = await Browser.MatchBoardWidthAsync(boardArea, scoreBar);
         }
     }
 
@@ -691,7 +678,6 @@
         Session.Changed -= OnSessionChanged;
         Session.Dispose();
         _ = Browser.SetPlayActionsAsync(null).AsTask();
-        _ = boardWidthWatcher?.InvokeVoidAsync("dispose").AsTask();
         selfReference?.Dispose();
     }
 }

@@ -1,15 +1,23 @@
+/* The game bar on top, then the page: together they fill the window under the header, so the
+   whole game fits without scrolling. */
+.play-shell {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--nav-height) - var(--footer-height));
+    height: calc(100dvh - var(--nav-height) - var(--footer-height));
+}
+
 /*
     Wide screens: [ad rail] [game] [ad rail]; signed-in players get only the right rail.
     Narrow screens: rails are hidden and a banner sits under the game instead.
 */
 .play-page {
+    flex: 1;
+    min-height: 0;
     display: grid;
     grid-template-columns: 160px minmax(0, 1fr) 160px;
     grid-template-areas: "left game right";
     gap: 1rem;
-    /* The window less the header and footer, so the whole game fits without scrolling. */
-    height: calc(100vh - var(--nav-height) - var(--footer-height));
-    height: calc(100dvh - var(--nav-height) - var(--footer-height));
     padding: 1rem;
 }
 
@@ -31,31 +39,6 @@
     flex-direction: column;
     gap: 0.6rem;
     min-height: 0;
-}
-
-/* The layout's name, centered above the board on a see-through pill so it reads on any background. */
-.layout-title {
-    padding: 0.15rem 1rem;
-    border-radius: 999px;
-    background: rgba(20, 12, 6, 0.55);
-    backdrop-filter: blur(6px);
-    text-align: center;
-    color: #fff;
-    font-size: 1.3rem;
-    font-weight: 700;
-    line-height: 1.2;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
-}
-
-.deal-badge {
-    margin-left: 0.4rem;
-    padding: 0.1rem 0.5rem;
-    border-radius: 999px;
-    background: rgba(184, 50, 31, 0.85);
-    font-size: 0.75rem;
-    font-weight: 600;
-    vertical-align: middle;
-    text-shadow: none;
 }
 
 .notice {
@@ -99,14 +82,6 @@
 .board-column > .notice,
 .board-column > .loading {
     align-self: stretch;
-}
-
-/* The score bar: centred, half the page wide (but not so narrow its columns crowd), and no wider
-   than the board (the script sets its max-width). */
-.score-bar {
-    align-self: center;
-    width: 50%;
-    min-width: min(100%, 40rem);
 }
 
 .board-area {
@@ -221,10 +196,6 @@
         display: none;
     }
 
-    .score-bar {
-        width: 100%;
-    }
-
     .ad-banner {
         display: block;
         grid-area: banner;
@@ -233,8 +204,7 @@
 }
 
 @media (max-width: 800px) {
-    .play-page,
-    .play-page.signed-in {
+    .play-shell {
         height: auto;
     }
 
