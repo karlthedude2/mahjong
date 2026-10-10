@@ -15,8 +15,8 @@
 
 <PageTitle>Mahjong Haus</PageTitle>
 
-<div class="play-page @(signedIn ? "signed-in" : "guest")">
-    @if (!signedIn)
+<div class="play-page @(signedIn ? "signed-in" : "guest") @(showAds ? "" : "no-ads")">
+    @if (showAds && !signedIn)
     {
         <aside class="ad-rail left" aria-label="@L["Advertisement"]">
             <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
@@ -215,13 +215,16 @@
         </div>
     </section>
 
-    <aside class="ad-rail right" aria-label="@L["Advertisement"]">
-        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
-    </aside>
+    @if (showAds)
+    {
+        <aside class="ad-rail right" aria-label="@L["Advertisement"]">
+            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotRail" Format="vertical" />
+        </aside>
 
-    <aside class="ad-banner" aria-label="@L["Advertisement"]">
-        <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
-    </aside>
+        <aside class="ad-banner" aria-label="@L["Advertisement"]">
+            <AdSlot ClientId="@config?.AdsClientId" SlotId="@config?.AdSlotBanner" Format="horizontal" />
+        </aside>
+    }
 </div>
 
 @if (confirmDemo)
@@ -284,7 +287,7 @@
 @if (showSettings)
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
-                    TileSetId="@Preferences.TileSet.Id" BackgroundId="@Preferences.Background.Id"
+                    TileSetId="@Preferences.TileSet.Id" FlatTileSetId="@Preferences.LastFlat.Id" StoneId="@Preferences.LastStone.Id" BackgroundId="@Preferences.Background.Id"
                     SkipSettings="Preferences.SkipSettings" GuaranteedWinnable="Preferences.GuaranteedWinnable" ForNewGame="settingsForNewGame"
                     OnApply="ApplySettingsAsync" OnCancel="CancelSettingsAsync" />
 }
@@ -294,6 +297,7 @@
 
     private bool signedIn;
     private ClientConfig? config;
+    private bool showAds => config?.ShowAds == true;
     private IReadOnlyList<LayoutDefinition> layouts = LayoutCatalog.Visible;
 
     // Solitaire layouts and Connect boards: anything the player can choose.

@@ -18,6 +18,7 @@
     private DotNetObjectReference<Board3D>? self;
     private string? shownStone;
     private string? shownState;
+    private bool disposed;
 
     [Parameter, EditorRequired] public MahjongGame Game { get; set; } = default!;
 
@@ -36,10 +37,28 @@
     {
         if (firstRender)
         {
+            // A new game replaces the board (it's keyed to the game), so this one may be thrown
+            // away while it's still starting: after each step, stop if it has been.
             await FaceArt.LoadAsync();
+            if (disposed)
+            {
+                return;
+            }
+
             self = DotNetObjectReference.Create(this);
             module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/board3d.js");
+            if (disposed)
+            {
+                await ReleaseAsync();
+                return;
+            }
+
             scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            if (disposed)
+            {
+                await ReleaseAsync();
+                return;
+            }
 
             var positions = Game.Layout.Positions.Select(p => new[] { p.X, p.Y, p.Z });
             await scene.InvokeVoidAsync("setLayout", positions, AllFaces());
@@ -53,12 +72,12 @@
         if (TileSet.Stone != shownStone)
         {
             shownStone = TileSet.Stone;
-            string stone = shownStone ?? "marble";
+            string stone = shownStone ?? TileSets.DefaultStone.Stone!;
             await scene.InvokeVoidAsync("setStone", stone, FaceArt.StoneFaces(stone));
         }
 
         string state = State();
-        if (state != shownState)
+        if (state != shownState && scene != null)
         {
             shownState = state;
             var tiles = Game.Board.Tiles.Select(t => new object[] { t.Id, t.Position.X, t.Position.Y, t.Position.Z, t.Face.Name });
@@ -109,17 +128,26 @@
 
     public async ValueTask DisposeAsync()
     {
+        disposed = true;
+        await ReleaseAsync();
+    }
+
+    // Lets go of the script's board and the module; safe to call more than once.
+    private async Task ReleaseAsync()
+    {
+        var (releasedScene, releasedModule) = (scene, module);
+        (scene, module) = (null, null);
         try
         {
-            if (scene != null)
+            if (releasedScene != null)
             {
-                await scene.InvokeVoidAsync("dispose");
-                await scene.DisposeAsync();
+                await releasedScene.InvokeVoidAsync("dispose");
+                await releasedScene.DisposeAsync();
             }
 
-            if (module != null)
+            if (releasedModule != null)
             {
-                await module.DisposeAsync();
+                await releasedModule.DisposeAsync();
             }
         }
         catch (JSDisconnectedException)
@@ -127,5 +155,6 @@
         }
 
         self?.Dispose();
+        self = null;
     }
 }

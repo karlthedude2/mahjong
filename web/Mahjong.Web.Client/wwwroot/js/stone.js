@@ -25,6 +25,8 @@ const Stones = {
     darkMarble: { color: "#5a4a40", texture: "textures/dark-marble.jpg", roughness: 0.32 },
     ivory: { color: "#ecdfc2", roughness: 0.38 },
     onyx: { color: "#141416", generate: onyxPicture, roughness: 0.24 },
+    beige: { color: "#e2cda4", texture: "textures/beige.jpg", roughness: 0.3 },
+    squareMarble: { color: "#f1ece6", texture: "textures/square-marble.jpg", roughness: 0.3 },
 };
 
 // The light the stone reflects: a soft studio rather than a room with bright lamps, so a polished

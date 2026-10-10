@@ -16,6 +16,9 @@ public sealed class AdsOptions
 
     /// <summary>Unit in the guest results dialog after a win.</summary>
     public string? ResultsSlot { get; set; }
+
+    /// <summary>Whether ads (and their placeholders) are shown at all. Off for now.</summary>
+    public bool Show { get; set; }
 }
 
 /// <summary>Cloudflare Web Analytics settings ("Analytics" section). Off until the token is set.</summary>

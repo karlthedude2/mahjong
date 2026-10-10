@@ -9,8 +9,8 @@ public enum TileSetKind
     Glyphs,
 
     /// <summary>
-    /// Stone blocks in 3D (the Board3D component), with the Mahjong Cube's stones and face art. Connect
-    /// boards stay flat and draw these as glyphs.
+    /// Stone blocks in 3D: Mahjong 3D (the Board3D component) and the Mahjong Cube, which share the
+    /// stones and face art. Connect boards stay flat and draw these as glyphs.
     /// </summary>
     ThreeD
 }
@@ -29,16 +29,26 @@ public static class TileSets
 {
     public static readonly TileSetInfo Classic = new("classic", "Classic", TileSetKind.Images);
     public static readonly TileSetInfo Simple = new("simple", "Simple (high contrast)", TileSetKind.Glyphs);
-    public static readonly TileSetInfo Marble3D = new("3d-marble", "3D Marble", TileSetKind.ThreeD, "marble");
-    public static readonly TileSetInfo DarkMarble3D = new("3d-dark-marble", "3D Dark Marble", TileSetKind.ThreeD, "darkMarble");
-    public static readonly TileSetInfo Onyx3D = new("3d-onyx", "3D Onyx", TileSetKind.ThreeD, "onyx");
-    public static readonly TileSetInfo Ivory3D = new("3d-ivory", "3D Ivory", TileSetKind.ThreeD, "ivory");
+    public static readonly TileSetInfo Ivory3D = new("3d-ivory", "Ivory", TileSetKind.ThreeD, "ivory");
+    public static readonly TileSetInfo Onyx3D = new("3d-onyx", "Onyx", TileSetKind.ThreeD, "onyx");
+    public static readonly TileSetInfo Beige3D = new("3d-beige", "Beige", TileSetKind.ThreeD, "beige");
+    public static readonly TileSetInfo Marble3D = new("3d-marble", "Marble", TileSetKind.ThreeD, "squareMarble");
 
-    public static IReadOnlyList<TileSetInfo> All { get; } = [Classic, Simple, Marble3D, DarkMarble3D, Onyx3D, Ivory3D];
+    /// <summary>The sets for flat boards: Mahjong Solitaire and Connect.</summary>
+    public static IReadOnlyList<TileSetInfo> Flat { get; } = [Classic, Simple];
+
+    /// <summary>The stones for Mahjong 3D and the Mahjong Cube.</summary>
+    public static IReadOnlyList<TileSetInfo> Stones { get; } = [Ivory3D, Onyx3D, Beige3D, Marble3D];
+
+    public static IReadOnlyList<TileSetInfo> All { get; } = [.. Flat, .. Stones];
 
     public static TileSetInfo Default => Classic;
 
-    public static TileSetInfo Find(string? id) => All.FirstOrDefault(s => s.Id == id) ?? Default;
+    public static TileSetInfo DefaultStone => Ivory3D;
+
+    /// <summary>A set by its id. A stone no longer offered (3D Dark Marble) becomes the default stone.</summary>
+    public static TileSetInfo Find(string? id) =>
+        All.FirstOrDefault(s => s.Id == id) ?? (id?.StartsWith("3d-") == true ? DefaultStone : Default);
 
     public static string ImageUrl(TileSetInfo set, string face) => $"tilesets/{set.Id}/{face}.png";
 

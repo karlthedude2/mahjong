@@ -22,11 +22,12 @@
             <button type="button" role="radio" aria-checked="@(size == 6 ? "true" : "false")" class="@(size == 6 ? "on" : null)" @onclick="() => NewGameAsync(6)">@L["Large"] (6×6×6)</button>
         </span>
         @* Development: pictures dropped into the cube-stones folder are listed too (see DevStoneEndpoints). *@
-        <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? "marble"))">
-            <option value="marble">@L["Marble"]</option>
-            <option value="darkMarble">@L["Dark marble"]</option>
-            <option value="onyx">@L["Onyx"]</option>
-            <option value="ivory">@L["Ivory"]</option>
+        @* The same stones as Mahjong 3D (TileSets.Stones). *@
+        <select class="cube-stone" aria-label="@L["Material"]" value="@stone" @onchange="@(e => SetStoneAsync(e.Value as string ?? DefaultStone))">
+            @foreach (var set in TileSets.Stones)
+            {
+                <option value="@set.Stone">@L[set.Name]</option>
+            }
             @if (droppedStones.Count > 0)
             {
                 <optgroup label="@L["From the cube-stones folder"]">
@@ -61,7 +62,8 @@
     private (CubeTile, CubeTile)? hint;
     private string? message;
     private int size = 4;
-    private string stone = "marble";
+    private static readonly string DefaultStone = TileSets.DefaultStone.Stone!;
+    private string stone = DefaultStone;
     private List<string> droppedStones = [];
 
     private const string DroppedPrefix = "file:";
@@ -80,7 +82,7 @@
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
             string? saved = await JS.InvokeAsync<string?>("localStorage.getItem", StoneSetting);
-            if (saved is "marble" or "darkMarble" or "onyx" or "ivory" || saved?.StartsWith(DroppedPrefix) == true && droppedStones.Contains(saved[DroppedPrefix.Length..]))
+            if (TileSets.Stones.Any(s => s.Stone == saved) || saved?.StartsWith(DroppedPrefix) == true && droppedStones.Contains(saved[DroppedPrefix.Length..]))
             {
                 stone = saved;
             }

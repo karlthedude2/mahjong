@@ -101,10 +101,12 @@
     align-self: stretch;
 }
 
-/* The score bar: centred, and no wider than the board (the script sets its max-width). */
+/* The score bar: centred, half the page wide (but not so narrow its columns crowd), and no wider
+   than the board (the script sets its max-width). */
 .score-bar {
     align-self: center;
-    width: 100%;
+    width: 50%;
+    min-width: min(100%, 40rem);
 }
 
 .board-area {
@@ -219,6 +221,10 @@
         display: none;
     }
 
+    .score-bar {
+        width: 100%;
+    }
+
     .ad-banner {
         display: block;
         grid-area: banner;
@@ -311,4 +317,11 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
+}
+
+/* Ads switched off (Ads:Show): no rails or banner, the game takes the whole width. */
+.play-page.no-ads {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "game";
+    grid-template-rows: minmax(0, 1fr);
 }
