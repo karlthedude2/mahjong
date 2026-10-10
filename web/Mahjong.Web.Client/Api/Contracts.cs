@@ -70,10 +70,10 @@ public sealed record ReplayInfo(
     IReadOnlyList<LeaderboardEntry> Entries,
     bool RandomDeal = false);
 
-public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon, bool SkipSettingsOnNewGame = false, bool PreferRandomDeals = false);
+public sealed record PlayerProfile(string DisplayName, string PreferredTileSet, string PreferredBackground, int GamesPlayed, int GamesWon, bool SkipSettingsOnNewGame = false, bool PreferRandomDeals = false, bool SkipCubeIntro = false);
 
 /// <summary>Changes to the player's profile; null fields are left as they are.</summary>
-public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null, bool? PreferRandomDeals = null);
+public sealed record UpdateProfileRequest(string? DisplayName, string? PreferredTileSet, string? PreferredBackground, bool? SkipSettingsOnNewGame = null, bool? PreferRandomDeals = null, bool? SkipCubeIntro = null);
 
 /// <summary>Settings the browser needs from the server's configuration.</summary>
 /// <param name="CubeStoneFaces">Mahjong Cube: each configured stone's face set, "light" or "dark" (see CubeOptions).</param>

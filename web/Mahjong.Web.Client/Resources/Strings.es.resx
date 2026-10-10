@@ -230,6 +230,8 @@
   <data name="Mahjong 3D" xml:space="preserve"><value>Mahjong 3D</value></data>
   <data name="Mahjong board" xml:space="preserve"><value>Tablero de mahjong</value></data>
   <data name="Mahjong Cube" xml:space="preserve"><value>Cubo Mahjong</value></data>
+  <data name="Don't show again" xml:space="preserve"><value>No volver a mostrar</value></data>
+  <data name="Got it" xml:space="preserve"><value>Entendido</value></data>
   <data name="Mahjong Cube · {0}" xml:space="preserve"><value>Cubo Mahjong · {0}</value></data>
   <data name="Mahjong Haus home" xml:space="preserve"><value>Inicio de Mahjong Haus</value></data>
   <data name="Mahjong Solitaire" xml:space="preserve"><value>Mahjong Solitario</value></data>

@@ -35,6 +35,9 @@ public class ApplicationUser : IdentityUser
     /// <summary>True if the player turned off "Guaranteed winnable path" and wants random deals.</summary>
     public bool PreferRandomDeals { get; set; }
 
+    /// <summary>True if the player checked "Don't show again" on the Mahjong Cube intro.</summary>
+    public bool SkipCubeIntro { get; set; }
+
     /// <summary>The chosen avatar's id (a Chinese zodiac animal, e.g. "dragon"), or empty for none.</summary>
     [MaxLength(16)]
     public string Avatar { get; set; } = "";

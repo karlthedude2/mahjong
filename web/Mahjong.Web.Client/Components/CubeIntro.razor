@@ -1,0 +1,27 @@
+@*
+    How to play Mahjong Cube, shown when a cube game starts (the help line under the cube used to say
+    it). "Don't show again" turns it off for the player, on their profile when they're signed in.
+*@
+<div class="intro-backdrop" role="dialog" aria-modal="true" aria-labelledby="cube-intro-title">
+    <div class="intro">
+        <h2 id="cube-intro-title">@L["Mahjong Cube"]</h2>
+
+        <p>@L["Drag to turn the cube. A tile can be taken when two of its sides that meet at an edge are open."]</p>
+
+        <label class="dont-show">
+            <input type="checkbox" @bind="dontShowAgain" />
+            @L["Don't show again"]
+        </label>
+
+        <div class="actions">
+            <button class="btn btn-primary" @onclick="() => OnClose.InvokeAsync(dontShowAgain)">@L["Got it"]</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool dontShowAgain;
+
+    /// <summary>Closes the intro; true if "Don't show again" was checked.</summary>
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+}

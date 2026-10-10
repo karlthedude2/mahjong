@@ -16,6 +16,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     private const string LayoutKey = "layout";
     private const string SkipSettingsKey = "skipSettings";
     private const string WinnableKey = "winnable";
+    private const string SkipCubeIntroKey = "skipCubeIntro";
 
     private bool signedIn;
 
@@ -37,6 +38,9 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     /// <summary>"Guaranteed winnable path": true (the default) for winnable deals, false for random ones.</summary>
     public bool GuaranteedWinnable { get; private set; } = true;
 
+    /// <summary>True if the player checked "Don't show again" on the Mahjong Cube intro.</summary>
+    public bool SkipCubeIntro { get; private set; }
+
     public async Task LoadAsync(bool isSignedIn)
     {
         signedIn = isSignedIn;
@@ -45,6 +49,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         LastLayout = await browser.GetSettingAsync(LayoutKey);
         SkipSettings = await browser.GetSettingAsync(SkipSettingsKey) == "on";
         GuaranteedWinnable = await browser.GetSettingAsync(WinnableKey) != "off";
+        SkipCubeIntro = await browser.GetSettingAsync(SkipCubeIntroKey) == "on";
 
         if (signedIn)
         {
@@ -54,6 +59,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
                 TileSet = TileSets.Find(profile.PreferredTileSet);
                 SkipSettings = profile.SkipSettingsOnNewGame;
                 GuaranteedWinnable = !profile.PreferRandomDeals;
+                SkipCubeIntro = profile.SkipCubeIntro;
 
                 // An empty profile value means they haven't chosen yet, so keep this browser's choice.
                 if (!string.IsNullOrEmpty(profile.PreferredBackground))
@@ -121,6 +127,16 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         if (signedIn)
         {
             await api.UpdateProfileAsync(new UpdateProfileRequest(null, null, null, PreferRandomDeals: !winnable));
+        }
+    }
+
+    public async Task SetSkipCubeIntroAsync(bool skip)
+    {
+        SkipCubeIntro = skip;
+        await browser.SetSettingAsync(SkipCubeIntroKey, skip ? "on" : "off");
+        if (signedIn)
+        {
+            await api.UpdateProfileAsync(new UpdateProfileRequest(null, null, null, SkipCubeIntro: skip));
         }
     }
 

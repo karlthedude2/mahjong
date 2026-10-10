@@ -29,4 +29,18 @@ public sealed class ProfileTests : IAsyncLifetime
         Assert.False(before!.SkipSettingsOnNewGame);
         Assert.Equal(before with { SkipSettingsOnNewGame = true }, after);
     }
+
+    [Fact]
+    public async Task TheCubeIntroSwitchIsSavedAndLeavesTheRestAlone()
+    {
+        var client = app.ClientFor("alice");
+        var before = await client.GetFromJsonAsync<PlayerProfile>("api/me");
+
+        var response = await client.PutAsJsonAsync("api/me", new UpdateProfileRequest(null, null, null, SkipCubeIntro: true));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var after = await client.GetFromJsonAsync<PlayerProfile>("api/me");
+        Assert.False(before!.SkipCubeIntro);
+        Assert.Equal(before with { SkipCubeIntro = true }, after);
+    }
 }
