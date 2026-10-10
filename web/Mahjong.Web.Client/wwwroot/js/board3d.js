@@ -14,6 +14,7 @@ const Gap = 0.04;
 // How far from straight down the board is first seen (about 20 degrees, enough to see the tiles'
 // sides), and how far it may be tilted and turned.
 const Tilt = 0.35, MaxTilt = 0.95, MaxTurn = 0.6;
+const HoldToTurn = 500;
 
 export function create(host, dotnet) {
     const stage = createStage(host, 35);
@@ -55,54 +56,11 @@ export function create(host, dotnet) {
     const changed = () => { dirty = true; };
     const look = createStoneLook({ meshes: () => meshes.values(), changed, aspect: Depth / Width, artOnTop: true, onFaceSet: set => setGlow(set === "dark") });
 
-    // On a dark stone the board's shadow would sink into the background, so the board gets a soft
-    // white glow instead: its outline, blurred, just under the tiles, so it shows evenly round every
-    // edge. It's redrawn as tiles go and come back. The layers still shade one another.
-    const Margin = 2;        // room for the glow past the board, in tile widths
-    const Spread = 0.45;     // how far the glow's shape reaches past each tile, so it shows from above
-    const Blur = 0.55;       // how soft the glow is, in tile widths
-    const haloCanvas = document.createElement("canvas");
-    const haloTexture = new THREE.CanvasTexture(haloCanvas);
-    haloTexture.colorSpace = THREE.SRGBColorSpace;
-    const halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: haloTexture, transparent: true, opacity: 0.8, depthWrite: false }));
-    halo.rotation.x = -Math.PI / 2;
-    halo.position.y = -0.002;
-    halo.visible = false;
-    scene.add(halo);
-    let glow = false;
-
+    // On a dark stone a black shadow would sink into the background, so the same shadow is cast
+    // in white instead: the same shape, softness and fall, only light.
     function setGlow(on) {
-        glow = on;
-        halo.visible = on;
-        floor.visible = !on;
-        drawHalo();
+        floor.material.color.set(on ? 0xffffff : 0x000000);
         changed();
-    }
-
-    function drawHalo() {
-        if (!glow || !frame) {
-            return;
-        }
-        const { centre, across, deep } = frame;
-        const wide = across + 2 * Margin, tall = deep + 2 * Margin;
-        const scale = 512 / wide;
-        haloCanvas.width = 512;
-        haloCanvas.height = Math.round(tall * scale);
-        const g = haloCanvas.getContext("2d");
-        g.clearRect(0, 0, haloCanvas.width, haloCanvas.height);
-        g.filter = `blur(${Blur * scale}px)`;
-        g.fillStyle = "#ffffff";
-        const left = centre.x - wide / 2, top = centre.z - tall / 2;
-        g.beginPath();
-        for (const mesh of meshes.values()) {
-            const p = mesh.position;
-            g.rect((p.x - Width / 2 - Spread - left) * scale, (p.z - Depth / 2 - Spread - top) * scale, (Width + 2 * Spread) * scale, (Depth + 2 * Spread) * scale);
-        }
-        g.fill();
-        haloTexture.needsUpdate = true;
-        halo.position.x = centre.x;
-        halo.position.z = centre.z;
-        halo.scale.set(wide, tall, 1);
     }
 
     // The sun stands over the board's upper left and a little behind it, low enough (about 45
@@ -176,24 +134,72 @@ export function create(host, dotnet) {
     const resized = new ResizeObserver(resize);
     resized.observe(host);
 
-    // A click (not a drag that tilts the board) on a tile tells the game which one.
+    // A click on a tile tells the game which one. The board only tilts or turns once the
+    // button has been held for HoldToTurn ms: until then the controls never see the press
+    // (it is stopped on the host, before it reaches the canvas), so a slightly shaky click
+    // still picks a tile. A second finger (a pinch) hands the press over straight away.
     const raycaster = new THREE.Raycaster();
-    let down = null;
-    renderer.domElement.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; });
-    renderer.domElement.addEventListener("pointerup", e => {
-        if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) {
-            down = null;
+    const canvas = renderer.domElement;
+    let down = null, holdTimer = 0, handingOver = false;
+
+    function handOver() {
+        clearTimeout(holdTimer);
+        if (!down || down.turning) {
             return;
         }
+        down.turning = true;
+        canvas.style.cursor = "grabbing";
+        handingOver = true;
+        canvas.dispatchEvent(new PointerEvent("pointerdown", {
+            bubbles: true, cancelable: true, pointerId: down.id, pointerType: down.type, isPrimary: true,
+            clientX: down.lastX, clientY: down.lastY, button: 0, buttons: 1,
+        }));
+        handingOver = false;
+    }
+
+    function onDown(e) {
+        if (handingOver || e.target !== canvas) {
+            return;
+        }
+        if (down) {
+            handOver();
+            return;
+        }
+        e.stopPropagation();
+        down = { id: e.pointerId, type: e.pointerType, x: e.clientX, y: e.clientY, lastX: e.clientX, lastY: e.clientY, turning: false };
+        holdTimer = setTimeout(handOver, HoldToTurn);
+    }
+
+    function onMove(e) {
+        if (down && e.pointerId === down.id) {
+            down.lastX = e.clientX;
+            down.lastY = e.clientY;
+        }
+    }
+
+    function onUp(e) {
+        if (!down || e.pointerId !== down.id) {
+            return;
+        }
+        const press = down;
         down = null;
-        const rect = renderer.domElement.getBoundingClientRect();
+        clearTimeout(holdTimer);
+        canvas.style.cursor = "";
+        if (press.turning || e.type === "pointercancel" || Math.hypot(e.clientX - press.x, e.clientY - press.y) > 6) {
+            return;
+        }
+        const rect = canvas.getBoundingClientRect();
         const pointer = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
         raycaster.setFromCamera(pointer, camera);
         const hit = raycaster.intersectObjects([...meshes.values()], false)[0];
         if (hit) {
             dotnet.invokeMethodAsync("OnTileClicked", hit.object.userData.id);
         }
-    });
+    }
+    host.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
 
     // Removed tiles shrink away; tiles that come back (undo) grow in.
     const shrinking = [], growing = [];
@@ -206,6 +212,7 @@ export function create(host, dotnet) {
                 scene.remove(item.mesh);
                 item.mesh.material.dispose();
                 shrinking.splice(i, 1);
+                dirty = true; // draw once more, now without it
             }
         }
         for (let i = growing.length - 1; i >= 0; i--) {
@@ -214,6 +221,7 @@ export function create(host, dotnet) {
             item.mesh.scale.setScalar(Math.max(t, 0.001));
             if (t >= 1) {
                 growing.splice(i, 1);
+                dirty = true; // draw once more, at full size
             }
         }
         if (controls.update() || shrinking.length > 0 || growing.length > 0 || dirty) {
@@ -284,13 +292,17 @@ export function create(host, dotnet) {
             selectedId = selected;
             hinted = new Set(hintIds);
             meshes.forEach(tint);
-            drawHalo();
             changed();
         },
 
         dispose() {
             renderer.setAnimationLoop(null);
             resized.disconnect();
+            clearTimeout(holdTimer);
+            host.removeEventListener("pointerdown", onDown, true);
+            window.removeEventListener("pointermove", onMove);
+            window.removeEventListener("pointerup", onUp);
+            window.removeEventListener("pointercancel", onUp);
             controls.dispose();
             for (const mesh of meshes.values()) {
                 mesh.material.dispose();
@@ -299,9 +311,6 @@ export function create(host, dotnet) {
             block.dispose();
             floor.geometry.dispose();
             floor.material.dispose();
-            halo.geometry.dispose();
-            halo.material.dispose();
-            haloTexture.dispose();
             sun.shadow.map?.dispose();
             stage.dispose();
         },
