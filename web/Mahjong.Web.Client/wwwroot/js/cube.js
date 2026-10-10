@@ -1,5 +1,5 @@
-// Prototype: draws the Mahjong Cube game with Three.js. The game itself (which tiles exist, which
-// are free, what matches) lives in CubeGame.cs; this only draws it, turns it, and reports taps.
+// Draws a Mahjong Cube game with Three.js. The game itself (which tiles exist, which are free,
+// what matches) is the page's MahjongGame; this only draws it, turns it, and reports taps.
 // The stone, light and face art are shared with the 3D board (stone.js).
 
 import * as THREE from "../lib/three/three.module.min.js";
@@ -55,12 +55,39 @@ export function create(host, dotnet) {
         meshes.clear();
     }
 
+    // How far away the camera stands so the block, turned any way, just fits the narrower side of
+    // the view: the sphere round its corners fills the narrower field of view, less a small margin.
+    let blockSize = 0;
+    function fittedDistance() {
+        const radius = ((blockSize - 1) * Spacing + 1) * Math.sqrt(3) / 2;
+        const halfHeight = THREE.MathUtils.degToRad(camera.fov) / 2;
+        const halfWidth = Math.atan(Math.tan(halfHeight) * camera.aspect);
+        return radius / Math.sin(Math.min(halfHeight, halfWidth)) * 1.03;
+    }
+
+    // Moves the camera to the fitted distance, keeping the angle it looks from.
+    function fit() {
+        if (!blockSize) {
+            return;
+        }
+        const distance = fittedDistance();
+        camera.position.setLength(distance);
+        controls.minDistance = distance * 0.5;
+        controls.maxDistance = distance * 2;
+        controls.update();
+    }
+
+    // A new size of view (a window resized, a phone turned) fits the block to it again; the same
+    // size (an undo or a shuffle redrawing it) leaves the player's zoom alone.
+    let shownSize = "";
     function resize() {
         const width = host.clientWidth, height = host.clientHeight;
-        if (width && height) {
+        if (width && height && `${width}x${height}` !== shownSize) {
+            shownSize = `${width}x${height}`;
             renderer.setSize(width, height, false);
             camera.aspect = width / height;
             camera.updateProjectionMatrix();
+            fit();
             changed();
         }
     }
@@ -129,12 +156,11 @@ export function create(host, dotnet) {
             hideBuried();
             look.refresh();
 
+            blockSize = size;
             if (!keepView) {
-                const distance = size * Spacing * 2.6;
-                camera.position.set(distance * 0.6, distance * 0.5, distance * 0.62);
+                camera.position.set(0.6, 0.5, 0.62);
                 controls.target.set(0, 0, 0);
-                controls.minDistance = size * 1.2;
-                controls.maxDistance = size * 5;
+                fit();
             }
             resize();
             changed();

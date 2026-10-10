@@ -286,6 +286,11 @@
     <LeaderboardDialog Layouts="AllLayouts.ToList()" LayoutName="@PlayingLayout?.Name" OnClose="() => showLeaderboard = false" />
 }
 
+@if (ShowCubeIntro)
+{
+    <CubeIntro OnClose="CloseCubeIntroAsync" />
+}
+
 @if (showSettings)
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
@@ -308,6 +313,8 @@
     // A layout chosen mid-game, kept for the next game so the current one isn't interrupted.
     private LayoutDefinition? pendingLayout;
     private bool showSettings;
+    // The cube game whose intro has been closed, so it isn't shown again for that game.
+    private MahjongGame? cubeIntroClosedFor;
     private bool showLeaderboard;
     // The dialog is open to pick settings for a new game, which is dealt when it closes.
     private bool settingsForNewGame;
@@ -337,6 +344,19 @@
     private bool confirmDemo;
     private bool confirmLanguage;
     private static readonly (string Label, int Pace)[] DemoSpeeds = [("Slow", 1400), ("Normal", 800), ("Fast", 300)];
+
+    // How to play the cube, as a cube game starts: before the first move, unless the player turned it off.
+    private bool ShowCubeIntro => Session.Game is { Layout.Kind: GameKind.Cube } game && game != cubeIntroClosedFor
+        && !Preferences.SkipCubeIntro && !Session.ClockStarted && !Session.IsDemo && !showSettings && Session.State == SessionState.Playing;
+
+    private async Task CloseCubeIntroAsync(bool dontShowAgain)
+    {
+        cubeIntroClosedFor = Session.Game;
+        if (dontShowAgain)
+        {
+            await Preferences.SetSkipCubeIntroAsync(true);
+        }
+    }
 
     private bool CanPlay => Session.State is SessionState.Playing or SessionState.NoMovesLeft;
 

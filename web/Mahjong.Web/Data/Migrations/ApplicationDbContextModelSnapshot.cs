@@ -102,6 +102,9 @@ namespace Mahjong.Web.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("SkipCubeIntro")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("SkipSettingsOnNewGame")
                         .HasColumnType("bit");
 
