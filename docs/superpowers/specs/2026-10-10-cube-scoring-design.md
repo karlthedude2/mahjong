@@ -133,7 +133,8 @@ stone, whatever the 3D or flat tile set.
 
 **Title and links.**
 - The title shows "Mahjong Cube · Small" or "Mahjong Cube · Large", from the layout.
-- `L.LayoutName` translates cube layout names.
+- `L.LayoutName` shows a cube layout as "Mahjong Cube · Small" or "Mahjong Cube · Large", so the title,
+  the leaderboards and the results dialog all name it that way.
 - Leaderboard "Play this deal" links work by layout name and seed, so they deal the same cube.
 
 **Leaderboards dialog** (`LeaderboardDialog.razor`). Add a "Mahjong Cube" option group with Small and
@@ -144,9 +145,9 @@ Large.
 
 ## 4. Translations
 
-`L.LayoutName` translates a non-Connect layout by its name. So add Spanish for "Cube Small" and "Cube
-Large" ("Cubo pequeño", "Cubo grande"). "Mahjong Cube", "Small", "Large" and "Board size" are translated
-already. Remove keys that only the casual
+`L.LayoutName` shows a cube layout as "Mahjong Cube · Small" or "Mahjong Cube · Large", from one new
+key, "Mahjong Cube · {0}" ("Cubo Mahjong · {0}"). "Mahjong Cube", "Small", "Large" and "Board size" are
+translated already. Remove keys that only the casual
 cube used, such as "You cleared the cube!" and "Your next game will be Mahjong Cube.". The existing
 translation tests catch any that are missing or unused.
 
@@ -164,10 +165,12 @@ translation tests catch any that are missing or unused.
 
 **Server** (`Mahjong.Web.Tests`):
 - A full cube game is started, finished and verified, and appears on the `Cube Small` leaderboard.
-- A random-deal cube win is marked as random.
+- A random cube deal starts as a random deal. Marking random-deal wins is shared code, already tested
+  for Solitaire; a random cube win can't be scripted, since a random deal has no known solution.
 
-**Client** (`Mahjong.Web.Tests`): the Cube tab's Apply returns the right layout name for each size, and
-the deal setting is kept.
+**Client** (`Mahjong.Web.Tests`): how the cube view catches up with the game (a pair taken shrinks away;
+an undo or a shuffle redraws the block) is a small helper with its own tests. The dialog and play page
+have no component tests in this project, so they're checked by hand.
 
 **By hand.** On my 5031 copy I'll start a cube game from the dialog and check the score bar and toolbar,
 the leaderboards page, and the results dialog by automation. Tapping cube tiles can't be done by
