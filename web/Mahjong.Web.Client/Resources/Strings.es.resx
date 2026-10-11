@@ -216,7 +216,6 @@
   <data name="Keep {0}" xml:space="preserve"><value>Mantener {0}</value></data>
   <data name="Large" xml:space="preserve"><value>Grande</value></data>
   <data name="Layout" xml:space="preserve"><value>Tablero</value></data>
-  <data name="Leaderboard" xml:space="preserve"><value>Clasificación</value></data>
   <data name="Leaderboards" xml:space="preserve"><value>Clasificaciones</value></data>
   <data name="Learn how to" xml:space="preserve"><value>Aprende a</value></data>
   <data name="Left" xml:space="preserve"><value>Hacia la izquierda</value></data>
@@ -349,7 +348,6 @@
   <data name="Replaying &lt;strong&gt;{0}&lt;/strong&gt;'s {1} deal. Score to beat: &lt;strong&gt;{2}&lt;/strong&gt;. Replays go on this deal's own list, never the main leaderboard." xml:space="preserve"><value>Repitiendo la partida de {1} de &lt;strong&gt;{0}&lt;/strong&gt;. Puntuación a superar: &lt;strong&gt;{2}&lt;/strong&gt;. Las repeticiones van a la lista propia de esta partida, nunca a la clasificación principal.</value></data>
   <data name="Replays" xml:space="preserve"><value>Repeticiones</value></data>
   <data name="Replays ({0})" xml:space="preserve"><value>Repeticiones ({0})</value></data>
-  <data name="Replays and more (new tab)" xml:space="preserve"><value>Repeticiones y más (pestaña nueva)</value></data>
   <data name="Resend" xml:space="preserve"><value>Reenviar</value></data>
   <data name="Resend email confirmation" xml:space="preserve"><value>Reenviar la confirmación del correo</value></data>
   <data name="Reset" xml:space="preserve"><value>Restablecer</value></data>
@@ -525,4 +523,9 @@
   <data name="{0} left" xml:space="preserve"><value>quedan {0}</value></data>
   <data name="{0} of 20 tiles · {1} s left · worth {2} now" xml:space="preserve"><value>{0} de 20 fichas · quedan {1} s · vale {2} ahora</value></data>
   <data name="{0}'s {1} deal" xml:space="preserve"><value>Reparto de {1} de {0}</value></data>
+  <data name="Back to leaderboards" xml:space="preserve"><value>Volver a las clasificaciones</value></data>
+  <data name="Play this deal?" xml:space="preserve"><value>¿Jugar este reparto?</value></data>
+  <data name="That deal couldn't be found." xml:space="preserve"><value>No se encontró ese reparto.</value></data>
+  <data name="This deal couldn't be found. It may never have been on a leaderboard." xml:space="preserve"><value>No se encontró este reparto. Quizás nunca estuvo en una clasificación.</value></data>
+  <data name="Your current game ends here and won't be saved." xml:space="preserve"><value>Tu partida actual termina aquí y no se guardará.</value></data>
 </root>

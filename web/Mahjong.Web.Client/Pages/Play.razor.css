@@ -91,6 +91,10 @@
     position: relative;
 }
 
+.board-area.hidden-board {
+    visibility: hidden;
+}
+
 /* A see-through bar with fully rounded ends. */
 .game-controls {
     display: inline-flex;
