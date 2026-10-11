@@ -125,6 +125,15 @@ public sealed class PlayerRenamerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheCommandSaysWhichDatabaseItIsUsing()
+    {
+        var (_, output) = await RunCommandAsync("rename-player", "Nobody", "Somebody");
+
+        // The tests' in-memory database has no server name, and calls itself "main".
+        Assert.StartsWith("Database:  / main" + Environment.NewLine, output);
+    }
+
+    [Fact]
     public async Task TheCommandRenamesWithApply()
     {
         var (code, output) = await RunCommandAsync("rename-player", "Alise", "Alice", "--apply");

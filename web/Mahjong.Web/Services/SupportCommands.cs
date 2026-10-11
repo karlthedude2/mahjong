@@ -1,3 +1,6 @@
+using Mahjong.Web.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace Mahjong.Web.Services;
 
 /// <summary>
@@ -25,6 +28,12 @@ public static class SupportCommands
         }
 
         using var scope = services.CreateScope();
+
+        // Which database this is, first: the local one unless ConnectionStrings__DefaultConnection
+        // points elsewhere (see docs/deploy.md), and it's easy to forget which.
+        var connection = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.GetDbConnection();
+        await output.WriteLineAsync($"Database: {connection.DataSource} / {connection.Database}");
+
         var result = await scope.ServiceProvider.GetRequiredService<PlayerRenamer>().RenameAsync(args[1], args[2], apply);
         if (result.Error != null)
         {

@@ -245,26 +245,33 @@ the request), the new name, and how many leaderboard and replay scores carry the
 `--apply` to make the change. It prints a line saying what was renamed and when; keep it with
 the request as the record.
 
-Locally it uses the local database. To rename a player on the live site:
+It first prints the database it's using. Unless you point it elsewhere, that's the local one,
+`(localdb)\MSSQLLocalDB / Mahjong`. To rename a player on the live site, do all of this in **one
+PowerShell window** (the connection string set in step 2 only lasts in that window):
 
-1. **Let your computer in:** allow your IP address on the SQL server's firewall, either in the
-   Azure portal (**SQL server `<APP_NAME>-sql` > Networking > Add your client IPv4 address > Save**)
-   or with the Azure CLI:
+1. **Let your computer in:** in the [Azure portal](https://portal.azure.com), search for the SQL
+   server `<APP_NAME>-sql` (the one marked "SQL server", not the database), then **Security >
+   Networking > Public access > Firewall rules > + Add your client IPv4 address > Save**. Or, with
+   the Azure CLI:
 
    ```powershell
-   az sql server firewall-rule create -g rg-<APP_NAME> -s <APP_NAME>-sql -n support --start-ip-address <your IP> --end-ip-address <your IP>
+   $ip = Invoke-RestMethod https://api.ipify.org
+   az sql server firewall-rule create -g rg-<APP_NAME> -s <APP_NAME>-sql -n support --start-ip-address $ip --end-ip-address $ip
    ```
 
-2. **Point this window at the live database:** copy the `DefaultConnection` connection string
-   from the web app (**App Service > Settings > Environment variables > Connection strings**) and
-   paste it at the prompt. Typed at a prompt, it isn't saved in your command history or any file.
+2. **Point this window at the live database:** in the portal, search for the web app `<APP_NAME>`
+   (marked "App Service"), then **Settings > Environment variables > Connection strings >
+   DefaultConnection > Show value**, and copy the value. Run this and paste it at the prompt
+   (typed at a prompt, it isn't saved in your command history or any file):
 
    ```powershell
    $env:ConnectionStrings__DefaultConnection = Read-Host "Connection string"
    ```
 
-3. **Check, then apply:** run the command without `--apply`, check the player and email it
-   shows, then run it again with `--apply`.
+3. **Check, then apply:** run the command without `--apply`. The first line should now say
+   `Database: tcp:<APP_NAME>-sql.database.windows.net,1433 / mahjong`; if it still says
+   `(localdb)`, step 2 wasn't run in this window. Check the player and email it shows, then run it
+   again with `--apply`.
 4. **Close up:** clear the connection string, and remove the firewall rule (in the portal, or):
 
    ```powershell
