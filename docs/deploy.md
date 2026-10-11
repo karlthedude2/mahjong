@@ -229,6 +229,51 @@ az rest --method delete --resource https://management.azure.com/ --headers "If-M
 (In Git Bash on Windows, put `MSYS_NO_PATHCONV=1` in front.) Remember the 30-minute limit: for
 longer work, run the "on" command again to refresh the file.
 
+## Renaming a player
+
+Players choose their display name once, when they sign up. If someone asks for theirs to be
+changed, first check the request came from the account's own email address. Then use the
+`rename-player` command, which checks the new name as sign-up does (length, invisible characters,
+the name filter, not another player's) and changes it everywhere it's shown, all at once.
+
+```powershell
+dotnet run --project web/Mahjong.Web -- rename-player "Current name" "New name"
+```
+
+On its own it changes nothing: it shows the player it found (with their email, to compare with
+the request), the new name, and how many leaderboard and replay scores carry the name. Add
+`--apply` to make the change. It prints a line saying what was renamed and when; keep it with
+the request as the record.
+
+Locally it uses the local database. To rename a player on the live site:
+
+1. **Let your computer in:** allow your IP address on the SQL server's firewall, either in the
+   Azure portal (**SQL server `<APP_NAME>-sql` > Networking > Add your client IPv4 address > Save**)
+   or with the Azure CLI:
+
+   ```powershell
+   az sql server firewall-rule create -g rg-<APP_NAME> -s <APP_NAME>-sql -n support --start-ip-address <your IP> --end-ip-address <your IP>
+   ```
+
+2. **Point this window at the live database:** copy the `DefaultConnection` connection string
+   from the web app (**App Service > Settings > Environment variables > Connection strings**) and
+   paste it at the prompt. Typed at a prompt, it isn't saved in your command history or any file.
+
+   ```powershell
+   $env:ConnectionStrings__DefaultConnection = Read-Host "Connection string"
+   ```
+
+3. **Check, then apply:** run the command without `--apply`, check the player and email it
+   shows, then run it again with `--apply`.
+4. **Close up:** clear the connection string, and remove the firewall rule (in the portal, or):
+
+   ```powershell
+   Remove-Item Env:ConnectionStrings__DefaultConnection
+   az sql server firewall-rule delete -g rg-<APP_NAME> -s <APP_NAME>-sql -n support
+   ```
+
+The command never migrates the database or starts the site.
+
 ## Running locally
 
 The web projects target .NET 10, which needs the .NET 10 SDK and Visual Studio 2026 (or VS Code,

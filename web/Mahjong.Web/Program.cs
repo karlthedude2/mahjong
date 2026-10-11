@@ -13,7 +13,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+// A support command (SupportCommands) runs and exits instead of starting the site. Its words aren't
+// settings, so the configuration doesn't see them.
+bool isCommand = SupportCommands.IsCommand(args);
+var builder = WebApplication.CreateBuilder(isCommand ? [] : args);
+if (isCommand)
+{
+    // Just the command's own output, not every database query.
+    // (a filter, as it's added after the settings files' "Default" level and so wins over it).
+    builder.Logging.AddFilter((string? _, LogLevel level) => level >= LogLevel.Warning);
+}
 var config = builder.Configuration;
 
 builder.Services.AddRazorComponents()
@@ -95,6 +104,7 @@ builder.Services.Configure<CubeOptions>(config.GetSection(CubeOptions.Section));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<GameRecordCleanup>();
+builder.Services.AddScoped<PlayerRenamer>();
 builder.Services.AddHostedService<GameRecordCleanupService>();
 
 builder.Services.AddRateLimiter(options =>
@@ -108,6 +118,13 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHealthChecks().AddDbContextCheck<ApplicationDbContext>();
 
 var app = builder.Build();
+
+if (isCommand)
+{
+    // Before anything else: no migrations, no web server.
+    Environment.ExitCode = await SupportCommands.RunAsync(app.Services, args, Console.Out);
+    return;
+}
 
 if (app.Environment.IsDevelopment())
 {
