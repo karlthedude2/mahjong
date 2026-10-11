@@ -1,0 +1,14 @@
+/* Phones: the two replay links one above the other, so the row fits without scrolling sideways. */
+@media (max-width: 600px) {
+    .replay-links {
+        white-space: normal !important;
+    }
+
+    .replay-links a {
+        display: block;
+    }
+
+    .replay-links .dot {
+        display: none;
+    }
+}

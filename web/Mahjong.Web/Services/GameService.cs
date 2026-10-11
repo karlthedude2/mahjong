@@ -40,7 +40,7 @@ public readonly record struct Player(string? UserId, string? GuestToken)
 /// </summary>
 public sealed class GameService(ApplicationDbContext db, TimeProvider time, ILogger<GameService> logger)
 {
-    public const int LeaderboardSize = 20;
+    public const int LeaderboardSize = LeaderboardEntry.ListSize;
 
     /// <summary>
     /// How far the game clock may drift from the real time played (time since the server started

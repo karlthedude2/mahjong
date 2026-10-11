@@ -1,0 +1,6 @@
+@using Mahjong.Web.Client.Api
+
+@* What the leaderboards are: shared by the Leaderboards page and the leaderboard dialog. *@
+<p>
+    @L.Html("The top {0} verified scores for each layout. <a href=\"Account/Login\">Sign in</a> and play to get on the board. Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong> were won on a randomly dealt board, which isn't guaranteed to be clearable.", LeaderboardEntry.ListSize)
+</p>

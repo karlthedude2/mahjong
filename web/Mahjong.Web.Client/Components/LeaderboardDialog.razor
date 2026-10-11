@@ -2,108 +2,150 @@
 @using Mahjong.Web.Client.Api
 @inject GameApi Api
 
-@* The leaderboards over the (paused) game. Opens on the game's own layout; others can be picked. *@
+@*
+    The leaderboards over the paused game, with everything the Leaderboards page has: the games'
+    tabs, the layout picker, and each score's links to its deal and replay list. A replay list
+    opens here too, with a way back. The page decides what's shown (LayoutName, ReplayId): the
+    links in here are caught by the game page and come back to it as changes to those.
+*@
 <div class="board-backdrop" @onclick="CloseAsync">
     <div class="board-dialog" role="dialog" aria-modal="true" aria-labelledby="leaderboard-title"
          @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync" tabindex="-1" @ref="dialog">
         <header>
-            <h2 id="leaderboard-title">@L["Leaderboard"]</h2>
+            @if (ReplayId != null)
+            {
+                <button type="button" class="btn btn-light btn-sm back" @onclick="() => OnShowLeaderboard.InvokeAsync(LayoutName)">
+                    &larr; @L["Back to leaderboards"]
+                </button>
+            }
+            <h2 id="leaderboard-title">
+                @if (ReplayId == null)
+                {
+                    @L["Leaderboards"]
+                }
+                else if (replay != null)
+                {
+                    @L["{0}'s {1} deal", replay.OriginalPlayer, L.LayoutName(replay.Layout)]
+                    @if (replay.RandomDeal)
+                    {
+                        <span class="badge bg-secondary align-middle fs-6 ms-2">@L["Random deal"]</span>
+                    }
+                }
+                else
+                {
+                    @L["Replays"]
+                }
+            </h2>
             <button type="button" class="btn-close" aria-label="@L["Close"]" @onclick="CloseAsync"></button>
         </header>
 
-        <label class="picker">
-            <span>@L["Layout"]</span>
-            <select class="form-select form-select-sm" value="@layoutName" @onchange="OnLayoutChangedAsync">
-                <optgroup label="@L["Mahjong Solitaire"]">
-                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Solitaire))
-                    {
-                        <option value="@l.Name">@L.LayoutName(l)</option>
-                    }
-                </optgroup>
-                <optgroup label="@L["Connect (Shisen-Sho)"]">
-                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Connect))
-                    {
-                        <option value="@l.Name">@L.LayoutName(l)</option>
-                    }
-                </optgroup>
-                <optgroup label="@L["Mahjong Cube"]">
-                    @foreach (var l in Layouts.Where(l => l.Kind == GameKind.Cube))
-                    {
-                        <option value="@l.Name">@L.LayoutName(l)</option>
-                    }
-                </optgroup>
-            </select>
-        </label>
+        @* Keyed to what's shown, so moving between the leaderboard and a replay list starts at the top. *@
+        <div class="body" @key="(LayoutName, ReplayId)">
+            @if (ReplayId != null)
+            {
+                @if (replay != null)
+                {
+                    <ReplayDetails Info="replay" />
+                }
+                else
+                {
+                    <p class="status">@(failed ? L["This deal couldn't be found. It may never have been on a leaderboard."] : L["Loading…"])</p>
+                }
+            }
+            else
+            {
+                <LeaderboardIntro />
 
-        @if (entries == null)
-        {
-            <p class="status">@(failed ? L["The leaderboard couldn't be loaded. Check your connection and try again."] : L["Loading…"])</p>
-        }
-        else if (entries.Count == 0)
-        {
-            <p class="status">@L["No scores on {0} yet. Be the first!", L.LayoutName(layoutName)]</p>
-        }
-        else
-        {
-            <div class="table-wrap">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">@L["Player"]</th>
-                            <th scope="col" class="text-end">@L["Score"]</th>
-                            <th scope="col" class="text-end" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</th>
-                            <th scope="col" class="text-end">@L["Date"]</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var entry in entries)
+                <ul class="nav nav-pills mb-3">
+                    @foreach (var kind in Kinds)
+                    {
+                        <li class="nav-item">
+                            <button type="button" class="nav-link @(kind == Kind ? "active" : null)" @onclick="() => ShowKindAsync(kind)">@KindName(kind)</button>
+                        </li>
+                    }
+                </ul>
+
+                <label class="picker">
+                    <span>@PickerLabel</span>
+                    <select class="form-select form-select-sm" value="@LayoutName" @onchange="OnLayoutChangedAsync">
+                        @foreach (var l in Layouts.Where(l => l.Kind == Kind))
                         {
-                            <tr>
-                                <td>@entry.Rank</td>
-                                <td>
-                                    <AvatarImage Id="@entry.Avatar" Size="24" CssClass="me-1" />
-                                    @entry.DisplayName
-                                    @if (entry.RandomDeal)
-                                    {
-                                        <span class="badge bg-secondary ms-1">@L["Random deal"]</span>
-                                    }
-                                </td>
-                                <td class="text-end">@entry.Score.ToString("N0")</td>
-                                <td class="text-end">@entry.TimeText</td>
-                                <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
-                            </tr>
+                            <option value="@l.Name">@L.LayoutName(l)</option>
                         }
-                    </tbody>
-                </table>
-            </div>
-        }
+                    </select>
+                </label>
 
-        <footer>
-            <a class="more" href="leaderboards?layout=@Uri.EscapeDataString(layoutName)" target="_blank" rel="noopener">@L["Replays and more (new tab)"]</a>
-            <button type="button" class="btn btn-primary" @onclick="CloseAsync">@L["Close"]</button>
-        </footer>
+                @if (entries == null)
+                {
+                    <p class="status">@(failed ? L["The leaderboard couldn't be loaded. Check your connection and try again."] : L["Loading…"])</p>
+                }
+                else if (entries.Count == 0)
+                {
+                    <p class="status">@L["No scores on {0} yet. Be the first!", L.LayoutName(LayoutName)]</p>
+                }
+                else
+                {
+                    <LeaderboardTable Entries="entries" />
+                }
+            }
+        </div>
     </div>
 </div>
 
 @code {
-    private ElementReference dialog;
-    private string layoutName = "";
-    private IReadOnlyList<LeaderboardEntry>? entries;
-    private bool failed;
+    private const string DefaultLayoutName = "Twin Peaks";
+    private static readonly GameKind[] Kinds = [GameKind.Solitaire, GameKind.Connect, GameKind.Cube];
 
-    /// <summary>The layouts to choose from (solitaire and Connect).</summary>
+    private ElementReference dialog;
+    private IReadOnlyList<LeaderboardEntry>? entries;
+    private ReplayInfo? replay;
+    private bool failed;
+    private (string, Guid?)? shown;
+
+    /// <summary>The layouts to choose from: solitaire, Connect and the cubes.</summary>
     [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
 
-    /// <summary>The layout to show first: the game's own.</summary>
-    [Parameter] public string? LayoutName { get; set; }
+    /// <summary>The leaderboard shown (or gone back to from a replay list).</summary>
+    [Parameter, EditorRequired] public string LayoutName { get; set; } = "";
+
+    /// <summary>The leaderboard game whose replay list is shown, or null for the leaderboard.</summary>
+    [Parameter] public Guid? ReplayId { get; set; }
+
+    /// <summary>Asks for another leaderboard: a tab, the picker, or Back from a replay list.</summary>
+    [Parameter] public EventCallback<string> OnShowLeaderboard { get; set; }
 
     [Parameter] public EventCallback OnClose { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private GameKind Kind => Layouts.FirstOrDefault(l => l.Name == LayoutName)?.Kind ?? GameKind.Solitaire;
+
+    private string PickerLabel => Kind switch
     {
-        layoutName = LayoutName ?? Layouts.FirstOrDefault()?.Name ?? "";
-        await LoadAsync();
+        GameKind.Connect => L["Board"],
+        GameKind.Cube => L["Board size"],
+        _ => L["Layout"],
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (shown == (LayoutName, ReplayId))
+        {
+            return;
+        }
+
+        shown = (LayoutName, ReplayId);
+        failed = false;
+        if (ReplayId is { } id)
+        {
+            replay = null;
+            replay = await Api.GetReplayAsync(id);
+            failed = replay == null;
+        }
+        else
+        {
+            entries = null;
+            entries = await Api.GetLeaderboardAsync(LayoutName);
+            failed = entries == null;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -115,19 +157,22 @@
         }
     }
 
-    private async Task OnLayoutChangedAsync(ChangeEventArgs e)
+    private string KindName(GameKind kind) => kind switch
     {
-        layoutName = (string?)e.Value ?? layoutName;
-        await LoadAsync();
+        GameKind.Connect => L["Connect (Shisen-Sho)"],
+        GameKind.Cube => L["Mahjong Cube"],
+        _ => L["Mahjong Solitaire"],
+    };
+
+    // A game's tab opens on its first board (Twin Peaks for solitaire, as on the Leaderboards page).
+    private Task ShowKindAsync(GameKind kind)
+    {
+        var choices = Layouts.Where(l => l.Kind == kind).ToList();
+        var first = choices.FirstOrDefault(l => l.Name == DefaultLayoutName) ?? choices.FirstOrDefault();
+        return kind == Kind || first == null ? Task.CompletedTask : OnShowLeaderboard.InvokeAsync(first.Name);
     }
 
-    private async Task LoadAsync()
-    {
-        entries = null;
-        failed = false;
-        entries = await Api.GetLeaderboardAsync(layoutName);
-        failed = entries == null;
-    }
+    private Task OnLayoutChangedAsync(ChangeEventArgs e) => OnShowLeaderboard.InvokeAsync((string?)e.Value ?? LayoutName);
 
     private async Task OnKeyDownAsync(KeyboardEventArgs e)
     {

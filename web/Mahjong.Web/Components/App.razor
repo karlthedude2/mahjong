@@ -75,6 +75,21 @@
                 e.preventDefault();
                 e.stopPropagation();
                 window.mahjongPlayAction(button.getAttribute("data-play-action"));
+                return;
+            }
+            // Links to the leaderboards, a replay list or a deal ("?replay=") open the leaderboard
+            // dialog on the game page (or start the deal) rather than leaving the game.
+            var link = window.mahjongPlayAction && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.target.closest && e.target.closest("a[href]");
+            if (link && link.origin === location.origin) {
+                var base = new URL(document.baseURI).pathname;
+                var path = link.pathname.indexOf(base) === 0 ? link.pathname.substring(base.length) : null;
+                var guid = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+                if (path === "leaderboards" || new RegExp("^replays/" + guid + "$").test(path)
+                    || (path === "" && new RegExp("[?&]replay=" + guid + "(&|$)").test(link.search))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.mahjongPlayAction("link:" + path + link.search);
+                }
             }
         }, true);
         // Page changes inside the site redraw the header, so reapply the settings afterwards.

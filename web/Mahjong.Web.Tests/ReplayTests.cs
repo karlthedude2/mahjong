@@ -142,6 +142,37 @@ public sealed class ReplayTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task TheLeaderboardPageLinksEachScoreToItsDealAndReplayList()
+    {
+        var (original, _) = await WinOriginalAsync("alice", secondsPerMove: 5, layout: "Cube Small");
+        await WinAsync("bob", secondsPerMove: 1, replayOf: original, layout: "Cube Small");
+
+        string html = await app.ClientFor(null).GetStringAsync("leaderboards?layout=Cube%20Small");
+
+        Assert.Contains("Alice", html);
+        Assert.Contains($"href=\"?replay={original}\"", html);
+        Assert.Contains($"href=\"replays/{original}\"", html);
+        Assert.Contains("Replays (1)", html);
+    }
+
+    [Fact]
+    public async Task TheReplayPageShowsTheOriginalAndTheReplays()
+    {
+        var (original, _) = await WinOriginalAsync("alice", secondsPerMove: 5);
+        var (_, replay) = await WinAsync("bob", secondsPerMove: 1, replayOf: original);
+        var info = await ReplayInfoAsync(original);
+
+        string html = await app.ClientFor(null).GetStringAsync($"replays/{original}");
+
+        Assert.Contains("Original score (first play)", html);
+        Assert.Contains(info.OriginalScore.ToString("N0"), html);
+        Assert.Contains($"href=\"?replay={original}\"", html);
+        Assert.Contains("Bob", html);
+        Assert.Contains(replay.Score.ToString("N0"), html);
+        Assert.Contains("Beat the original", html);
+    }
+
+    [Fact]
     public async Task UnknownReplayListsAreNotFound()
     {
         var response = await app.ClientFor(null).GetAsync($"api/replays/{Guid.NewGuid()}");
@@ -149,27 +180,27 @@ public sealed class ReplayTests : IAsyncLifetime
     }
 
     /// <summary>Starts, plays and finishes a winning game (or replay); returns its ID and the server's verdict.</summary>
-    private async Task<(Guid GameId, FinishGameResponse Result)> WinAsync(string user, int secondsPerMove, Guid replayOf)
+    private async Task<(Guid GameId, FinishGameResponse Result)> WinAsync(string user, int secondsPerMove, Guid replayOf, string layout = TestLayout)
     {
         var client = app.ClientFor(user);
-        var started = await StartAsync(client, replayOf);
-        var response = await FinishAsync(client, started.GameId, Play(started.Seed, secondsPerMove).Record!);
+        var started = await StartAsync(client, replayOf, layout);
+        var response = await FinishAsync(client, started.GameId, Play(started.Seed, secondsPerMove, layout).Record!);
         response.EnsureSuccessStatusCode();
         return (started.GameId, (await response.Content.ReadFromJsonAsync<FinishGameResponse>())!);
     }
 
-    private async Task<(Guid GameId, long Seed)> WinOriginalAsync(string user, int secondsPerMove)
+    private async Task<(Guid GameId, long Seed)> WinOriginalAsync(string user, int secondsPerMove, string layout = TestLayout)
     {
         var client = app.ClientFor(user);
-        var started = await StartAsync(client, replayOf: null);
-        var response = await FinishAsync(client, started.GameId, Play(started.Seed, secondsPerMove).Record!);
+        var started = await StartAsync(client, replayOf: null, layout);
+        var response = await FinishAsync(client, started.GameId, Play(started.Seed, secondsPerMove, layout).Record!);
         response.EnsureSuccessStatusCode();
         return (started.GameId, started.Seed);
     }
 
-    private static async Task<StartGameResponse> StartAsync(HttpClient client, Guid? replayOf)
+    private static async Task<StartGameResponse> StartAsync(HttpClient client, Guid? replayOf, string layout = TestLayout)
     {
-        var response = await client.PostAsJsonAsync("api/games", new StartGameRequest(TestLayout, replayOf));
+        var response = await client.PostAsJsonAsync("api/games", new StartGameRequest(layout, replayOf));
         response.EnsureSuccessStatusCode();
         var started = (await response.Content.ReadFromJsonAsync<StartGameResponse>())!;
         (await client.PostAsync($"api/games/{started.GameId}/resume", null)).EnsureSuccessStatusCode();
@@ -186,9 +217,9 @@ public sealed class ReplayTests : IAsyncLifetime
         (await app.ClientFor(null).GetFromJsonAsync<ReplayInfo>($"api/replays/{original}"))!;
 
     /// <summary>Plays the deal's solution, moving the real clock along with the game clock.</summary>
-    private MahjongGame Play(long seed, int secondsPerMove)
+    private MahjongGame Play(long seed, int secondsPerMove, string layout = TestLayout)
     {
-        var game = new MahjongGame(LayoutCatalog.Find(TestLayout)!, seed);
+        var game = new MahjongGame(LayoutCatalog.Find(layout)!, seed);
         foreach (var (first, second) in game.Board.LastDeal.Solution)
         {
             for (int s = 0; s < secondsPerMove; s++)

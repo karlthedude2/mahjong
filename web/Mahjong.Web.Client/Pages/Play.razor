@@ -132,7 +132,8 @@
 
                     @if (Session.Game is { } game)
                     {
-                        <div class="board-area">
+                        @* Hidden under the leaderboards, even before the first move (when there's no clock to pause). *@
+                        <div class="board-area @(showLeaderboard ? "hidden-board" : null)">
                             <BonusBadges Game="game" />
                             @if (Session.State == SessionState.Paused)
                             {
@@ -243,6 +244,20 @@
     </div>
 }
 
+@if (confirmDeal is { } deal)
+{
+    <div class="demo-backdrop" @onclick="() => confirmDeal = null">
+        <div class="demo-dialog" role="dialog" aria-modal="true" aria-labelledby="deal-confirm-title" @onclick:stopPropagation="true">
+            <h2 id="deal-confirm-title">@L["Play this deal?"]</h2>
+            <p>@L["Your current game ends here and won't be saved."]</p>
+            <div class="actions">
+                <button class="btn btn-light" @onclick="() => confirmDeal = null">@L["Keep playing"]</button>
+                <button class="btn btn-primary" @onclick="() => PlayDealAsync(deal)">@L["Play this deal"]</button>
+            </div>
+        </div>
+    </div>
+}
+
 @if (confirmLanguage)
 {
     <div class="demo-backdrop" @onclick="() => confirmLanguage = false">
@@ -283,7 +298,8 @@
 
 @if (showLeaderboard)
 {
-    <LeaderboardDialog Layouts="AllLayouts.ToList()" LayoutName="@PlayingLayout?.Name" OnClose="() => showLeaderboard = false" />
+    <LeaderboardDialog Layouts="AllLayouts.ToList()" LayoutName="@leaderboardLayout" ReplayId="leaderboardReplay"
+                       OnShowLeaderboard="layout => (leaderboardLayout, leaderboardReplay) = (layout, null)" OnClose="() => showLeaderboard = false" />
 }
 
 @if (ShowCubeIntro)
@@ -316,6 +332,11 @@
     // The cube game whose intro has been closed, so it isn't shown again for that game.
     private MahjongGame? cubeIntroClosedFor;
     private bool showLeaderboard;
+    // What the leaderboard dialog shows: a layout's leaderboard, or (with leaderboardReplay) a deal's replay list.
+    private string leaderboardLayout = "";
+    private Guid? leaderboardReplay;
+    // A leaderboard deal the player asked to play while a game was under way, waiting for them to confirm.
+    private Guid? confirmDeal;
     // The dialog is open to pick settings for a new game, which is dealt when it closes.
     private bool settingsForNewGame;
     // The deal setting was changed mid-game; it applies from the next game.
@@ -435,13 +456,22 @@
         }
         else if (action == "leaderboards")
         {
-            // Pause a running game first; closing the leaderboard leaves it paused, ready to resume.
-            if (Session.CanPause && Session.State != SessionState.Paused)
+            await ShowLeaderboardAsync(PlayingLayout?.Name, null);
+        }
+        else if (action.StartsWith("link:", StringComparison.Ordinal) && LeaderboardLink.Parse(action["link:".Length..]) is { } link)
+        {
+            // A link to the leaderboards, a replay list or a deal, anywhere on this page (the
+            // leaderboard dialog's own, the results, the notices): handled here, not by leaving the game.
+            if (link.Kind == LeaderboardLinkKind.PlayDeal)
             {
-                await Session.TogglePauseAsync();
+                await RequestDealAsync(link.GameId);
             }
-
-            showLeaderboard = true;
+            else
+            {
+                await ShowLeaderboardAsync(
+                    link.Kind == LeaderboardLinkKind.Leaderboard ? link.Layout ?? PlayingLayout?.Name : showLeaderboard ? leaderboardLayout : PlayingLayout?.Name,
+                    link.Kind == LeaderboardLinkKind.Replays ? link.GameId : null);
+            }
         }
         else if (action == "language")
         {
@@ -532,6 +562,52 @@
             replayLayout = null;
             Navigation.NavigateTo("", replace: true);
         }
+    }
+
+    // Opens the leaderboard dialog (or changes what it shows) over the game, pausing it first; closing
+    // the dialog leaves the game paused, ready to resume.
+    private async Task ShowLeaderboardAsync(string? layout, Guid? replayId)
+    {
+        if (Session.CanPause && Session.State != SessionState.Paused)
+        {
+            await Session.TogglePauseAsync();
+        }
+
+        leaderboardLayout = AllLayouts.Any(l => l.Name == layout) ? layout! : DefaultLayoutName;
+        leaderboardReplay = replayId;
+        showLeaderboard = true;
+    }
+
+    // "Play this deal" from the leaderboards: straight away, or after asking if a game is under way.
+    private async Task RequestDealAsync(Guid gameId)
+    {
+        showLeaderboard = false;
+        if (GameUnderWay && !Session.IsDemo)
+        {
+            confirmDeal = gameId;
+        }
+        else
+        {
+            await PlayDealAsync(gameId);
+        }
+    }
+
+    // Deals a leaderboard game's tiles as a replay, as if the page had been opened with ?replay=.
+    private async Task PlayDealAsync(Guid gameId)
+    {
+        confirmDeal = null;
+        var info = await Api.GetReplayAsync(gameId);
+        if (info == null || LayoutCatalog.Find(info.Layout) is not { } layout)
+        {
+            error = L["That deal couldn't be found."];
+            return;
+        }
+
+        demoDeal = null;
+        replay = info;
+        replayLayout = layout;
+        Navigation.NavigateTo($"?replay={gameId}", replace: true);
+        await PlayReplayAsync();
     }
 
     // Deals the replayed game's tiles. Signed-in players' replays are verified and ranked on the

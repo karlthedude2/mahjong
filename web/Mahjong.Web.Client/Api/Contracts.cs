@@ -51,6 +51,9 @@ public sealed record LeaderboardEntry(int Rank, string DisplayName, int Score, i
 {
     /// <summary>The time as m:ss (or h:mm:ss), or an empty string if it wasn't recorded.</summary>
     public string TimeText => Seconds <= 0 ? "" : TimeSpan.FromSeconds(Seconds).ToString(Seconds >= 3600 ? @"h\:mm\:ss" : @"m\:ss");
+
+    /// <summary>How many scores a leaderboard, or a deal's replay list, keeps.</summary>
+    public const int ListSize = 20;
 }
 
 /// <summary>

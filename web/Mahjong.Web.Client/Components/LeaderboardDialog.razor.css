@@ -4,16 +4,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.55);
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.7);
     z-index: 100;
 }
 
+/* Big enough for everything the Leaderboards page shows; the inside scrolls. */
 .board-dialog {
     display: flex;
     flex-direction: column;
-    width: min(44rem, 100%);
-    max-height: 100%;
+    width: min(60rem, 100%);
+    height: 100%;
+    max-height: 56rem;
     padding: 1.25rem 1.5rem;
     border-radius: 1rem;
     background: #fffaf0;
@@ -22,28 +24,36 @@
     outline: none;
 }
 
-header,
-footer {
+header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eadfca;
 }
 
-footer {
-    margin-top: 0.75rem;
-}
-
-h2 {
+header h2 {
+    flex: 1;
     margin: 0;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+}
+
+.back {
+    white-space: nowrap;
+}
+
+.body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-top: 1rem;
 }
 
 .picker {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0.75rem 0;
+    margin-bottom: 0.75rem;
     font-weight: 600;
 }
 
@@ -52,14 +62,7 @@ h2 {
     max-width: 100%;
 }
 
-/* The table scrolls inside the dialog on small screens. */
-.table-wrap {
-    min-height: 0;
-    overflow: auto;
-}
-
-.table {
-    margin: 0;
+.body ::deep .table {
     font-variant-numeric: tabular-nums;
 }
 
@@ -67,16 +70,23 @@ h2 {
     margin: 0.5rem 0;
 }
 
-.more {
-    font-size: 0.9rem;
-}
-
+/* Phones: the whole screen. */
 @media (max-width: 600px) {
     .board-backdrop {
-        padding: 0.5rem;
+        padding: 0;
     }
 
     .board-dialog {
+        max-height: none;
         padding: 1rem;
+        border-radius: 0;
+    }
+
+    header {
+        flex-wrap: wrap;
+    }
+
+    header h2 {
+        font-size: 1.25rem;
     }
 }

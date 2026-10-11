@@ -1,0 +1,42 @@
+@using Mahjong.Web.Client.Api
+
+@*
+    A leaderboard's scores, each with links to play its deal and to see its replay list. Shared by
+    the Leaderboards page and the leaderboard dialog on the game page (which catches those links
+    and handles them in place).
+*@
+<div class="table-responsive">
+    <table class="table table-sm">
+        <thead>
+            <tr><th scope="col">#</th><th scope="col">@L["Player"]</th><th scope="col" class="text-end">@L["Score"]</th><th scope="col" class="text-end" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</th><th scope="col" class="text-end">@L["Date"]</th><th scope="col" class="text-end" title="@L["Play the same deal and try to beat it. Replays are ranked on their own list."]">@L["Replay"]</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Entries)
+            {
+                <tr>
+                    <td>@entry.Rank</td>
+                    <td>
+                        <AvatarImage Id="@entry.Avatar" Size="24" CssClass="me-1" />
+                        @entry.DisplayName
+                        @if (entry.RandomDeal)
+                        {
+                            <span class="badge bg-secondary ms-1" title="@L["Won on a random deal, which isn't guaranteed to be clearable"]">@L["Random deal"]</span>
+                        }
+                    </td>
+                    <td class="text-end">@entry.Score.ToString("N0")</td>
+                    <td class="text-end">@entry.TimeText</td>
+                    <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
+                    <td class="text-end text-nowrap replay-links">
+                        <a href="?replay=@entry.GameId" title="@L["Play this exact deal"]">@L["Play this deal"]</a>
+                        <span class="dot">&middot;</span>
+                        <a href="replays/@entry.GameId" title="@L["Best replay scores on this deal"]">@L["Replays ({0})", entry.ReplayCount]</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<LeaderboardEntry> Entries { get; set; } = [];
+}
