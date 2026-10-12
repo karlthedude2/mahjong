@@ -60,6 +60,11 @@ builder.Services.AddAuthorization();
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    // Persistent sign-ins last this long; each request near the middle of the window renews it,
+    // so a player stays signed in until they've been away for 30 days.
+    options.ExpireTimeSpan = TimeSpan.FromDays(30);
+    options.SlidingExpiration = true;
+
     // The API answers 401/403 instead of redirecting to the login page.
     options.Events.OnRedirectToLogin = context => ApiAwareRedirect(context, StatusCodes.Status401Unauthorized);
     options.Events.OnRedirectToAccessDenied = context => ApiAwareRedirect(context, StatusCodes.Status403Forbidden);
