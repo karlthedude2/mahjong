@@ -41,7 +41,9 @@ export function create(host, dotnet) {
     // and only the solid tiles are redrawn when the size settles.
     const wireframe = new THREE.Group();
     scene.add(wireframe);
-    const wireEdges = new THREE.EdgesGeometry(box, 20);
+    // Every triangle's edge, so the rounded corners show as a fine mesh. (EdgesGeometry would show
+    // only sharp creases, and this box has none, so it draws nothing.)
+    const wireEdges = new THREE.WireframeGeometry(box);
     const wireMaterial = new THREE.LineBasicMaterial({ color: 0x888888 });
     let wiring = false;
     let settle = 0;
