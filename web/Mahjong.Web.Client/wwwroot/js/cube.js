@@ -37,14 +37,50 @@ export function create(host, dotnet) {
         mesh.material.color.copy(id === selectedId ? Tints.selected : hinted.has(id) ? Tints.hinted : free.has(id) ? Tints.free : Tints.blocked);
     }
 
+    // While the view is being resized the tiles are drawn as wireframes, so the new size shows at once
+    // and only the solid tiles are redrawn when the size settles.
+    const wireframe = new THREE.Group();
+    scene.add(wireframe);
+    const wireEdges = new THREE.EdgesGeometry(box, 20);
+    const wireMaterial = new THREE.LineBasicMaterial({ color: 0x888888 });
+    let wiring = false;
+    let settle = 0;
+
     // Cubes with a neighbour on all six sides can't be seen, so they aren't drawn.
     function hideBuried() {
         const at = new Set([...meshes.values()].map(m => m.userData.key));
         for (const mesh of meshes.values()) {
             const [x, y, z] = mesh.userData.at;
-            mesh.visible = ![[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
+            mesh.userData.buried = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]
                 .every(([dx, dy, dz]) => at.has(`${x + dx},${y + dy},${z + dz}`));
         }
+        drawTiles();
+    }
+
+    // Shows the solid tiles, or while wiring, their edges instead. Buried tiles are never shown.
+    function drawTiles() {
+        wireframe.clear();
+        wireframe.visible = wiring;
+        for (const mesh of meshes.values()) {
+            const shown = !mesh.userData.buried;
+            mesh.visible = shown && !wiring;
+            if (shown && wiring) {
+                const edges = new THREE.LineSegments(wireEdges, wireMaterial);
+                edges.position.copy(mesh.position);
+                wireframe.add(edges);
+            }
+        }
+        changed();
+    }
+
+    function beginWiring() {
+        wiring = true;
+        drawTiles();
+        clearTimeout(settle);
+        settle = setTimeout(() => {
+            wiring = false;
+            drawTiles();
+        }, 250);
     }
 
     function clear() {
@@ -83,6 +119,10 @@ export function create(host, dotnet) {
     function resize() {
         const width = host.clientWidth, height = host.clientHeight;
         if (width && height && `${width}x${height}` !== shownSize) {
+            // Not the first sizing, which is just the view opening.
+            if (shownSize) {
+                beginWiring();
+            }
             shownSize = `${width}x${height}`;
             renderer.setSize(width, height, false);
             camera.aspect = width / height;
@@ -112,6 +152,12 @@ export function create(host, dotnet) {
             dotnet.invokeMethodAsync("OnTileTapped", hit.object.userData.id);
         }
     });
+
+    // Zooming (a mouse wheel, or a pinch on a touch screen) is the size adjustment the player makes,
+    // so it shows the wireframe too. OrbitControls' own start and end events fire at once for a wheel
+    // turn, so they can't tell when zooming has stopped.
+    renderer.domElement.addEventListener("wheel", beginWiring, { passive: true });
+    renderer.domElement.addEventListener("touchmove", e => { if (e.touches.length > 1) beginWiring(); }, { passive: true });
 
     // Removed tiles shrink away instead of vanishing.
     const shrinking = [];
@@ -194,7 +240,10 @@ export function create(host, dotnet) {
 
         dispose() {
             renderer.setAnimationLoop(null);
+            clearTimeout(settle);
             resized.disconnect();
+            wireEdges.dispose();
+            wireMaterial.dispose();
             controls.dispose();
             clear();
             look.dispose();
