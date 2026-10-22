@@ -24,6 +24,11 @@
     box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
 }
 
+/* Focused on open so keys reach it; no ring for that. */
+.settings:focus {
+    outline: none;
+}
+
 @media (max-width: 600px) {
     .settings-backdrop {
         padding: 0;
@@ -346,16 +351,35 @@ img.tile {
     text-overflow: ellipsis;
 }
 
-.caption select {
+/* The Tiles and Stone lists cover their whole card, unseen; the card shows the choice. */
+.card {
+    position: relative;
+}
+
+select.cover {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    margin-left: -2px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #F3EEDC;
-    font-size: 15px;
-    font-weight: 600;
+    height: 100%;
+    opacity: 0;
     cursor: pointer;
+}
+
+.card:has(select.cover:focus-visible) {
+    outline: 3px solid #F3EEDC;
+    outline-offset: 2px;
+}
+
+.mini-chevron {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    vertical-align: -3px;
+    fill: none;
+    stroke: #B8AE9C;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* Gravity and the winnable switch. Gravity's options share the row evenly, so long labels wrap inside their button. */

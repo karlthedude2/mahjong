@@ -3,7 +3,7 @@
 
 @* The game, layout, tiles and background in one screen, with Start game always in view. Nothing changes until Start game (or OK). *@
 <div class="settings-backdrop" @onclick="CancelAsync">
-    <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title"
+    <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1" @ref="dialog"
          @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
         <header class="top">
             <h2 id="settings-title" class="visually-hidden">@L["Game settings"]</h2>
@@ -55,7 +55,7 @@
             else
             {
                 var picked = tab == GameTab.Connect ? boardItems.FirstOrDefault(b => b.Id == boardName) : layoutItems.FirstOrDefault(l => l.Id == layoutName);
-                <button type="button" class="big-card" @onclick="() => sheet = tab == GameTab.Connect ? Sheet.Board : Sheet.Layout">
+                <button type="button" class="big-card" @ref="bigCard" @onclick="() => sheet = tab == GameTab.Connect ? Sheet.Board : Sheet.Layout">
                     <img class="backdrop" src="@background.Url" alt="" />
                     @if (picked != null && !failed.Contains(picked.ImageUrl))
                     {
@@ -90,13 +90,15 @@
                         </span>
                         <span class="caption">
                             <span class="overline">@L["Stone"]</span>
-                            <select id="stone" @bind="stoneId">
-                                @foreach (var set in TileSets.Stones)
-                                {
-                                    <option value="@set.Id">@L[set.Name]</option>
-                                }
-                            </select>
+                            <span class="value">@L[TileSets.Find(stoneId).Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
                         </span>
+                        @* Stretched invisibly over the card, so a tap anywhere on it opens the list. *@
+                        <select id="stone" class="cover" @bind="stoneId">
+                            @foreach (var set in TileSets.Stones)
+                            {
+                                <option value="@set.Id">@L[set.Name]</option>
+                            }
+                        </select>
                     </label>
                 }
                 else
@@ -119,17 +121,18 @@
                         </span>
                         <span class="caption">
                             <span class="overline">@L["Tiles"]</span>
-                            <select id="tile-set" @bind="flatId">
-                                @foreach (var set in TileSets.Flat)
-                                {
-                                    <option value="@set.Id">@L[set.Name]</option>
-                                }
-                            </select>
+                            <span class="value">@L[flat.Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
                         </span>
+                        <select id="tile-set" class="cover" @bind="flatId">
+                            @foreach (var set in TileSets.Flat)
+                            {
+                                <option value="@set.Id">@L[set.Name]</option>
+                            }
+                        </select>
                     </label>
                 }
 
-                <button type="button" class="card" @onclick="() => sheet = Sheet.Background">
+                <button type="button" class="card" @ref="backgroundCard" @onclick="() => sheet = Sheet.Background">
                     <img class="art" src="@background.Url" alt="" />
                     <span class="caption">
                         <span class="overline">@L["Background"]</span>
@@ -196,15 +199,15 @@
         {
             case Sheet.Layout:
                 <PickerSheet Title="@L["Layout"]" Items="layoutItems" SelectedId="@layoutName" BackdropUrl="@background.Url"
-                             OnPick="id => { layoutName = id; sheet = Sheet.None; }" OnClose="() => sheet = Sheet.None" />
+                             OnPick="id => { layoutName = id; CloseSheet(); }" OnClose="CloseSheet" />
                 break;
             case Sheet.Board:
                 <PickerSheet Title="@L["Board"]" Items="boardItems" SelectedId="@boardName" BackdropUrl="@background.Url"
-                             OnPick="id => { boardName = id; sheet = Sheet.None; }" OnClose="() => sheet = Sheet.None" />
+                             OnPick="id => { boardName = id; CloseSheet(); }" OnClose="CloseSheet" />
                 break;
             case Sheet.Background:
                 <PickerSheet Title="@L["Background"]" Items="backgroundItems" SelectedId="@backgroundId"
-                             OnPick="id => { backgroundId = id; sheet = Sheet.None; }" OnClose="() => sheet = Sheet.None" />
+                             OnPick="id => { backgroundId = id; CloseSheet(); }" OnClose="CloseSheet" />
                 break;
         }
     </div>
@@ -236,6 +239,11 @@
 
     private GameTab tab;
     private Sheet sheet;
+    /// <summary>The sheet that just closed, whose card gets focus back after the next render.</summary>
+    private Sheet closedSheet;
+    private ElementReference dialog;
+    private ElementReference bigCard;
+    private ElementReference backgroundCard;
     private int cubeSize = 4;
     private string? boardName;
     private Gravity gravity;
@@ -320,6 +328,28 @@
         winnable = GuaranteedWinnable;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Into the dialog, so Escape and screen readers work however it was opened.
+            await dialog.FocusAsync();
+        }
+        else if (closedSheet != Sheet.None)
+        {
+            // Back to the card that opened the sheet.
+            var card = closedSheet == Sheet.Background ? backgroundCard : bigCard;
+            closedSheet = Sheet.None;
+            await card.FocusAsync();
+        }
+    }
+
+    private void CloseSheet()
+    {
+        closedSheet = sheet;
+        sheet = Sheet.None;
+    }
+
     private async Task OnKeyDownAsync(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
@@ -327,7 +357,7 @@
             // An open sheet closes first; the next Escape closes the dialog.
             if (sheet != Sheet.None)
             {
-                sheet = Sheet.None;
+                CloseSheet();
                 return;
             }
 
