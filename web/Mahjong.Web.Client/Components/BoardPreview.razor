@@ -1,0 +1,40 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+
+@*
+    The settings screen's live board: the chosen layout drawn the way the game will draw it (flat
+    tiles, 3D stones or the cube), in the chosen tiles or stone and face set, for looking only. The
+    deal is fixed, so it stays the same while other settings change. One view at a time: a new layout
+    or face set replaces it.
+*@
+<div class="board-preview" aria-hidden="true">
+    @if (Layout.Kind == GameKind.Cube)
+    {
+        <CubeBoard @key="(Layout, FaceSet)" Game="Game" ReadOnly="true" Stone="@(TileSet.Stone ?? TileSets.DefaultStone.Stone!)" FaceSet="FaceSet" />
+    }
+    else if (TileSet.Kind == TileSetKind.ThreeD)
+    {
+        <Board3D @key="(Layout, FaceSet)" Game="Game" ReadOnly="true" TileSet="TileSet" FaceSet="FaceSet" />
+    }
+    else
+    {
+        <Board Game="Game" TileSet="TileSet" />
+    }
+</div>
+
+@code {
+    // Any fixed deal will do; this one shows a good spread of suits.
+    private const int Seed = 7;
+
+    private MahjongGame? game;
+
+    [Parameter, EditorRequired] public LayoutDefinition Layout { get; set; } = default!;
+
+    /// <summary>A flat tile set (Solitaire, Connect) or a stone (Mahjong 3D, the cube).</summary>
+    [Parameter, EditorRequired] public TileSetInfo TileSet { get; set; } = TileSets.Default;
+
+    [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
+
+    // Dealt again only for a new layout.
+    private MahjongGame Game => game is { } dealt && dealt.Layout == Layout ? dealt : game = new MahjongGame(Layout, Seed);
+}
