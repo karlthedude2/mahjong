@@ -1,0 +1,34 @@
+/* Two or three options in a row, one of them on. */
+.segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+    border: 1px solid #3A312B;
+    border-radius: 999px;
+    background: #201A16;
+}
+
+.segmented button {
+    min-height: 40px;
+    padding: 0 16px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.segmented button + button {
+    border-left: 1px solid #3A312B;
+}
+
+.segmented button.on {
+    background: #D7263D;
+    color: #fff;
+}
+
+.segmented button:focus-visible {
+    outline: 3px solid #F3EEDC;
+    outline-offset: -3px;
+}

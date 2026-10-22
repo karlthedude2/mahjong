@@ -42,14 +42,10 @@
             {
                 <div class="big-card">
                     <img class="backdrop" src="@background.Url" alt="" />
-                    <div class="segmented" role="radiogroup" aria-label="@L["Board size"]">
-                        @foreach (var (option, name) in CubeSizes)
-                        {
-                            <button type="button" role="radio" aria-checked="@(cubeSize == option ? "true" : "false")"
-                                    class="@(cubeSize == option ? "on" : null)" @onclick="() => cubeSize = option">@L[name] (@option×@option×@option)</button>
-                        }
-                    </div>
-                    <span class="chip left"><span class="overline">@L["Board size"]</span></span>
+                    <Segmented TValue="int" Label="@L["Board size"]" @bind-Value="cubeSize"
+                               Options="@(CubeSizes.Select(c => (c.Size, $"{L[c.Name]} ({c.Size}×{c.Size}×{c.Size})")).ToList())" />
+                    @* The radio group already says "Board size" to screen readers. *@
+                    <span class="chip left" aria-hidden="true"><span class="overline">@L["Board size"]</span></span>
                 </div>
             }
             else
@@ -145,13 +141,8 @@
             {
                 <section class="row">
                     <span class="row-label">@L["Gravity"]</span>
-                    <div class="segmented" role="radiogroup" aria-label="@L["Gravity"]">
-                        @foreach (var option in new[] { Gravity.None, Gravity.Down, Gravity.Left })
-                        {
-                            <button type="button" role="radio" aria-checked="@(gravity == option ? "true" : "false")"
-                                    class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option switch { Gravity.Down => L["Down"], Gravity.Left => L["Left"], _ => L["Off"] })</button>
-                        }
-                    </div>
+                    <Segmented TValue="Gravity" Label="@L["Gravity"]" @bind-Value="gravity"
+                               Options="@([(Gravity.None, L["Off"]), (Gravity.Down, L["Down"]), (Gravity.Left, L["Left"])])" />
                     <p class="hint">
                         @(gravity switch
                         {
