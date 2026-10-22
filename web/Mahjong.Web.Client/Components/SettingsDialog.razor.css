@@ -225,11 +225,16 @@ button.big-card {
     opacity: 0.7;
 }
 
+/* Centered across the card; width: max-content keeps the two sizes on one line. */
 .big-card .segmented {
     position: absolute;
-    left: 50%;
+    left: 0;
+    right: 0;
     top: 45%;
-    transform: translate(-50%, -50%);
+    width: max-content;
+    max-width: calc(100% - 20px);
+    margin: 0 auto;
+    transform: translateY(-50%);
     background: rgba(23, 19, 16, 0.88);
 }
 
@@ -353,7 +358,22 @@ img.tile {
     cursor: pointer;
 }
 
-/* Gravity and the winnable switch. */
+/* Gravity and the winnable switch. Gravity's options share the row evenly, so long labels wrap inside their button. */
+.row .segmented {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    border-radius: 14px;
+}
+
+.row .segmented button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 8px;
+    white-space: normal;
+    line-height: 1.15;
+}
+
 .row-label {
     display: block;
     margin-bottom: 6px;
