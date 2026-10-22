@@ -142,14 +142,14 @@
                             else if (game.Layout.Kind == GameKind.Cube)
                             {
                                 @* Mahjong Cube: always drawn in stone, in the stone chosen for 3D. *@
-                                <CubeBoard @key="game" Game="game" Selected="Session.Selected" Hinted="Session.HintedTiles" OnTileClick="Session.ClickAsync"
-                                           Stone="@(Preferences.LastStone.Stone!)" />
+                                <CubeBoard @key="(game, Preferences.FaceSet)" Game="game" Selected="Session.Selected" Hinted="Session.HintedTiles" OnTileClick="Session.ClickAsync"
+                                           Stone="@(Preferences.LastStone.Stone!)" FaceSet="Preferences.FaceSet" />
                             }
                             else if (Preferences.TileSet.Kind == TileSetKind.ThreeD && game.Layout.Kind != GameKind.Connect)
                             {
                                 @* A 3D tile set: the same game drawn as stone blocks. Connect stays flat. *@
-                                <Board3D @key="game" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
-                                         Hinted="Session.HintedTiles" />
+                                <Board3D @key="(game, Preferences.FaceSet)" Game="game" Selected="Session.Selected" TileSet="Preferences.TileSet" OnTileClick="Session.ClickAsync"
+                                         Hinted="Session.HintedTiles" FaceSet="Preferences.FaceSet" />
                             }
                             else
                             {
@@ -310,7 +310,7 @@
 @if (showSettings)
 {
     <SettingsDialog Layouts="layouts" PlayingLayoutName="@(Session.Game != null ? PlayingLayout?.Name : null)" LayoutName="@((pendingLayout ?? currentLayout)?.Name)"
-                    TileSetId="@Preferences.TileSet.Id" FlatTileSetId="@Preferences.LastFlat.Id" StoneId="@Preferences.LastStone.Id" BackgroundId="@Preferences.Background.Id"
+                    TileSetId="@Preferences.TileSet.Id" FlatTileSetId="@Preferences.LastFlat.Id" StoneId="@Preferences.LastStone.Id" FaceSetId="@Preferences.FaceSet.Id" BackgroundId="@Preferences.Background.Id"
                     SkipSettings="Preferences.SkipSettings" GuaranteedWinnable="Preferences.GuaranteedWinnable" ForNewGame="settingsForNewGame"
                     OnApply="ApplySettingsAsync" OnCancel="CancelSettingsAsync" />
 }
@@ -701,6 +701,12 @@
         if (choice.StoneId != null && TileSets.Find(choice.StoneId) is { Kind: TileSetKind.ThreeD } stone && stone != Preferences.LastStone)
         {
             await Preferences.SetStoneAsync(stone);
+        }
+
+        // The face art for Mahjong 3D and the cube; a new set redraws the board (it's keyed to the set).
+        if (choice.FaceSetId != null && FaceSets.Find(choice.FaceSetId) is var faceSet && faceSet != Preferences.FaceSet)
+        {
+            await Preferences.SetFaceSetAsync(faceSet);
         }
 
         var layout = AllLayouts.FirstOrDefault(l => l.Name == choice.LayoutName);

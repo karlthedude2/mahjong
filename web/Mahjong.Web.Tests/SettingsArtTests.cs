@@ -19,6 +19,18 @@ public sealed class SettingsArtTests
     public void EachStoneHasItsOwnLook(string id, string css) =>
         Assert.Equal(css, SettingsArt.StoneCss(TileSets.Find(id)));
 
+    [Theory]
+    [InlineData("3d-onyx", null, true)]
+    [InlineData("3d-ivory", null, false)]
+    [InlineData("3d-ivory", "dark", true)]
+    [InlineData("3d-onyx", "light", false)]
+    public void DarkStonesShowTheDarkPictures(string stoneId, string? configured, bool dark) =>
+        Assert.Equal(dark, SettingsArt.IsDark(TileSets.Find(stoneId), configured));
+
+    [Fact]
+    public void FaceUrlsComeFromTheChosenSet() =>
+        Assert.Equal("faces/standard/dark/East.webp", SettingsArt.FaceUrl(FaceSets.Standard, "East", darkStone: true));
+
     private static string Wwwroot(string path)
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)

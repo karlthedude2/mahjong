@@ -12,6 +12,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     private const string TileSetKey = "tileSet";
     private const string FlatTileSetKey = "flatTileSet";
     private const string StoneKey = "stone";
+    private const string FaceSetKey = "faceSet";
     private const string BackgroundKey = "background";
     private const string LayoutKey = "layout";
     private const string SkipSettingsKey = "skipSettings";
@@ -27,6 +28,9 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 
     /// <summary>The last stone chosen (Mahjong 3D), kept while playing a flat board.</summary>
     public TileSetInfo LastStone { get; private set; } = TileSets.DefaultStone;
+
+    /// <summary>The face art set for Mahjong 3D and the cube.</summary>
+    public FaceSetInfo FaceSet { get; private set; } = FaceSets.Default;
 
     public BackgroundInfo Background { get; private set; } = Backgrounds.Default;
 
@@ -72,6 +76,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
         // The other kind's last choice is kept in this browser only (the profile has one tile set).
         LastFlat = TileSet.Kind == TileSetKind.ThreeD ? FlatOrDefault(await browser.GetSettingAsync(FlatTileSetKey)) : TileSet;
         LastStone = TileSet.Kind == TileSetKind.ThreeD ? TileSet : StoneOrDefault(await browser.GetSettingAsync(StoneKey));
+        FaceSet = FaceSets.Find(await browser.GetSettingAsync(FaceSetKey));
 
         // Keep the page (and the copy the page head reads on the next visit) in step.
         await browser.SetSettingAsync(BackgroundKey, Background.Id);
@@ -145,6 +150,13 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     {
         LastStone = stone;
         await browser.SetSettingAsync(StoneKey, stone.Id);
+    }
+
+    /// <summary>The face art set for Mahjong 3D and the cube, kept in this browser like the stone.</summary>
+    public async Task SetFaceSetAsync(FaceSetInfo faceSet)
+    {
+        FaceSet = faceSet;
+        await browser.SetSettingAsync(FaceSetKey, faceSet.Id);
     }
 
     private static TileSetInfo FlatOrDefault(string? id) => TileSets.Flat.FirstOrDefault(s => s.Id == id) ?? TileSets.Default;

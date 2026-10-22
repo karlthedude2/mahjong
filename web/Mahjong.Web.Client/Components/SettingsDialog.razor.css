@@ -338,9 +338,12 @@ img.tile {
 .glyph.blue,
 .glyph.wind { color: #1B3F8B; }
 
+/* A stone with a face on it (Mahjong 3D's shape; the cube's are square). */
 .stone {
+    box-sizing: border-box;
     width: 34px;
     height: 46px;
+    padding: 4px;
     border-radius: 6px;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15), 3px 3px 0 rgba(0, 0, 0, 0.45);
 }
@@ -376,6 +379,60 @@ select.cover {
 .card:has(select.cover:focus-visible) {
     outline: 3px solid #F3EEDC;
     outline-offset: 2px;
+}
+
+/* Mahjong 3D and the cube: Stone and Face share the wider card, Background the narrower one. */
+.pair.wide-first {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.stone-face .halves {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stone-face .half {
+    margin: 0;
+    cursor: pointer;
+}
+
+.stone-face .half + .half {
+    border-left: 1px solid #3A312B;
+}
+
+/* Each list covers its half of the card, stones included. */
+select.cover.left {
+    right: 50%;
+    width: auto;
+}
+
+select.cover.right {
+    left: 50%;
+    width: auto;
+}
+
+.stone-face:has(select.cover:focus-visible) {
+    outline: none;
+}
+
+.stone-face .half:has(select.cover:focus-visible) .value {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.stone img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* The cube's pieces are cubes. */
+.stone.square {
+    width: 42px;
+    height: 42px;
+    padding: 5px;
+    border-radius: 7px;
 }
 
 .mini-chevron {

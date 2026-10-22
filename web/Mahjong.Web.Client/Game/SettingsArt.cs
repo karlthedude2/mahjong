@@ -17,4 +17,18 @@ public static class SettingsArt
         "squareMarble" => "url('textures/square-marble.jpg') center / cover",
         _ => "#EFE6D0",
     };
+
+    /// <summary>
+    /// Whether a stone shows a face set's dark pictures: its configured face set (Cube:StoneFaces) if it
+    /// has one, otherwise only onyx, the one dark stone offered.
+    /// </summary>
+    public static bool IsDark(TileSetInfo stone, string? configured) => configured switch
+    {
+        "dark" => true,
+        "light" => false,
+        _ => stone.Stone == "onyx",
+    };
+
+    /// <summary>A face's picture in the chosen set, for the Stone and Face card.</summary>
+    public static string FaceUrl(FaceSetInfo set, string face, bool darkStone) => FaceSets.PictureUrl(set, face, darkStone);
 }

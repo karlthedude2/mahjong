@@ -25,5 +25,6 @@ public sealed record PreviewItem(string Id, string Name, string ImageUrl, string
 
 /// <summary>What the player chose in the settings dialog.</summary>
 /// <param name="StoneId">For Mahjong Cube: the stone chosen for it (the tile set of the other games stays as it was).</param>
+/// <param name="FaceSetId">The face art set for Mahjong 3D and the cube, when one of those was chosen.</param>
 public sealed record SettingsChoice(string LayoutName, string TileSetId, string BackgroundId, bool SkipSettings, bool GuaranteedWinnable,
-    string? StoneId = null);
+    string? StoneId = null, string? FaceSetId = null);
