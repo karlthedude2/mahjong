@@ -1,0 +1,101 @@
+@page "/dev/layout-previews"
+@using Mahjong.Core
+@using Mahjong.Web.Client.Game
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject HttpClient Http
+
+@*
+    Development only (not linked): draws every layout and Connect board in blank Ivory stones with
+    the game's own 3D renderer, and saves each as its picker picture (POST /dev/layout-previews/{slug},
+    which the server maps only in Development). Commit the pictures afterwards.
+*@
+
+<PageTitle>Layout pictures</PageTitle>
+
+<section class="dev-previews">
+    <h1>Layout pictures</h1>
+    <p>Draws each layout in blank stones and saves it to <code>wwwroot/layouts/previews</code> (and to <code>LayoutPreviews:CopyTo</code> if that's set).</p>
+    <div class="buttons">
+        <button type="button" class="btn btn-primary" disabled="@running" @onclick="() => RunAsync(missingOnly: false)">Redraw all</button>
+        <button type="button" class="btn btn-secondary" disabled="@running" @onclick="() => RunAsync(missingOnly: true)">Missing only</button>
+    </div>
+
+    <div class="stage">
+        @if (current != null)
+        {
+            <Board3D @key="current" @ref="board" Game="game!" TileSet="TileSets.Ivory3D" ReadOnly="true" Blank="true" PixelRatio="1" />
+        }
+    </div>
+
+    <ol class="log">
+        @foreach (var line in log)
+        {
+            <li>@line</li>
+        }
+    </ol>
+</section>
+
+@code {
+    // Any fixed deal: the stones are blank, so only the layout's shape shows.
+    private const int Seed = 1;
+
+    private Board3D? board;
+    private LayoutDefinition? current;
+    private MahjongGame? game;
+    private bool running;
+    private readonly List<string> log = [];
+
+    private async Task RunAsync(bool missingOnly)
+    {
+        running = true;
+        log.Clear();
+        foreach (var layout in LayoutCatalog.All.Concat(ConnectLayouts.BaseBoards))
+        {
+            string slug = LayoutPreviews.Slug(layout.PreviewName);
+            if (missingOnly && (await Http.GetAsync(LayoutPreviews.Url(layout.PreviewName))).IsSuccessStatusCode)
+            {
+                continue;
+            }
+
+            (current, game) = (layout, new MahjongGame(layout, Seed));
+            StateHasChanged();
+            string? picture = await DrawnAsync();
+            if (picture == null)
+            {
+                log.Add($"{layout.PreviewName}: not drawn in time");
+                continue;
+            }
+
+            var response = await Http.PostAsync("dev/layout-previews/" + slug,
+                new ByteArrayContent(Convert.FromBase64String(picture[(picture.IndexOf(',') + 1)..])));
+            string answer = await response.Content.ReadAsStringAsync();
+            log.Add(response.StatusCode == System.Net.HttpStatusCode.NotFound
+                ? "Only in development: the server doesn't save pictures here."
+                : $"{layout.PreviewName}: {(response.IsSuccessStatusCode ? "saved " : "")}{answer}");
+            StateHasChanged();
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                break;
+            }
+        }
+
+        (current, game) = (null, null);
+        running = false;
+    }
+
+    // Waits for the board to be drawn, then a moment more for its shadows, and takes the picture.
+    private async Task<string?> DrawnAsync()
+    {
+        for (int i = 0; i < 50; i++)
+        {
+            await Task.Delay(100);
+            if (board != null && await board.SnapshotAsync() is { } first)
+            {
+                await Task.Delay(300);
+                return await board.SnapshotAsync() ?? first;
+            }
+        }
+
+        return null;
+    }
+}

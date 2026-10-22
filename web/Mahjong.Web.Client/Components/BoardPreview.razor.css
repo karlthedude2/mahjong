@@ -1,0 +1,27 @@
+/* For looking only: nothing in it takes a tap, so a tap reaches the card it sits in. */
+.board-preview {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.board-preview ::deep svg.board {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* The 3D views fade in as they're drawn. */
+.board-preview ::deep canvas {
+    animation: preview-in 0.35s ease-out;
+}
+
+@keyframes preview-in {
+    from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .board-preview ::deep canvas {
+        animation: none;
+    }
+}

@@ -10,6 +10,8 @@ namespace Mahjong.Web.Api;
 /// <item><c>/dev/faces</c>: face art named after the face (<c>2bams.png</c>), from <c>Cube:FacesFolder</c> or <c>cube-faces</c>.
 /// Its <c>light</c> and <c>dark</c> subfolders (<c>/dev/faces/light</c>, <c>/dev/faces/dark</c>) hold the art for stones
 /// configured with light or dark faces; a picture in the folder itself serves either.</item>
+/// <item><c>POST /dev/layout-previews/{slug}</c>: saves a layout's picker picture (see <see cref="LayoutPreviewFiles"/>)
+/// into the client's wwwroot/layouts/previews, and a copy into <c>LayoutPreviews:CopyTo</c> if that's set.</item>
 /// </list>
 /// </summary>
 public static class DevPictureEndpoints
@@ -27,6 +29,21 @@ public static class DevPictureEndpoints
             Directory.CreateDirectory(folder);
             MapFolder(app, "/dev/faces/" + set, folder);
         }
+
+        string previews = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "Mahjong.Web.Client", "wwwroot", "layouts", "previews"));
+        app.MapPost("/dev/layout-previews/{slug}", async (string slug, HttpRequest request) =>
+        {
+            using var body = new MemoryStream();
+            await request.Body.CopyToAsync(body);
+            try
+            {
+                return Results.Ok(LayoutPreviewFiles.Save(slug, body.ToArray(), previews, config["LayoutPreviews:CopyTo"]));
+            }
+            catch (ArgumentException e)
+            {
+                return Results.BadRequest(e.Message);
+            }
+        }).DisableAntiforgery();
     }
 
     private static string Folder(string? configured, string name, IWebHostEnvironment environment)

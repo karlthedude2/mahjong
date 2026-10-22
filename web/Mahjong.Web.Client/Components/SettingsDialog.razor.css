@@ -214,13 +214,14 @@ button.big-card {
     object-fit: cover;
 }
 
-.big-card .layout {
+/* The live board, clear of the chips along the bottom. */
+.big-card .preview {
+    position: absolute;
     left: 10px;
     top: 10px;
-    width: calc(100% - 20px);
-    height: calc(100% - 50px);
-    object-fit: contain;
-    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55));
+    right: 10px;
+    bottom: 40px;
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
 }
 
 .big-card .missing {
@@ -233,17 +234,18 @@ button.big-card {
     opacity: 0.7;
 }
 
-/* Centered across the card; width: max-content keeps the two sizes on one line. */
+/* The cube's sizes: small, in the lower right where "Change" sits on the other cards. */
 .big-card ::deep .segmented {
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 45%;
-    width: max-content;
-    max-width: calc(100% - 20px);
-    margin: 0 auto;
-    transform: translateY(-50%);
+    right: 10px;
+    bottom: 6px;
     background: rgba(23, 19, 16, 0.88);
+}
+
+.big-card ::deep .segmented button {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
 }
 
 .chip {

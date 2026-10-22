@@ -29,6 +29,29 @@ public sealed class LayoutPreviewTests
         Assert.All(Directory.GetFiles(PreviewFolder(), "*.png"), file => Assert.Equal(6, File.ReadAllBytes(file)[25]));
     }
 
+    [Fact]
+    public void EveryVisibleLayoutAndBoardHasAPicture()
+    {
+        var missing = LayoutCatalog.Visible.Concat(ConnectLayouts.BaseBoards)
+            .Where(l => !File.Exists(Path.Combine(PreviewFolder(), LayoutPreviews.Slug(l.PreviewName) + ".png")))
+            .Select(l => l.Name)
+            .ToList();
+
+        Assert.True(missing.Count == 0, "No picture (draw it at /dev/layout-previews): " + string.Join(", ", missing));
+    }
+
+    [Fact]
+    public void PicturesAre400By300()
+    {
+        // PNG IHDR: width and height are big-endian at bytes 16 and 20.
+        Assert.All(Directory.GetFiles(PreviewFolder(), "*.png"), file =>
+        {
+            byte[] png = File.ReadAllBytes(file);
+            Assert.Equal((400, 300), (System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16)),
+                System.Buffers.Binary.BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20))));
+        });
+    }
+
     private static string PreviewFolder()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)

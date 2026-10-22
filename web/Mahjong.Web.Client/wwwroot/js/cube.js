@@ -9,11 +9,14 @@ import { Tints, createStage, createStoneLook } from "./stone.js";
 
 const Spacing = 1.06;
 
-export function create(host, dotnet) {
-    const stage = createStage(host, 40);
+// options: { readOnly } draws the cube to look at only (the settings preview): no turning and no taps.
+export function create(host, dotnet, options = {}) {
+    const readOnly = options.readOnly === true;
+    const stage = createStage(host, 40, options.pixelRatio);
     const { renderer, scene, camera } = stage;
 
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enabled = !readOnly;
     // A short glide after a drag: long enough to feel smooth, short enough that a tap right
     // afterwards lands on the tile under the finger.
     controls.enableDamping = true;
@@ -139,7 +142,7 @@ export function create(host, dotnet) {
     // A tap (not a drag that turns the cube) on a tile tells the game which one.
     const raycaster = new THREE.Raycaster();
     let down = null;
-    renderer.domElement.addEventListener("pointerdown", e => { down = { x: e.clientX, y: e.clientY }; });
+    renderer.domElement.addEventListener("pointerdown", e => { down = readOnly ? null : { x: e.clientX, y: e.clientY }; });
     renderer.domElement.addEventListener("pointerup", e => {
         if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) {
             down = null;
@@ -158,8 +161,10 @@ export function create(host, dotnet) {
     // Zooming (a mouse wheel, or a pinch on a touch screen) is the size adjustment the player makes,
     // so it shows the wireframe too. OrbitControls' own start and end events fire at once for a wheel
     // turn, so they can't tell when zooming has stopped.
-    renderer.domElement.addEventListener("wheel", beginWiring, { passive: true });
-    renderer.domElement.addEventListener("touchmove", e => { if (e.touches.length > 1) beginWiring(); }, { passive: true });
+    if (!readOnly) {
+        renderer.domElement.addEventListener("wheel", beginWiring, { passive: true });
+        renderer.domElement.addEventListener("touchmove", e => { if (e.touches.length > 1) beginWiring(); }, { passive: true });
+    }
 
     // Removed tiles shrink away instead of vanishing.
     const shrinking = [];

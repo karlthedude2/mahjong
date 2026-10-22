@@ -9,7 +9,7 @@
     (wwwroot/js/cube.js). The game, its score and its controls are the page's; this only draws the
     block, lets it be turned, and reports which tile was tapped.
 *@
-<div class="cube-board">
+<div class="cube-board @(ReadOnly ? "read-only" : null)">
     <div class="cube-view" @ref="view" role="img" aria-label="@L["Mahjong Cube"]"></div>
 </div>
 
@@ -32,6 +32,9 @@
     [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
 
     [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
+
+    /// <summary>For looking only (the settings preview): no turning or taps.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
 
     /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
     [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
@@ -68,7 +71,7 @@
                 return;
             }
 
-            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self, new { readOnly = ReadOnly });
             if (disposed)
             {
                 await ReleaseAsync();

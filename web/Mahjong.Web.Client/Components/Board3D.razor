@@ -9,7 +9,7 @@
     Mahjong Cube's stones and face art, for a 3D tile set. It takes the same parameters as Board, and
     sends the script the board's tiles whenever they, the selection or the hint change.
 *@
-<div class="board3d" @ref="view" role="img" aria-label="@L["Mahjong board"]"></div>
+<div class="board3d @(ReadOnly ? "read-only" : null)" @ref="view" role="img" aria-label="@L["Mahjong board"]"></div>
 
 @code {
     private ElementReference view;
@@ -29,6 +29,15 @@
     [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
 
     [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
+
+    /// <summary>For looking only (the settings preview, the picker pictures): no turning or clicks.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
+
+    /// <summary>Plain stones with nothing on their faces (the picker pictures).</summary>
+    [Parameter] public bool Blank { get; set; }
+
+    /// <summary>A fixed canvas pixel ratio (1 for a picture saved at an exact size); otherwise the screen's.</summary>
+    [Parameter] public double? PixelRatio { get; set; }
 
     /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
     [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
@@ -56,7 +65,7 @@
                 return;
             }
 
-            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self, new { readOnly = ReadOnly, pixelRatio = PixelRatio });
             if (disposed)
             {
                 await ReleaseAsync();
@@ -88,12 +97,20 @@
         }
     }
 
-    // Every face the game can deal, with its pictures and its drawn symbol.
+    /// <summary>The board as drawn now, as a PNG data URL; null until it has been drawn.</summary>
+    public async ValueTask<string?> SnapshotAsync() => scene == null || shownState == null ? null : await scene.InvokeAsync<string>("snapshot");
+
+    // Every face the game can deal, with its pictures and its drawn symbol (none for blank stones).
     private Dictionary<string, object> AllFaces() => Mahjong.Core.TileSet.Standard.PairFaces
         .Select(f => f.Name)
         .Distinct()
         .ToDictionary(name => name, name =>
         {
+            if (Blank)
+            {
+                return (object)new { art = (object?)null, glyph = new { main = "", caption = "", color = "wind" } };
+            }
+
             var glyph = TileSets.Glyph(name);
             return (object)new
             {

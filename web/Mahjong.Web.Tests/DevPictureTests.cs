@@ -22,4 +22,12 @@ public sealed class DevPictureTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task LayoutPicturesCanOnlyBeSavedInDevelopment()
+    {
+        var response = await app.CreateClient().PostAsync("/dev/layout-previews/arena", new ByteArrayContent([1, 2, 3]));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
 }

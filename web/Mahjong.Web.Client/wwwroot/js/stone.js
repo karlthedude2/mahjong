@@ -209,11 +209,12 @@ diffuseColor.rgb *= mix(stone, art.rgb, printed);`);
     return material;
 }
 
-// The renderer, scene, soft studio light and camera for a 3D view in host.
-export function createStage(host, fieldOfView) {
+// The renderer, scene, soft studio light and camera for a 3D view in host. pixelRatio, if given,
+// replaces the screen's (a picture saved at an exact size uses 1).
+export function createStage(host, fieldOfView, pixelRatio) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     // Sharp enough on high-density screens without drawing four times the pixels.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(pixelRatio ?? Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.NeutralToneMapping;
     host.appendChild(renderer.domElement);
 
@@ -238,6 +239,9 @@ export function createStage(host, fieldOfView) {
             scene.environment.dispose();
             environment.dispose();
             renderer.dispose();
+            // Hand the WebGL context back now rather than whenever the canvas is collected: the
+            // settings preview makes a new one per layout, and browsers allow only a few at a time.
+            renderer.forceContextLoss();
             renderer.domElement.remove();
         },
     };

@@ -41,8 +41,9 @@
 
             @if (tab == GameTab.Cube)
             {
-                <div class="big-card">
+                <div class="big-card cube">
                     <img class="backdrop" src="@background.Url" alt="" />
+                    <div class="preview"><BoardPreview Layout="CubeLayouts.ForSize(cubeSize)" TileSet="TileSets.Find(stoneId)" FaceSet="FaceSets.Find(faceSetId)" /></div>
                     <Segmented TValue="int" Label="@L["Board size"]" @bind-Value="cubeSize"
                                Options="@(CubeSizes.Select(c => (c.Size, $"{L[c.Name]} ({c.Size}×{c.Size}×{c.Size})")).ToList())" />
                     @* The radio group already says "Board size" to screen readers. *@
@@ -52,11 +53,15 @@
             else
             {
                 var picked = tab == GameTab.Connect ? boardItems.FirstOrDefault(b => b.Id == boardName) : layoutItems.FirstOrDefault(l => l.Id == layoutName);
+                var shown = picked == null ? null : LayoutCatalog.Find(picked.Id);
                 <button type="button" class="big-card" @ref="bigCard" @onclick="() => sheet = tab == GameTab.Connect ? Sheet.Board : Sheet.Layout">
                     <img class="backdrop" src="@background.Url" alt="" />
-                    @if (picked != null && !failed.Contains(picked.ImageUrl))
+                    @if (shown != null)
                     {
-                        <img class="layout" src="@picked.ImageUrl" alt="" @onerror="() => failed.Add(picked.ImageUrl)" />
+                        @* The board itself, drawn with every setting chosen so far. *@
+                        <div class="preview">
+                            <BoardPreview Layout="shown" TileSet="@(tab == GameTab.ThreeD ? TileSets.Find(stoneId) : TileSets.Find(flatId))" FaceSet="FaceSets.Find(faceSetId)" />
+                        </div>
                     }
                     else
                     {
@@ -226,7 +231,6 @@
 @code {
     private IReadOnlyList<PreviewItem> layoutItems = [];
     private IReadOnlyList<PreviewItem> boardItems = [];
-    private readonly HashSet<string> failed = [];
     /// <summary>
     /// The dialog's games. Mahjong 3D is Mahjong Solitaire drawn in stone (it shares its layouts
     /// and leaderboards); which one is played follows the tile set chosen. Mahjong Cube is a game of

@@ -16,8 +16,12 @@ const Gap = 0.04;
 const Tilt = 0.35, MaxTilt = 0.95, MaxTurn = 0.6;
 const HoldToTurn = 500;
 
-export function create(host, dotnet) {
-    const stage = createStage(host, 35);
+// options: { readOnly } draws the board to look at only (the settings preview, the picker
+// pictures): no turning, no clicks, and tiles appear at full size at once. { pixelRatio } fixes the
+// canvas's pixel ratio.
+export function create(host, dotnet, options = {}) {
+    const readOnly = options.readOnly === true;
+    const stage = createStage(host, 35, options.pixelRatio);
     const { renderer, scene, camera } = stage;
 
     // Shadows, so the board stands off the page: a soft light from the upper left and behind casts
@@ -42,6 +46,7 @@ export function create(host, dotnet) {
     scene.add(floor);
 
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enabled = !readOnly;
     controls.enableDamping = true;
     controls.dampingFactor = 0.2;
     controls.enablePan = false;
@@ -196,10 +201,12 @@ export function create(host, dotnet) {
             dotnet.invokeMethodAsync("OnTileClicked", hit.object.userData.id);
         }
     }
-    host.addEventListener("pointerdown", onDown, true);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
+    if (!readOnly) {
+        host.addEventListener("pointerdown", onDown, true);
+        window.addEventListener("pointermove", onMove);
+        window.addEventListener("pointerup", onUp);
+        window.addEventListener("pointercancel", onUp);
+    }
 
     // Removed tiles shrink away; tiles that come back (undo) grow in.
     const shrinking = [], growing = [];
@@ -271,8 +278,10 @@ export function create(host, dotnet) {
                     mesh.userData = { id, tile };
                     meshes.set(id, mesh);
                     scene.add(mesh);
-                    mesh.scale.setScalar(0.001);
-                    growing.push({ mesh });
+                    if (!readOnly) {
+                        mesh.scale.setScalar(0.001);
+                        growing.push({ mesh });
+                    }
                     added = true;
                 } else if (mesh.userData.tile.face !== face) {
                     mesh.userData.tile = tile;
@@ -293,6 +302,14 @@ export function create(host, dotnet) {
             hinted = new Set(hintIds);
             meshes.forEach(tint);
             changed();
+        },
+
+        // The board as drawn now, as a PNG data URL (for the picker pictures).
+        snapshot() {
+            // At the container's size now, rather than waiting for the resize observer.
+            resize();
+            renderer.render(scene, camera);
+            return renderer.domElement.toDataURL("image/png");
         },
 
         dispose() {
