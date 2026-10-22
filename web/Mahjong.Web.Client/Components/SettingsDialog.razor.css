@@ -13,6 +13,8 @@
 .settings {
     position: relative;
     width: min(440px, 100%);
+    /* vh first, for browsers without dvh (which follows a phone's browser bars). */
+    max-height: calc(100vh - 2rem);
     max-height: calc(100dvh - 2rem);
     display: flex;
     flex-direction: column;
@@ -36,6 +38,7 @@
 
     .settings {
         width: 100%;
+        height: 100vh;
         height: 100dvh;
         max-height: none;
         border-radius: 0;
@@ -231,7 +234,7 @@ button.big-card {
 }
 
 /* Centered across the card; width: max-content keeps the two sizes on one line. */
-.big-card .segmented {
+.big-card ::deep .segmented {
     position: absolute;
     left: 0;
     right: 0;
@@ -256,6 +259,11 @@ button.big-card {
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
+}
+
+/* A long layout or board name ends in "…" rather than being cut off. */
+.chip .value {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -383,14 +391,14 @@ select.cover {
 }
 
 /* Gravity and the winnable switch. Gravity's options share the row evenly, so long labels wrap inside their button. */
-.row .segmented {
+.row ::deep .segmented {
     display: flex;
     flex-wrap: nowrap;
     width: 100%;
     border-radius: 14px;
 }
 
-.row .segmented button {
+.row ::deep .segmented button {
     flex: 1 1 0;
     min-width: 0;
     padding: 6px 8px;
@@ -450,36 +458,6 @@ select.cover {
 
 .switch:checked::after {
     transform: translateX(18px);
-}
-
-/* Two or three options in a row, one of them on. */
-.segmented {
-    display: inline-flex;
-    flex-wrap: wrap;
-    overflow: hidden;
-    border: 1px solid #3A312B;
-    border-radius: 999px;
-    background: #201A16;
-}
-
-.segmented button {
-    min-height: 40px;
-    padding: 0 16px;
-    border: 0;
-    background: none;
-    color: inherit;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.segmented button + button {
-    border-left: 1px solid #3A312B;
-}
-
-.segmented button.on {
-    background: #D7263D;
-    color: #fff;
 }
 
 /* An info icon and its note: shown on hover or keyboard focus, or while tapped open. */

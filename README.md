@@ -47,7 +47,7 @@ The shape layouts (Pyramid, Fortress, Cat and so on) are drawn as text grids in 
 
 ### The layout's picture (web)
 
-The web settings dialog shows a 300×223 picture of each layout, from `web/Mahjong.Web.Client/wwwroot/layouts/previews/<slug>.png` (the name in lower case with hyphens for spaces: `Standard Turtle` is `standard-turtle.png`). A layout without one shows a placeholder. To draw the pictures (Classic tiles over the Dragon Valley background, the layout centered), run this on Windows:
+The web settings dialog shows a 300×223 picture of each layout, from `web/Mahjong.Web.Client/wwwroot/layouts/previews/<slug>.png` (the name in lower case with hyphens for spaces: `Standard Turtle` is `standard-turtle.png`). A layout without one shows a placeholder. The picture is see-through around the tiles, and the dialog shows the player's chosen background behind it. To draw the pictures (Classic tiles on a transparent background, the layout centered), run this on Windows:
 
 ```
 dotnet run --project tools/LayoutPreviews                        # layouts that don't have a picture yet
@@ -56,7 +56,7 @@ dotnet run --project tools/LayoutPreviews -- --all               # redraw every 
 dotnet run --project tools/LayoutPreviews -- --copy-to <folder>  # also save "<Layout name>.png" there
 ```
 
-You can also make a picture yourself: any 300×223 PNG with the right name works.
+You can also make a picture yourself: a 300×223 PNG with a transparent background (RGBA) and the right name. The `PreviewPicturesHaveSeeThroughBackgrounds` test checks this.
 
 ## Adding a tile set or background (web)
 

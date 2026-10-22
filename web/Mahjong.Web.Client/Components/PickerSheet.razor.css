@@ -80,7 +80,8 @@ h2 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 10px;
     align-content: start;
-    padding: 4px 16px 16px;
+    /* Room above the first row for the selected picture's ring (3px + 2px offset). */
+    padding: 8px 16px 16px;
 }
 
 .item {

@@ -20,7 +20,7 @@ public static partial class LayoutPreviews
     private static partial Regex NonAlphanumeric();
 }
 
-/// <summary>One card in a <see cref="Components.PreviewStrip"/>.</summary>
+/// <summary>One picture in a <see cref="Components.PickerSheet"/>.</summary>
 public sealed record PreviewItem(string Id, string Name, string ImageUrl, string? Badge = null);
 
 /// <summary>What the player chose in the settings dialog.</summary>

@@ -1,0 +1,66 @@
+@typeparam TValue
+
+@* Two or three options in a row, one of them on: a radio group. Tab reaches the chosen option; the arrow keys (and Home/End) move the choice. *@
+<div class="segmented" role="radiogroup" aria-label="@Label">
+    @for (int i = 0; i < Options.Count; i++)
+    {
+        int index = i;
+        bool on = EqualityComparer<TValue>.Default.Equals(Options[index].Value, Value);
+        <button type="button" role="radio" aria-checked="@(on ? "true" : "false")" tabindex="@(on ? 0 : -1)" class="@(on ? "on" : null)"
+                @ref="refs[index]" @onclick="() => PickAsync(index)" @onkeydown="e => OnKeyDownAsync(e, index)">@Options[index].Label</button>
+    }
+</div>
+
+@code {
+    private ElementReference[] refs = [];
+    private int? focusNext;
+
+    [Parameter, EditorRequired] public IReadOnlyList<(TValue Value, string Label)> Options { get; set; } = [];
+
+    [Parameter] public TValue? Value { get; set; }
+
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (refs.Length != Options.Count)
+        {
+            refs = new ElementReference[Options.Count];
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusNext is int index)
+        {
+            focusNext = null;
+            await refs[index].FocusAsync();
+        }
+    }
+
+    private Task PickAsync(int index)
+    {
+        Value = Options[index].Value;
+        return ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e, int index)
+    {
+        int count = Options.Count;
+        int? next = e.Key switch
+        {
+            "ArrowRight" or "ArrowDown" => (index + 1) % count,
+            "ArrowLeft" or "ArrowUp" => (index + count - 1) % count,
+            "Home" => 0,
+            "End" => count - 1,
+            _ => null,
+        };
+        if (next is int target)
+        {
+            focusNext = target;
+            await PickAsync(target);
+        }
+    }
+}
