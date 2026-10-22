@@ -22,7 +22,7 @@ The stones in Mahjong 3D and the Cube show face art, but today there's only one 
   - The top shows three stones in the chosen stone with faces (red dragon, green dragon, East) from the chosen set. A dark stone shows the set's dark pictures.
   - Mahjong 3D draws the stones tile-shaped (34×46). **Mahjong Cube draws them square** (42×42), as the Cube's pieces are cubes.
   - Below the stones it splits into two halves: **STONE · <name> ▾** on the left and **FACE · <set> ▾** on the right. Each half is a dropdown, and a tap anywhere on a half opens its list.
-- The row splits 3:2, so the Stone and Face card is wider than Background. Background's name ends in "…" if it doesn't fit.
+- The row splits 5:3, so the Stone and Face card is wider than Background (3:2 cut off "Standard" at phone width). Background's name ends in "…" if it doesn't fit.
 - Strings: "Face" (es: "Cara") and "Standard" (es: "Estándar").
 
 ## Saving and using the choice

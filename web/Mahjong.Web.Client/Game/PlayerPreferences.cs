@@ -12,7 +12,8 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
     private const string TileSetKey = "tileSet";
     private const string FlatTileSetKey = "flatTileSet";
     private const string StoneKey = "stone";
-    private const string FaceSetKey = "faceSet";
+    /// <summary>The browser setting holding the face set (read by the /cube test page too).</summary>
+    public const string FaceSetKey = "faceSet";
     private const string BackgroundKey = "background";
     private const string LayoutKey = "layout";
     private const string SkipSettingsKey = "skipSettings";

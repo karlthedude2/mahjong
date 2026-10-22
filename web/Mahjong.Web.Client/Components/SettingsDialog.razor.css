@@ -416,10 +416,7 @@ select.cover.right {
     width: auto;
 }
 
-.stone-face:has(select.cover:focus-visible) {
-    outline: none;
-}
-
+/* The card's ring, plus an underline on the half whose list has focus. */
 .stone-face .half:has(select.cover:focus-visible) .value {
     text-decoration: underline;
     text-underline-offset: 3px;
