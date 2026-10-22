@@ -239,6 +239,9 @@ export function createStage(host, fieldOfView, pixelRatio) {
             scene.environment.dispose();
             environment.dispose();
             renderer.dispose();
+            // Hand the WebGL context back now rather than whenever the canvas is collected: the
+            // settings preview makes a new one per layout, and browsers allow only a few at a time.
+            renderer.forceContextLoss();
             renderer.domElement.remove();
         },
     };

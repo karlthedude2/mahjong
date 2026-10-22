@@ -79,4 +79,4 @@ The web version's second game, chosen under **Game** in the settings dialog. Til
 - **Rules:** `ConnectRules.FindPath` finds the line (the web board draws it briefly), and `ConnectRules.Settle` applies gravity; gravity moves are undoable.
 - **Winnable deals:** `ConnectDealer` works like the solitaire dealer: it removes random joinable pairs from the faceless board (applying gravity) until it's empty, then gives each pair the same face.
 - **Hints** (both games) cost 500 of the no-shuffle bonus; undo doesn't give it back. Hints are recorded, so the server's replay check sees them.
-- **Pictures:** one per board size (`connect-small.png` and so on), drawn by `tools/LayoutPreviews`.
+- **Pictures:** one per board size (`connect-small.png` and so on), drawn at `/dev/layout-previews` (see "The layout's picture").
