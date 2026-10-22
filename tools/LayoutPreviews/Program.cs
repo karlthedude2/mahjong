@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 using Mahjong.Core;
 
 // Renders the 300x223 layout pictures for the web settings dialog, drawn like the web board:
-// Classic tiles in the shared draw order over the Dragon Valley background, with the whole layout
-// fitted and centered in the frame.
+// Classic tiles in the shared draw order on a transparent background (the dialog puts the chosen
+// background behind them), with the whole layout fitted and centered in the frame.
 //
 //   dotnet run --project tools/LayoutPreviews                     layouts without a picture yet
 //   dotnet run --project tools/LayoutPreviews -- "My Layout" Cat  just these (hidden ones too)
@@ -71,7 +71,6 @@ if (layouts.Count == 0)
     return 0;
 }
 
-using var background = Image.FromFile(Path.Combine(web, "backgrounds", "dragon-valley.jpg"));
 var tileImages = new Dictionary<string, Image>();
 foreach (var layout in layouts)
 {
@@ -110,15 +109,14 @@ Bitmap Render(LayoutDefinition layout)
         }
     }
 
-    // The frame: the background covering it, the board fitted inside and centered both ways.
+    // The frame: see-through, with the board fitted inside and centered both ways.
     using var frame = new Bitmap(Width * Oversample, Height * Oversample, PixelFormat.Format32bppArgb);
     using (var g = HighQuality(Graphics.FromImage(frame)))
     {
-        g.DrawImage(background, Centered(frame.Size, background.Size, Math.Max((double)frame.Width / background.Width, (double)frame.Height / background.Height)));
         g.DrawImage(board, Centered(frame.Size, board.Size, Math.Min((double)frame.Width / boardW, (double)frame.Height / boardH)));
     }
 
-    var preview = new Bitmap(Width, Height, PixelFormat.Format24bppRgb);
+    var preview = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
     using (var g = HighQuality(Graphics.FromImage(preview)))
     {
         g.DrawImage(frame, new Rectangle(0, 0, Width, Height));

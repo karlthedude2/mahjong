@@ -1,160 +1,231 @@
 @using Mahjong.Core
 @using Mahjong.Web.Client.Game
 
-@* Layout, tile set and background in one place. Nothing changes until OK. *@
+@* The game, layout, tiles and background in one screen, with Start game always in view. Nothing changes until Start game (or OK). *@
 <div class="settings-backdrop" @onclick="CancelAsync">
-    <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title"
+    <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1" @ref="dialog"
          @onclick:stopPropagation="true" @onkeydown="OnKeyDownAsync">
-        <header>
-            <h2 id="settings-title">@L["Game settings"]</h2>
-            <button type="button" class="btn-close" aria-label="@L["Close"]" @onclick="CancelAsync"></button>
+        <header class="top">
+            <h2 id="settings-title" class="visually-hidden">@L["Game settings"]</h2>
+            <img class="logo" src="logo-header.png" alt="Mahjong Haus" />
+            <button type="button" class="icon-button" aria-label="@L["Close"]" @onclick="CancelAsync">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
         </header>
 
-        <section>
-            <h3>@L["Game"]</h3>
-            <div class="segmented" role="radiogroup" aria-label="@L["Game"]">
-                @foreach (var (option, name) in Tabs)
-                {
-                    <button type="button" role="radio" aria-checked="@(tab == option ? "true" : "false")"
-                            class="@(tab == option ? "on" : null)" @onclick="() => tab = option">@L[name]</button>
-                }
-            </div>
-            <p class="hint">
-                @(tab switch
-                {
-                    GameTab.ThreeD => L["Mahjong Solitaire with stone tiles you can tilt and turn."],
-                    GameTab.Cube => L["Take matching pairs from a cube you can turn. A tile can be taken when two of its sides that meet at an edge are open."],
-                    GameTab.Connect => L["Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board."],
-                    _ => L["Remove matching pairs of free tiles from the stack."],
-                })
-            </p>
-        </section>
-
-        @if (tab is GameTab.Solitaire or GameTab.ThreeD)
-        {
-            <section>
-                <h3>@L["Layout"]</h3>
-                <PreviewStrip @key="GameKind.Solitaire" @ref="layoutStrip" Label="@L["Layout"]" Items="layoutItems" @bind-SelectedId="layoutName" />
-            </section>
-        }
-        else if (tab == GameTab.Cube)
-        {
-            <section>
-                <h3>@L["Board size"]</h3>
-                <div class="segmented" role="radiogroup" aria-label="@L["Board size"]">
-                    @foreach (var (option, name) in CubeSizes)
-                    {
-                        <button type="button" role="radio" aria-checked="@(cubeSize == option ? "true" : "false")"
-                                class="@(cubeSize == option ? "on" : null)" @onclick="() => cubeSize = option">@L[name] (@option×@option×@option)</button>
-                    }
-                </div>
-            </section>
-        }
-        else
-        {
-            <section>
-                <h3>@L["Board"]</h3>
-                <PreviewStrip @key="GameKind.Connect" Label="@L["Board size"]" Items="boardItems" @bind-SelectedId="boardName" />
-            </section>
-
-            <section>
-                <h3>@L["Gravity"]</h3>
-                <div class="segmented" role="radiogroup" aria-label="@L["Gravity"]">
-                    @foreach (var option in new[] { Gravity.None, Gravity.Down, Gravity.Left })
-                    {
-                        <button type="button" role="radio" aria-checked="@(gravity == option ? "true" : "false")"
-                                class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option switch { Gravity.Down => L["Down"], Gravity.Left => L["Left"], _ => L["Off"] })</button>
-                    }
-                </div>
-                <p class="hint">
-                    @(gravity switch
-                    {
-                        Gravity.Down => L["Tiles fall down to fill the gaps."],
-                        Gravity.Left => L["Tiles slide left to fill the gaps."],
-                        _ => L["Tiles stay where they are."],
-                    })
-                    @L["Each setting has its own leaderboard."]
-                </p>
-            </section>
-        }
-
-        <section>
-            @if (tab is GameTab.ThreeD or GameTab.Cube)
-            {
-                <h3><label for="stone">@L["Stone"]</label></h3>
-                <select id="stone" class="form-select" @bind="stoneId">
-                    @foreach (var set in TileSets.Stones)
-                    {
-                        <option value="@set.Id">@L[set.Name]</option>
-                    }
-                </select>
-            }
-            else
-            {
-                <h3><label for="tile-set">@L["Tiles"]</label></h3>
-                <select id="tile-set" class="form-select" @bind="flatId">
-                    @foreach (var set in TileSets.Flat)
-                    {
-                        <option value="@set.Id">@L[set.Name]</option>
-                    }
-                </select>
-            }
-        </section>
-
-        <section>
-            <h3>@L["Deal"]</h3>
-            <div class="deal-row">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" role="switch" id="winnable" @bind="winnable" />
-                    <label class="form-check-label" for="winnable">@L["Guaranteed winnable path"]</label>
-                </div>
-                @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
-                <span class="info @(showDealInfo ? "open" : null)">
-                    <button type="button" class="info-button" aria-label="@L["About guaranteed winnable deals"]"
-                            aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
+        <div class="middle">
+            <div class="game-row">
+                <label class="game-select">
+                    <span class="overline">@L["Game"]</span>
+                    <select @bind="tab">
+                        @foreach (var (option, name) in Tabs)
+                        {
+                            <option value="@option">@L[name]</option>
+                        }
+                    </select>
+                    <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                </label>
+                @* Hover (or keyboard focus) shows the rules; a tap toggles them, for touch screens. *@
+                <span class="info @(showGameInfo ? "open" : null)">
+                    <button type="button" class="info-button" aria-label="@L["About this game"]"
+                            aria-expanded="@(showGameInfo ? "true" : "false")" @onclick="() => showGameInfo = !showGameInfo">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <circle cx="12" cy="12" r="9.5" />
                             <path d="M12 11v6M12 7.5v.01" />
                         </svg>
                     </button>
-                    <span class="info-note" role="note">@L[WinnableNote]</span>
+                    <span class="info-note below" role="note">@GameRules</span>
                 </span>
             </div>
-            <p class="hint">
-                @(winnable ? L["Every deal can be cleared."] : L["Tiles are dealt at random, like a real set, so some deals can't be cleared."])
-            </p>
-        </section>
 
-        <section>
-            <h3>@L["Background"]</h3>
-            <PreviewStrip Label="@L["Background"]" Items="backgroundItems" @bind-SelectedId="backgroundId" />
-        </section>
+            @if (tab == GameTab.Cube)
+            {
+                <div class="big-card">
+                    <img class="backdrop" src="@background.Url" alt="" />
+                    <div class="segmented" role="radiogroup" aria-label="@L["Board size"]">
+                        @foreach (var (option, name) in CubeSizes)
+                        {
+                            <button type="button" role="radio" aria-checked="@(cubeSize == option ? "true" : "false")"
+                                    class="@(cubeSize == option ? "on" : null)" @onclick="() => cubeSize = option">@L[name] (@option×@option×@option)</button>
+                        }
+                    </div>
+                    <span class="chip left"><span class="overline">@L["Board size"]</span></span>
+                </div>
+            }
+            else
+            {
+                var picked = tab == GameTab.Connect ? boardItems.FirstOrDefault(b => b.Id == boardName) : layoutItems.FirstOrDefault(l => l.Id == layoutName);
+                <button type="button" class="big-card" @ref="bigCard" @onclick="() => sheet = tab == GameTab.Connect ? Sheet.Board : Sheet.Layout">
+                    <img class="backdrop" src="@background.Url" alt="" />
+                    @if (picked != null && !failed.Contains(picked.ImageUrl))
+                    {
+                        <img class="layout" src="@picked.ImageUrl" alt="" @onerror="() => failed.Add(picked.ImageUrl)" />
+                    }
+                    else
+                    {
+                        <svg class="missing" viewBox="0 0 64 48" role="img" aria-label="@L["No picture yet"]">
+                            <rect x="6" y="6" width="52" height="36" rx="3" fill="none" stroke="currentColor" stroke-width="2.5" />
+                            <circle cx="20" cy="18" r="4" fill="currentColor" />
+                            <path d="M10 38 L24 26 L32 32 L42 22 L54 34" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                            <line x1="4" y1="44" x2="60" y2="4" stroke="currentColor" stroke-width="3" />
+                        </svg>
+                    }
+                    <span class="chip left">
+                        <span class="overline">@(tab == GameTab.Connect ? L["Board"] : L["Layout"])</span>
+                        <span class="value">@picked?.Name</span>
+                    </span>
+                    <span class="chip right">@L["Change"]</span>
+                </button>
+            }
 
-        <section class="switch-row">
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="skip-settings" @bind="skipSettings" />
-                <label class="form-check-label" for="skip-settings">@L["Don't show settings for every new game"]</label>
+            <div class="pair">
+                @if (tab is GameTab.ThreeD or GameTab.Cube)
+                {
+                    <label class="card" for="stone">
+                        <span class="art" aria-hidden="true">
+                            @for (int i = 0; i < 3; i++)
+                            {
+                                <span class="stone" style="background: @SettingsArt.StoneCss(TileSets.Find(stoneId))"></span>
+                            }
+                        </span>
+                        <span class="caption">
+                            <span class="overline">@L["Stone"]</span>
+                            <span class="value">@L[TileSets.Find(stoneId).Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
+                        </span>
+                        @* Stretched invisibly over the card, so a tap anywhere on it opens the list. *@
+                        <select id="stone" class="cover" @bind="stoneId">
+                            @foreach (var set in TileSets.Stones)
+                            {
+                                <option value="@set.Id">@L[set.Name]</option>
+                            }
+                        </select>
+                    </label>
+                }
+                else
+                {
+                    var flat = TileSets.Find(flatId);
+                    <label class="card" for="tile-set">
+                        <span class="art" aria-hidden="true">
+                            @foreach (var face in SettingsArt.SampleFaces)
+                            {
+                                if (flat.Kind == TileSetKind.Images)
+                                {
+                                    <img class="tile" src="@TileSets.ImageUrl(flat, face)" alt="" />
+                                }
+                                else
+                                {
+                                    var glyph = TileSets.Glyph(face);
+                                    <span class="tile glyph @glyph.ColorClass">@glyph.Main</span>
+                                }
+                            }
+                        </span>
+                        <span class="caption">
+                            <span class="overline">@L["Tiles"]</span>
+                            <span class="value">@L[flat.Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
+                        </span>
+                        <select id="tile-set" class="cover" @bind="flatId">
+                            @foreach (var set in TileSets.Flat)
+                            {
+                                <option value="@set.Id">@L[set.Name]</option>
+                            }
+                        </select>
+                    </label>
+                }
+
+                <button type="button" class="card" @ref="backgroundCard" @onclick="() => sheet = Sheet.Background">
+                    <img class="art" src="@background.Url" alt="" />
+                    <span class="caption">
+                        <span class="overline">@L["Background"]</span>
+                        <span class="value">@L[background.Name]</span>
+                    </span>
+                </button>
             </div>
-            <p class="hint">@L["You can always change these with the settings gear in the header."]</p>
-        </section>
+
+            @if (tab == GameTab.Connect)
+            {
+                <section class="row">
+                    <span class="row-label">@L["Gravity"]</span>
+                    <div class="segmented" role="radiogroup" aria-label="@L["Gravity"]">
+                        @foreach (var option in new[] { Gravity.None, Gravity.Down, Gravity.Left })
+                        {
+                            <button type="button" role="radio" aria-checked="@(gravity == option ? "true" : "false")"
+                                    class="@(gravity == option ? "on" : null)" @onclick="() => gravity = option">@(option switch { Gravity.Down => L["Down"], Gravity.Left => L["Left"], _ => L["Off"] })</button>
+                        }
+                    </div>
+                    <p class="hint">
+                        @(gravity switch
+                        {
+                            Gravity.Down => L["Tiles fall down to fill the gaps."],
+                            Gravity.Left => L["Tiles slide left to fill the gaps."],
+                            _ => L["Tiles stay where they are."],
+                        })
+                        @L["Each setting has its own leaderboard."]
+                    </p>
+                </section>
+            }
+
+            <section class="row">
+                <div class="switch-line">
+                    <label class="switch-label" for="winnable">@L["Guaranteed winnable path"]</label>
+                    @* Hover (or keyboard focus) shows the note; a tap toggles it, for touch screens. *@
+                    <span class="info @(showDealInfo ? "open" : null)">
+                        <button type="button" class="info-button" aria-label="@L["About guaranteed winnable deals"]"
+                                aria-expanded="@(showDealInfo ? "true" : "false")" @onclick="() => showDealInfo = !showDealInfo">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9.5" />
+                                <path d="M12 11v6M12 7.5v.01" />
+                            </svg>
+                        </button>
+                        <span class="info-note" role="note">@L[WinnableNote]</span>
+                    </span>
+                    <input class="switch" type="checkbox" role="switch" id="winnable" @bind="winnable" />
+                </div>
+                <p class="hint">
+                    @(winnable ? L["Every deal can be cleared."] : L["Tiles are dealt at random, like a real set, so some deals can't be cleared."])
+                </p>
+            </section>
+        </div>
 
         <footer>
-            <button type="button" class="btn btn-light" @onclick="CancelAsync">@L["Cancel"]</button>
-            <button type="button" class="btn btn-primary" @onclick="ApplyAsync">@(ForNewGame ? L["Start game"] : L["OK"])</button>
+            <label class="skip">
+                <input type="checkbox" @bind="skipSettings" />
+                @L["Skip this screen next time"]
+            </label>
+            <p class="hint">@L["You can always change these with the settings gear in the header."]</p>
+            <button type="button" class="start" @onclick="ApplyAsync">@(ForNewGame ? L["Start game"] : L["OK"])</button>
         </footer>
+
+        @switch (sheet)
+        {
+            case Sheet.Layout:
+                <PickerSheet Title="@L["Layout"]" Items="layoutItems" SelectedId="@layoutName" BackdropUrl="@background.Url"
+                             OnPick="id => { layoutName = id; CloseSheet(); }" OnClose="CloseSheet" />
+                break;
+            case Sheet.Board:
+                <PickerSheet Title="@L["Board"]" Items="boardItems" SelectedId="@boardName" BackdropUrl="@background.Url"
+                             OnPick="id => { boardName = id; CloseSheet(); }" OnClose="CloseSheet" />
+                break;
+            case Sheet.Background:
+                <PickerSheet Title="@L["Background"]" Items="backgroundItems" SelectedId="@backgroundId"
+                             OnPick="id => { backgroundId = id; CloseSheet(); }" OnClose="CloseSheet" />
+                break;
+        }
     </div>
 </div>
 
 @code {
-    private PreviewStrip? layoutStrip;
     private IReadOnlyList<PreviewItem> layoutItems = [];
     private IReadOnlyList<PreviewItem> boardItems = [];
+    private readonly HashSet<string> failed = [];
     /// <summary>
-    /// The dialog's game tabs. Mahjong 3D is Mahjong Solitaire drawn in stone (it shares its layouts
+    /// The dialog's games. Mahjong 3D is Mahjong Solitaire drawn in stone (it shares its layouts
     /// and leaderboards); which one is played follows the tile set chosen. Mahjong Cube is a game of
     /// its own with a size (Cube Small or Cube Large), its own leaderboards and the same stones.
     /// </summary>
     private enum GameTab { Solitaire, ThreeD, Cube, Connect }
+
+    /// <summary>The picker sheet open over the screen, if any.</summary>
+    private enum Sheet { None, Layout, Board, Background }
 
     private static readonly (GameTab Tab, string Name)[] Tabs =
     [
@@ -167,6 +238,12 @@
     private static readonly (int Size, string Name)[] CubeSizes = [(4, "Small"), (6, "Large")];
 
     private GameTab tab;
+    private Sheet sheet;
+    /// <summary>The sheet that just closed, whose card gets focus back after the next render.</summary>
+    private Sheet closedSheet;
+    private ElementReference dialog;
+    private ElementReference bigCard;
+    private ElementReference backgroundCard;
     private int cubeSize = 4;
     private string? boardName;
     private Gravity gravity;
@@ -178,8 +255,19 @@
     private bool skipSettings;
     private bool winnable = true;
     private bool showDealInfo;
+    private bool showGameInfo;
 
     private const string WinnableNote = "As in life, a winnable game can still be lost if you choose the wrong path. Choose wisely.";
+
+    private BackgroundInfo background => Backgrounds.Find(backgroundId);
+
+    private string GameRules => tab switch
+    {
+        GameTab.ThreeD => L["Mahjong Solitaire with stone tiles you can tilt and turn."],
+        GameTab.Cube => L["Take matching pairs from a cube you can turn. A tile can be taken when two of its sides that meet at an edge are open."],
+        GameTab.Connect => L["Remove matching pairs that can be joined by a line with at most two turns through empty space, even around the edge of the board."],
+        _ => L["Remove matching pairs of free tiles from the stack."],
+    };
 
     [Parameter, EditorRequired] public IReadOnlyList<LayoutDefinition> Layouts { get; set; } = [];
 
@@ -191,7 +279,7 @@
 
     [Parameter] public string? TileSetId { get; set; }
 
-    /// <summary>The last flat set and stone chosen, so switching tabs keeps each choice.</summary>
+    /// <summary>The last flat set and stone chosen, so switching games keeps each choice.</summary>
     [Parameter] public string? FlatTileSetId { get; set; }
 
     [Parameter] public string? StoneId { get; set; }
@@ -242,16 +330,37 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && layoutStrip != null)
+        if (firstRender)
         {
-            await layoutStrip.FocusSelectedAsync();
+            // Into the dialog, so Escape and screen readers work however it was opened.
+            await dialog.FocusAsync();
         }
+        else if (closedSheet != Sheet.None)
+        {
+            // Back to the card that opened the sheet.
+            var card = closedSheet == Sheet.Background ? backgroundCard : bigCard;
+            closedSheet = Sheet.None;
+            await card.FocusAsync();
+        }
+    }
+
+    private void CloseSheet()
+    {
+        closedSheet = sheet;
+        sheet = Sheet.None;
     }
 
     private async Task OnKeyDownAsync(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
         {
+            // An open sheet closes first; the next Escape closes the dialog.
+            if (sheet != Sheet.None)
+            {
+                CloseSheet();
+                return;
+            }
+
             await CancelAsync();
         }
     }

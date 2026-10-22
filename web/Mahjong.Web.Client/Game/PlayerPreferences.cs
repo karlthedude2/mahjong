@@ -32,7 +32,7 @@ public sealed class PlayerPreferences(BrowserInterop browser, GameApi api)
 
     public string? LastLayout { get; private set; }
 
-    /// <summary>True if the settings dialog shouldn't open for each new game ("Don't show settings for every new game").</summary>
+    /// <summary>True if the settings dialog shouldn't open for each new game ("Skip this screen next time").</summary>
     public bool SkipSettings { get; private set; }
 
     /// <summary>"Guaranteed winnable path": true (the default) for winnable deals, false for random ones.</summary>
