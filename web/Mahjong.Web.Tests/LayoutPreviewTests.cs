@@ -22,6 +22,13 @@ public sealed class LayoutPreviewTests
         Assert.All(pictures, p => Assert.Contains(p!, slugs));
     }
 
+    [Fact]
+    public void PreviewPicturesHaveSeeThroughBackgrounds()
+    {
+        // PNG IHDR: colour type is byte 25; 6 = RGBA, so the chosen background shows behind the tiles.
+        Assert.All(Directory.GetFiles(PreviewFolder(), "*.png"), file => Assert.Equal(6, File.ReadAllBytes(file)[25]));
+    }
+
     private static string PreviewFolder()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
