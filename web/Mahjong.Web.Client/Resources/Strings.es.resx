@@ -24,6 +24,7 @@
   <data name="5,000 for a fast finish, dropping in steps after 2:40." xml:space="preserve"><value>5000 por terminar rápido; baja por tramos después de 2:40.</value></data>
   <data name="A user with this login already exists." xml:space="preserve"><value>Ya existe un usuario con este inicio de sesión.</value></data>
   <data name="About guaranteed winnable deals" xml:space="preserve"><value>Acerca de los repartos con solución garantizada</value></data>
+  <data name="About this game" xml:space="preserve"><value>Acerca de este juego</value></data>
   <data name="Access denied" xml:space="preserve"><value>Acceso denegado</value></data>
   <data name="Account ({0})" xml:space="preserve"><value>Cuenta ({0})</value></data>
   <data name="Add a new passkey" xml:space="preserve"><value>Añadir una llave de acceso</value></data>
@@ -64,6 +65,7 @@
   <data name="Candy Store" xml:space="preserve"><value>Tienda de dulces</value></data>
   <data name="Cat" xml:space="preserve"><value>Gato</value></data>
   <data name="Celestial Chart" xml:space="preserve"><value>Carta celeste</value></data>
+  <data name="Change" xml:space="preserve"><value>Cambiar</value></data>
   <data name="Change email" xml:space="preserve"><value>Cambiar el correo electrónico</value></data>
   <data name="Change password" xml:space="preserve"><value>Cambiar la contraseña</value></data>
   <data name="Change your account settings" xml:space="preserve"><value>Cambia la configuración de tu cuenta</value></data>
@@ -117,7 +119,6 @@
   <data name="Display names need at least one letter, number or emoji." xml:space="preserve"><value>El nombre visible necesita al menos una letra, un número o un emoji.</value></data>
   <data name="Dog" xml:space="preserve"><value>Perro</value></data>
   <data name="Don't have access to your authenticator device? You can" xml:space="preserve"><value>¿No tienes acceso a tu dispositivo autenticador? Puedes</value></data>
-  <data name="Don't show settings for every new game" xml:space="preserve"><value>No mostrar la configuración en cada partida nueva</value></data>
   <data name="Dot" xml:space="preserve"><value>CÍRCULO</value></data>
   <data name="Down" xml:space="preserve"><value>Hacia abajo</value></data>
   <data name="Download" xml:space="preserve"><value>Descargar</value></data>
@@ -379,6 +380,7 @@
   <data name="Sign in" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="Sign out" xml:space="preserve"><value>Cerrar sesión</value></data>
   <data name="Simple (high contrast)" xml:space="preserve"><value>Sencillo (alto contraste)</value></data>
+  <data name="Skip this screen next time" xml:space="preserve"><value>No mostrar esta pantalla la próxima vez</value></data>
   <data name="Slow" xml:space="preserve"><value>Lenta</value></data>
   <data name="Small" xml:space="preserve"><value>Pequeño</value></data>
   <data name="Snake" xml:space="preserve"><value>Serpiente</value></data>
