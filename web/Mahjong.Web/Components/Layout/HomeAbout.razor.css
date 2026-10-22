@@ -1,0 +1,40 @@
+/* Below the game, reached by scrolling: a readable panel like the other text pages. */
+.home-about {
+    max-width: 46rem;
+    margin: 1.5rem auto;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    background: var(--panel-bg);
+    color: var(--panel-text);
+    line-height: 1.55;
+}
+
+.home-about h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.4rem;
+}
+
+.home-about h3 {
+    margin: 1.25rem 0 0.4rem;
+    font-size: 1.1rem;
+}
+
+.home-about dt {
+    margin-top: 0.6rem;
+    font-weight: 700;
+}
+
+.home-about dd {
+    margin: 0.15rem 0 0;
+}
+
+.home-about a {
+    color: var(--accent);
+}
+
+@media (max-width: 600px) {
+    .home-about {
+        margin: 1rem 0.5rem;
+        padding: 1rem;
+    }
+}
