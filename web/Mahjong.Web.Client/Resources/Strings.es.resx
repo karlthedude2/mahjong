@@ -171,6 +171,7 @@
   <data name="Every deal can be cleared." xml:space="preserve"><value>Todos los repartos se pueden completar.</value></data>
   <data name='Everyone who replays this deal gets exactly the same tiles. Replays are ranked here, one best score per player. The original was a first play, so it stays on the &lt;a href="leaderboards?layout={0}"&gt;{1} leaderboard&lt;/a&gt; whatever happens below.' xml:space="preserve"><value>Todos los que repiten este reparto reciben exactamente las mismas fichas. Las repeticiones se clasifican aquí, con la mejor puntuación de cada jugador. La original fue una primera partida, así que se queda en la &lt;a href="leaderboards?layout={0}"&gt;clasificación de {1}&lt;/a&gt; pase lo que pase aquí abajo.</value></data>
   <data name="External logins" xml:space="preserve"><value>Inicios de sesión externos</value></data>
+  <data name="Face" xml:space="preserve"><value>Cara</value></data>
   <data name="Face value of every tile you removed." xml:space="preserve"><value>El valor de cada ficha que retiraste.</value></data>
   <data name="Fast" xml:space="preserve"><value>Rápida</value></data>
   <data name="Finish" xml:space="preserve"><value>Final</value></data>
@@ -391,6 +392,7 @@
   <data name="Speed Bonus" xml:space="preserve"><value>Bono de velocidad</value></data>
   <data name="Speed Bonus!" xml:space="preserve"><value>¡Bono de velocidad!</value></data>
   <data name="Spider" xml:space="preserve"><value>Araña</value></data>
+  <data name="Standard" xml:space="preserve"><value>Estándar</value></data>
   <data name="Standard Turtle" xml:space="preserve"><value>Tortuga clásica</value></data>
   <data name="Start game" xml:space="preserve"><value>Empezar partida</value></data>
   <data name="Start it now" xml:space="preserve"><value>Empezarla ahora</value></data>

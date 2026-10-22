@@ -1,5 +1,6 @@
 @using Mahjong.Core
 @using Mahjong.Web.Client.Game
+@inject FaceArt FaceArt
 
 @* The game, layout, tiles and background in one screen, with Start game always in view. Nothing changes until Start game (or OK). *@
 <div class="settings-backdrop" @onclick="CancelAsync">
@@ -74,28 +75,46 @@
                 </button>
             }
 
-            <div class="pair">
+            <div class="pair @(tab is GameTab.ThreeD or GameTab.Cube ? "wide-first" : null)">
                 @if (tab is GameTab.ThreeD or GameTab.Cube)
                 {
-                    <label class="card" for="stone">
+                    var stone = TileSets.Find(stoneId);
+                    var faceSet = FaceSets.Find(faceSetId);
+                    bool dark = SettingsArt.IsDark(stone, FaceArt.StoneFaces(stone.Stone!));
+                    @* Stone and face together: the stones show both; each half of the card opens its own list. *@
+                    <div class="card stone-face">
                         <span class="art" aria-hidden="true">
-                            @for (int i = 0; i < 3; i++)
+                            @foreach (var face in SettingsArt.SampleFaces)
                             {
-                                <span class="stone" style="background: @SettingsArt.StoneCss(TileSets.Find(stoneId))"></span>
+                                <span class="stone @(tab == GameTab.Cube ? "square" : null)" style="background: @SettingsArt.StoneCss(stone)">
+                                    <img src="@SettingsArt.FaceUrl(faceSet, face, dark)" alt="" />
+                                </span>
                             }
                         </span>
-                        <span class="caption">
-                            <span class="overline">@L["Stone"]</span>
-                            <span class="value">@L[TileSets.Find(stoneId).Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
+                        <span class="halves">
+                            @* Each list is stretched invisibly over its half of the card, so a tap anywhere there opens it. *@
+                            <label class="caption half">
+                                <span class="overline">@L["Stone"]</span>
+                                <span class="value">@L[stone.Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
+                                <select class="cover left" @bind="stoneId">
+                                    @foreach (var set in TileSets.Stones)
+                                    {
+                                        <option value="@set.Id">@L[set.Name]</option>
+                                    }
+                                </select>
+                            </label>
+                            <label class="caption half">
+                                <span class="overline">@L["Face"]</span>
+                                <span class="value">@L[faceSet.Name]<svg class="mini-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg></span>
+                                <select class="cover right" @bind="faceSetId">
+                                    @foreach (var set in FaceSets.All)
+                                    {
+                                        <option value="@set.Id">@L[set.Name]</option>
+                                    }
+                                </select>
+                            </label>
                         </span>
-                        @* Stretched invisibly over the card, so a tap anywhere on it opens the list. *@
-                        <select id="stone" class="cover" @bind="stoneId">
-                            @foreach (var set in TileSets.Stones)
-                            {
-                                <option value="@set.Id">@L[set.Name]</option>
-                            }
-                        </select>
-                    </label>
+                    </div>
                 }
                 else
                 {
@@ -242,6 +261,7 @@
     private string? layoutName;
     private string flatId = TileSets.Default.Id;
     private string stoneId = TileSets.DefaultStone.Id;
+    private string faceSetId = FaceSets.Default.Id;
     private string backgroundId = Backgrounds.Default.Id;
     private bool skipSettings;
     private bool winnable = true;
@@ -274,6 +294,9 @@
     [Parameter] public string? FlatTileSetId { get; set; }
 
     [Parameter] public string? StoneId { get; set; }
+
+    /// <summary>The face art set for Mahjong 3D and the cube.</summary>
+    [Parameter] public string? FaceSetId { get; set; }
 
     [Parameter] public string? BackgroundId { get; set; }
 
@@ -314,9 +337,16 @@
         layoutName = chosen?.Kind == GameKind.Solitaire ? chosen.Name : Layouts.FirstOrDefault()?.Name;
         flatId = TileSets.Flat.FirstOrDefault(s => s.Id == FlatTileSetId)?.Id ?? TileSets.Default.Id;
         stoneId = TileSets.Stones.FirstOrDefault(s => s.Id == StoneId)?.Id ?? TileSets.DefaultStone.Id;
+        faceSetId = FaceSets.Find(FaceSetId).Id;
         backgroundId = Backgrounds.Find(BackgroundId).Id;
         skipSettings = SkipSettings;
         winnable = GuaranteedWinnable;
+    }
+
+    // Which stones show the dark face pictures is the server's configuration; redraw once it's here.
+    protected override async Task OnInitializedAsync()
+    {
+        await FaceArt.LoadAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -367,10 +397,11 @@
         {
             // The block of the chosen size, in the chosen stone; the other games' tile set stays as it is.
             return OnApply.InvokeAsync(new SettingsChoice(CubeLayouts.ForSize(cubeSize).Name, TileSets.Find(TileSetId).Id, backgroundId, skipSettings, winnable,
-                StoneId: stoneId));
+                StoneId: stoneId, FaceSetId: faceSetId));
         }
 
         string tileSetId = tab == GameTab.ThreeD ? stoneId : flatId;
-        return OnApply.InvokeAsync(new SettingsChoice(chosen, tileSetId, backgroundId, skipSettings, winnable));
+        return OnApply.InvokeAsync(new SettingsChoice(chosen, tileSetId, backgroundId, skipSettings, winnable,
+            FaceSetId: tab == GameTab.ThreeD ? faceSetId : null));
     }
 }

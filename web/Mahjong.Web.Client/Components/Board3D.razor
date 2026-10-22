@@ -30,6 +30,9 @@
 
     [Parameter] public IReadOnlySet<int>? Hinted { get; set; }
 
+    /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
+    [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
+
     // The page redraws every clock tick; only send the board when something on it has changed.
     protected override bool ShouldRender() => scene == null || State() != shownState || TileSet.Stone != shownStone;
 
@@ -94,7 +97,7 @@
             var glyph = TileSets.Glyph(name);
             return (object)new
             {
-                art = FaceArt.Pictures(name),
+                art = FaceArt.Pictures(name, FaceSet),
                 glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
             };
         });

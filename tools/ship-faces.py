@@ -1,10 +1,12 @@
 """Ships the face art for Mahjong 3D and the Mahjong Cube.
 
 Reads the faces from cube-faces/ (plain) and cube-faces/dark/ (with the white glow, for dark stones)
-and writes them, 512 px tall, as WebP to web/Mahjong.Web.Client/wwwroot/faces/ and faces/dark/,
-named exactly as the game names each face. Run it after changing the art, then commit the result:
+and writes them, 512 px tall, as WebP to a face set's folder, web/Mahjong.Web.Client/wwwroot/faces/<set>/
+and <set>/dark/, named exactly as the game names each face. Run it after changing the art, then commit
+the result (a new set also needs a line in FaceSets.cs):
 
-    python tools/ship-faces.py
+    python tools/ship-faces.py            # the Standard set (faces/standard)
+    python tools/ship-faces.py <set>      # another set (faces/<set>)
 
 Needs Pillow (pip install pillow). Stops, writing nothing, if a face is missing.
 """
@@ -16,7 +18,8 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "cube-faces"
-TARGET = ROOT / "web" / "Mahjong.Web.Client" / "wwwroot" / "faces"
+FACE_SET = sys.argv[1] if len(sys.argv) > 1 else "standard"
+TARGET = ROOT / "web" / "Mahjong.Web.Client" / "wwwroot" / "faces" / FACE_SET
 HEIGHT = 512
 QUALITY = 88
 

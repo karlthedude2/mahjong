@@ -4,6 +4,7 @@
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject IJSRuntime JS
 @inject FaceArt FaceArt
+@inject BrowserInterop Browser
 
 @*
     Test bench for Mahjong Cube (the scored game is played from the Play page's Mahjong Cube tab,
@@ -42,7 +43,7 @@
 
     @if (loaded)
     {
-        <CubeBoard @key="game" Game="game" Selected="selected" OnTileClick="Click" Stone="@stone" StoneUrl="@StoneUrl" StoneFacesKey="@StoneFacesKey" />
+        <CubeBoard @key="game" Game="game" Selected="selected" OnTileClick="Click" Stone="@stone" StoneUrl="@StoneUrl" StoneFacesKey="@StoneFacesKey" FaceSet="faceSet" />
     }
 </section>
 
@@ -87,6 +88,8 @@
     private static readonly string DefaultStone = TileSets.DefaultStone.Stone!;
     private string stone = DefaultStone;
     private List<string> droppedStones = [];
+    // The face set chosen in the game's settings.
+    private FaceSetInfo faceSet = FaceSets.Default;
     private bool loaded;
 
     private const string DroppedPrefix = "file:";
@@ -102,6 +105,7 @@
         if (firstRender)
         {
             droppedStones = await FaceArt.ListAsync("dev/stones");
+            faceSet = FaceSets.Find(await Browser.GetSettingAsync(PlayerPreferences.FaceSetKey));
 
             // The last stone chosen, so a refresh after dropping in a new picture keeps the view.
             string? saved = await JS.InvokeAsync<string?>("localStorage.getItem", StoneSetting);

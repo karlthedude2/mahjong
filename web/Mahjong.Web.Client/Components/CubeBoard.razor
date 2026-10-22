@@ -33,6 +33,9 @@
 
     [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
 
+    /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
+    [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
+
     /// <summary>The stone (TileSets.Stones' Stone), or a picture's name with <see cref="StoneUrl"/>.</summary>
     [Parameter] public string Stone { get; set; } = TileSets.DefaultStone.Stone!;
 
@@ -138,7 +141,7 @@
         return (object)new
         {
             id = t.Id, x = t.Position.X, y = t.Position.Y, z = t.Position.Z, face = t.Face.Name,
-            art = FaceArt.Pictures(t.Face.Name),
+            art = FaceArt.Pictures(t.Face.Name, FaceSet),
             glyph = new { main = glyph.Main, caption = L[glyph.Caption].Value, color = glyph.ColorClass },
         };
     }).ToList();
