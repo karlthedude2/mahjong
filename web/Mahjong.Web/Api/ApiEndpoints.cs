@@ -16,6 +16,13 @@ public static partial class ApiEndpoints
     /// <summary>The header a guest's game calls carry, holding the token from the game's start.</summary>
     public const string GuestTokenHeader = "X-Guest-Token";
 
+    /// <summary>The pages the sitemap lists, relative to the site's root.</summary>
+    private static readonly string[] PublicPages = ["", "leaderboards", "privacy"];
+
+    // The live site's address (https and Site:CanonicalHost) when it's configured, otherwise the one asked for.
+    private static string SiteRoot(HttpRequest request, IConfiguration config) =>
+        config["Site:CanonicalHost"] is { Length: > 0 } host ? $"https://{host}/" : $"{request.Scheme}://{request.Host}/";
+
     public static void MapMahjongApi(this IEndpointRouteBuilder app)
     {
         // ads.txt names who may sell ads on this site; AdSense checks it. Built from Ads:ClientId
@@ -24,6 +31,21 @@ public static partial class ApiEndpoints
             ads.Value.ClientId is { Length: > 0 } clientId
                 ? Results.Text($"google.com, {clientId.Replace("ca-pub-", "pub-")}, DIRECT, f08c47fec0942fa0\n", "text/plain")
                 : Results.NotFound());
+
+        // For search and ads crawlers: the public pages are open to them (sign-in, the API and the
+        // development tools aren't), and the sitemap lists those pages. Addresses use the host asked
+        // for, or the live site's own (see SiteRoot).
+        app.MapGet("/robots.txt", (HttpRequest request, IConfiguration config) => Results.Text(
+            $"User-agent: *\nDisallow: /Account/\nDisallow: /api/\nDisallow: /dev/\nDisallow: /language/\n\nSitemap: {SiteRoot(request, config)}sitemap.xml\n",
+            "text/plain"));
+        app.MapGet("/sitemap.xml", (HttpRequest request, IConfiguration config) =>
+        {
+            string root = SiteRoot(request, config);
+            var urls = PublicPages.Select(page => $"  <url><loc>{root}{page}</loc></url>\n");
+            return Results.Text(
+                $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{string.Concat(urls)}</urlset>\n",
+                "application/xml");
+        });
 
         // Switches the site's language (the header's EN/ES button): remembers it for a year, then goes
         // back to the page the player was on.
