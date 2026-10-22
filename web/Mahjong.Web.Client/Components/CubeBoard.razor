@@ -33,6 +33,9 @@
 
     [Parameter] public EventCallback<Tile> OnTileClick { get; set; }
 
+    /// <summary>For looking only (the settings preview): no turning or taps.</summary>
+    [Parameter] public bool ReadOnly { get; set; }
+
     /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
     [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
 
@@ -68,7 +71,7 @@
                 return;
             }
 
-            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self);
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self, new { readOnly = ReadOnly });
             if (disposed)
             {
                 await ReleaseAsync();

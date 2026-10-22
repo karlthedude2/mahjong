@@ -209,11 +209,12 @@ diffuseColor.rgb *= mix(stone, art.rgb, printed);`);
     return material;
 }
 
-// The renderer, scene, soft studio light and camera for a 3D view in host.
-export function createStage(host, fieldOfView) {
+// The renderer, scene, soft studio light and camera for a 3D view in host. pixelRatio, if given,
+// replaces the screen's (a picture saved at an exact size uses 1).
+export function createStage(host, fieldOfView, pixelRatio) {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     // Sharp enough on high-density screens without drawing four times the pixels.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(pixelRatio ?? Math.min(window.devicePixelRatio, 1.5));
     renderer.toneMapping = THREE.NeutralToneMapping;
     host.appendChild(renderer.domElement);
 
