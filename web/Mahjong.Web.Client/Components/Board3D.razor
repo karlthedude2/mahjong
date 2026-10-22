@@ -9,7 +9,7 @@
     Mahjong Cube's stones and face art, for a 3D tile set. It takes the same parameters as Board, and
     sends the script the board's tiles whenever they, the selection or the hint change.
 *@
-<div class="board3d" @ref="view" role="img" aria-label="@L["Mahjong board"]"></div>
+<div class="board3d @(ReadOnly ? "read-only" : null)" @ref="view" role="img" aria-label="@L["Mahjong board"]"></div>
 
 @code {
     private ElementReference view;

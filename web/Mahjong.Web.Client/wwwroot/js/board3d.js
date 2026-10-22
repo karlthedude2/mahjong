@@ -306,6 +306,8 @@ export function create(host, dotnet, options = {}) {
 
         // The board as drawn now, as a PNG data URL (for the picker pictures).
         snapshot() {
+            // At the container's size now, rather than waiting for the resize observer.
+            resize();
             renderer.render(scene, camera);
             return renderer.domElement.toDataURL("image/png");
         },

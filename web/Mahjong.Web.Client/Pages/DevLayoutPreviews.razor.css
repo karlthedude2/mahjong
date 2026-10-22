@@ -1,0 +1,24 @@
+.dev-previews {
+    max-width: 900px;
+    margin: 1rem auto;
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(255, 250, 240, 0.95);
+}
+
+.buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Exactly the picture's size; transparent, so the page shows through as it will in the picker. */
+.stage {
+    width: 400px;
+    height: 300px;
+    margin: 1rem 0;
+    outline: 1px dashed #999;
+}
+
+.log {
+    font-size: 0.85rem;
+}

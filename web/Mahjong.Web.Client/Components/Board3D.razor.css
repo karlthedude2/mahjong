@@ -18,3 +18,11 @@
         height: 62vh;
     }
 }
+
+/* For looking only (the settings preview, the picker pictures): just the size of its container. */
+.board3d.read-only {
+    min-height: 0;
+    height: 100%;
+    touch-action: auto;
+    pointer-events: none;
+}

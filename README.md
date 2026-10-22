@@ -47,16 +47,14 @@ The shape layouts (Pyramid, Fortress, Cat and so on) are drawn as text grids in 
 
 ### The layout's picture (web)
 
-The web settings dialog shows a 300×223 picture of each layout, from `web/Mahjong.Web.Client/wwwroot/layouts/previews/<slug>.png` (the name in lower case with hyphens for spaces: `Standard Turtle` is `standard-turtle.png`). A layout without one shows a placeholder. The picture is see-through around the tiles, and the dialog shows the player's chosen background behind it. To draw the pictures (Classic tiles on a transparent background, the layout centered), run this on Windows:
+The settings screen's layout and board pickers show a 400×300 picture of each layout, from `web/Mahjong.Web.Client/wwwroot/layouts/previews/<slug>.png` (the name in lower case with hyphens for spaces: `Standard Turtle` is `standard-turtle.png`). The picture is the layout in blank stones, drawn by the game's own 3D renderer on a transparent background, and the picker shows the player's chosen background behind it. A layout without one shows a placeholder, and the `EveryVisibleLayoutAndBoardHasAPicture` test fails.
 
-```
-dotnet run --project tools/LayoutPreviews                        # layouts that don't have a picture yet
-dotnet run --project tools/LayoutPreviews -- "My Layout"         # just these (hidden layouts too)
-dotnet run --project tools/LayoutPreviews -- --all               # redraw every visible layout
-dotnet run --project tools/LayoutPreviews -- --copy-to <folder>  # also save "<Layout name>.png" there
-```
+To draw the pictures, run the site in Development and open `/dev/layout-previews`:
 
-You can also make a picture yourself: a 300×223 PNG with a transparent background (RGBA) and the right name. The `PreviewPicturesHaveSeeThroughBackgrounds` test checks this.
+- **Missing only** draws the layouts that don't have a picture yet (after adding a layout).
+- **Redraw all** draws every layout and Connect board again, hidden layouts included.
+
+Then commit the pictures. To also keep a copy as `<Layout name>.png` outside the repository, set `LayoutPreviews:CopyTo` to a folder in `appsettings.Development.json` (or your user secrets).
 
 ## Adding a tile set or background (web)
 

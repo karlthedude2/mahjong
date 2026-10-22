@@ -33,3 +33,14 @@
         max-height: 75vh;
     }
 }
+
+/* For looking only (the settings preview): just the size of its container, at any screen width. */
+.cube-board.read-only,
+.cube-board.read-only .cube-view {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: auto;
+    touch-action: auto;
+    pointer-events: none;
+}
