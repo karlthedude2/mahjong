@@ -383,7 +383,7 @@ select.cover {
 
 /* Mahjong 3D and the cube: Stone and Face share the wider card, Background the narrower one. */
 .pair.wide-first {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
 }
 
 .stone-face .halves {
@@ -393,7 +393,12 @@ select.cover {
 
 .stone-face .half {
     margin: 0;
+    padding-inline: 8px;
     cursor: pointer;
+}
+
+.stone-face .half .mini-chevron {
+    margin-left: 2px;
 }
 
 .stone-face .half + .half {
