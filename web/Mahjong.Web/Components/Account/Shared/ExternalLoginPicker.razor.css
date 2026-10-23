@@ -1,66 +1,70 @@
-/* Sign-in buttons styled after each provider's own guidelines. */
+/* Three across, in the settings' dark style. A live service is a light button with its own logo; one
+   that isn't set up yet is dark and dimmed, with "soon" under its name. */
 .providers {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    max-width: 20rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0;
 }
 
 .provider {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    height: 2.75rem;
-    padding: 0 1rem;
-    border: 1px solid #747775;
-    border-radius: 0.3rem;
-    background: #fff;
-    color: #1f1f1f;
-    font-family: Roboto, "Segoe UI", Arial, sans-serif;
-    font-size: 0.95rem;
-    font-weight: 500;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    height: 56px;
+    padding: 0 4px;
+    border: 1px solid #3A312B;
+    border-radius: 12px;
+    background: #F3EEDC;
+    color: #171310;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.1;
     cursor: pointer;
-    transition: background-color 0.15s, box-shadow 0.15s;
 }
 
-.provider:hover {
-    background: #f7f8f8;
-    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.3);
+.provider:hover:not(:disabled) {
+    background: #ffffff;
 }
 
 .provider:focus-visible {
-    outline: 3px solid #2b6cb0;
+    outline: 3px solid #F3EEDC;
     outline-offset: 2px;
 }
 
+.provider:disabled {
+    background: #201A16;
+    color: #8C8270;
+    cursor: default;
+}
+
 .provider span {
-    flex: 1;
-    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.soon {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 }
 
 .logo {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 20px;
+    height: 20px;
     flex: 0 0 auto;
 }
 
-.provider.microsoft {
-    border-color: #8c8c8c;
-    border-radius: 0;
-    color: #5e5e5e;
-    font-family: "Segoe UI", Arial, sans-serif;
-    font-weight: 600;
-}
-
-.provider.facebook {
+/* Facebook's own blue when it's live. */
+.provider.facebook:not(:disabled) {
     border-color: #1877f2;
     background: #1877f2;
     color: #fff;
-    font-family: Helvetica, Arial, sans-serif;
-    font-weight: 700;
-}
-
-.provider.facebook:hover {
-    background: #166fe5;
 }
