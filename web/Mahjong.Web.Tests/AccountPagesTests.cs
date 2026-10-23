@@ -54,7 +54,7 @@ public sealed partial class AccountPagesTests : IDisposable
     {
         string html = await app.CreateClient().GetStringAsync("/Account/Register");
 
-        Assert.Contains("class=\"auth-page\"", html);
+        Assert.Matches("class=\"auth-page[ \"]", html);
         Assert.Matches("<h1[^>]*>Create an account</h1>", html);
         Assert.Matches("<button type=\"button\" class=\"provider facebook\" disabled", html);
         foreach (var field in new[] { "Input.DisplayName", "Input.Email", "Input.Password", "Input.ConfirmPassword", "Input.Avatar" })
