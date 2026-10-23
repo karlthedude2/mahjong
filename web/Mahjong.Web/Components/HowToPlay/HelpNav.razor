@@ -1,0 +1,22 @@
+@*
+    The foot of a how-to-play page: play now, and the other games' pages, in the page's language.
+*@
+<nav class="help-nav" aria-label="@(Strings.IsSpanish ? "Cómo jugar" : "How to play")">
+    <a class="play-now" href="">@(Strings.IsSpanish ? "Jugar ahora" : "Play now")</a>
+    <p>
+        @(Strings.IsSpanish ? "Cómo jugar a los demás juegos:" : "How to play the other games:")
+        @foreach (var other in HelpPages.Games.Where(g => g != Current))
+        {
+            <a href="@HelpPages.Path($"{HelpPages.Hub}/{other.Slug}", Language)">@(Strings.IsSpanish ? other.Spanish : other.English)</a>
+            @(" · ")
+        }
+        <a href="@HelpPages.Path(HelpPages.Hub, Language)">@(Strings.IsSpanish ? "Todos los juegos" : "All games")</a>
+    </p>
+</nav>
+
+@code {
+    /// <summary>The page's own game, left out of the list; null on the hub.</summary>
+    [Parameter] public HelpGame? Current { get; set; }
+
+    private static string Language => Strings.IsSpanish ? "es" : "en";
+}

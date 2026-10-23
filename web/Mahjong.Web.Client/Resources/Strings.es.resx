@@ -528,6 +528,7 @@
   <data name="{0} of 20 tiles · {1} s left · worth {2} now" xml:space="preserve"><value>{0} de 20 fichas · quedan {1} s · vale {2} ahora</value></data>
   <data name="{0}'s {1} deal" xml:space="preserve"><value>Reparto de {1} de {0}</value></data>
   <data name="Back to leaderboards" xml:space="preserve"><value>Volver a las clasificaciones</value></data>
+  <data name="How to play" xml:space="preserve"><value>Cómo jugar</value></data>
   <data name="Play this deal?" xml:space="preserve"><value>¿Jugar este reparto?</value></data>
   <data name="That deal couldn't be found." xml:space="preserve"><value>No se encontró ese reparto.</value></data>
   <data name="This deal couldn't be found. It may never have been on a leaderboard." xml:space="preserve"><value>No se encontró este reparto. Quizás nunca estuvo en una clasificación.</value></data>

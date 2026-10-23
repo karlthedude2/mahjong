@@ -44,6 +44,22 @@ public static class DevPictureEndpoints
                 return Results.BadRequest(e.Message);
             }
         }).DisableAntiforgery();
+
+        // The how-to-play pages' pictures of Mahjong 3D and the cube, drawn on the same page.
+        string helpPictures = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "Mahjong.Web.Client", "wwwroot", "help-pictures"));
+        app.MapPost("/dev/how-to-play-pictures/{name}", async (string name, HttpRequest request) =>
+        {
+            using var body = new MemoryStream();
+            await request.Body.CopyToAsync(body);
+            try
+            {
+                return Results.Ok(new[] { LayoutPreviewFiles.SaveHelpPicture(name, body.ToArray(), helpPictures) });
+            }
+            catch (ArgumentException e)
+            {
+                return Results.BadRequest(e.Message);
+            }
+        }).DisableAntiforgery();
     }
 
     private static string Folder(string? configured, string name, IWebHostEnvironment environment)

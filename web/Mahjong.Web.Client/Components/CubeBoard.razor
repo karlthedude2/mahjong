@@ -36,6 +36,9 @@
     /// <summary>For looking only (the settings preview): no turning or taps.</summary>
     [Parameter] public bool ReadOnly { get; set; }
 
+    /// <summary>A fixed canvas pixel ratio (1 for a picture saved at an exact size); otherwise the screen's.</summary>
+    [Parameter] public double? PixelRatio { get; set; }
+
     /// <summary>The face art set chosen. The page keys the board to it, so a new set redraws the board.</summary>
     [Parameter] public FaceSetInfo FaceSet { get; set; } = FaceSets.Default;
 
@@ -71,7 +74,7 @@
                 return;
             }
 
-            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self, new { readOnly = ReadOnly });
+            scene = await module.InvokeAsync<IJSObjectReference>("create", view, self, new { readOnly = ReadOnly, pixelRatio = PixelRatio });
             if (disposed)
             {
                 await ReleaseAsync();
@@ -159,6 +162,9 @@
             await OnTileClick.InvokeAsync(tile);
         }
     }
+
+    /// <summary>The cube as drawn now, as a PNG data URL; null until it has been drawn.</summary>
+    public async ValueTask<string?> SnapshotAsync() => scene == null || shownState == null ? null : await scene.InvokeAsync<string>("snapshot");
 
     public async ValueTask DisposeAsync()
     {

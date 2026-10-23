@@ -1,2 +1,80 @@
-<HelpHead Page="how-to-play/mahjong-cube" Title="CubeEn" Description="CubeEn" />
-<article class="help"><h1>CubeEn</h1></article>
+<HelpHead Page="how-to-play/mahjong-cube" Title="How to play Mahjong Cube"
+          Description="How to play Mahjong Cube: take matching pairs from a cube of mahjong tiles you can turn. Which tiles can be taken, the controls, scoring and tips." />
+
+<article class="help" lang="en">
+    <h1>How to play Mahjong Cube</h1>
+    <p class="lead">
+        Mahjong Cube takes the matching game into three dimensions. The tiles form a solid cube instead of a flat pile, and you
+        turn the cube in your hands to find pairs on every side.
+    </p>
+
+    <figure>
+        <div class="board-picture"><img src="help-pictures/mahjong-cube.png" alt="A Mahjong Cube game: a small cube of ivory tiles, four tiles along each edge" width="800" height="600" loading="lazy" /></div>
+        <figcaption>The small cube: four tiles along each edge, 64 tiles in all.</figcaption>
+    </figure>
+
+    <h2>The goal</h2>
+    <p>Take the whole cube apart in matching pairs. Every tile has to go.</p>
+
+    <h2>Which tiles can be taken</h2>
+    <p>
+        Each tile in the cube is a small cube itself, with six sides. A tile can be taken when <strong>two of its sides that meet at
+        an edge are open</strong>: one open side across (left or right) and one open side on another axis (above or below, in front
+        or behind). Two open sides facing opposite ways, like left and right, aren't enough.
+    </p>
+    <RuleDiagram Kind="cube" Caption="On a full cube, the corners and edges can be taken first. Tiles in the middle of a face have only one open side until their neighbours go." />
+    <p>
+        Tiles that can't be taken are drawn slightly dimmed, so the ones you can take stand out. As pairs come away, the tiles
+        underneath open up and the cube gets smaller, layer by layer.
+    </p>
+
+    <h2>The tiles</h2>
+    <p>
+        The cube uses the same tiles as the other games. Each tile matches only its identical twin. The faces are printed on every
+        side of each tile, so a tile reads the same whichever way the cube is turned.
+    </p>
+    <TileGuide />
+
+    <h2>Playing on Mahjong Haus</h2>
+    <ol>
+        <li><strong>Choose Mahjong Cube</strong> in the settings (the gear in the top bar), and a size: small (4×4×4, 64 tiles) or
+            large (6×6×6, 216 tiles).</li>
+        <li><strong>Choose a stone and a face</strong> on the Stone and Face card, and a background.</li>
+        <li><strong>Turn the cube.</strong> Drag to turn it. Pinch, or use the mouse wheel, to zoom.</li>
+        <li><strong>Take a pair.</strong> Tap a tile you can take, then its twin, which may be on another side: turn the cube to
+            find it.</li>
+        <li><strong>Use the tools under the cube:</strong> undo and redo, a hint, shuffle, the demo, and pause.</li>
+    </ol>
+
+    <h2>Scoring</h2>
+    <p>
+        The cube is scored like the other games: points for every tile, pace and speed bonuses, finish bonuses for a quick finish,
+        and a no-shuffle bonus. Each size has its own leaderboard. <a href="how-to-play/mahjong-solitaire#scoring">See how scoring works.</a>
+    </p>
+
+    <h2>Tips</h2>
+    <ul>
+        <li><strong>Turn the cube often.</strong> A tile's twin is just as likely to be on the far side. Take a full turn around
+            before deciding you're stuck.</li>
+        <li><strong>Work from the corners in.</strong> Corners and edges open first. Taking them evenly, rather than digging a hole
+            in one face, keeps more tiles available.</li>
+        <li><strong>Don't strand the last of a kind.</strong> Before taking a pair, check where the other two tiles of that kind
+            are. If one sits deep in the middle, keep a way open to it.</li>
+        <li><strong>Start small.</strong> The small cube is quick to learn on; the large one hides 64 tiles inside it, out of sight until the outer layers come away.</li>
+    </ul>
+
+    <h2>Questions</h2>
+    <dl>
+        <dt>Why can't I take a tile with three open sides in a row?</dt>
+        <dd>Open sides only count in pairs that meet at an edge. Left and right are on the same axis, so they count as one; you
+            need one of those plus an open side above, below, in front or behind.</dd>
+        <dt>Can every cube be cleared?</dt>
+        <dd>With Guaranteed winnable path on, yes: the cube is dealt so there's a way through, though a wrong order can still leave
+            you stuck. Undo, or shuffle the tiles left.</dd>
+        <dt>Is there a quick way to see the rules while playing?</dt>
+        <dd>The first time you play, a short note explains how to turn the cube and which tiles can be taken. The ⓘ next to the game
+            in the settings shows the rule too.</dd>
+    </dl>
+
+    <HelpNav Current="HelpPages.Cube" />
+</article>

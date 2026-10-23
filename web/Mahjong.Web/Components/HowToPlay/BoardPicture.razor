@@ -1,0 +1,42 @@
+@using Mahjong.Core
+@using Mahjong.Web.Client.Components
+@using Mahjong.Web.Client.Game
+
+@*
+    A flat board drawn by the game's own Board component, on the server, so the help page shows exactly
+    what the game looks like: Mahjong Solitaire's Turtle, or a small Connect board with the line that
+    joins a pair. A fixed deal keeps the picture the same on every visit.
+*@
+<figure>
+    <div class="board-picture" role="img" aria-label="@Alt">
+        <Board Game="game" TileSet="TileSets.Classic" Path="path" />
+    </div>
+    <figcaption>@Caption</figcaption>
+</figure>
+
+@code {
+    private const int Seed = 11;
+
+    private MahjongGame game = default!;
+    private IReadOnlyList<Cell>? path;
+
+    /// <summary>True for a Connect board (with a pair's line), false for Mahjong Solitaire.</summary>
+    [Parameter] public bool Connect { get; set; }
+
+    [Parameter, EditorRequired] public string Alt { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Caption { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        if (Connect)
+        {
+            game = new MahjongGame(ConnectLayouts.BaseBoards[0], Seed);
+            path = game.Board.FindMove() is var (first, second) ? game.Board.FindPath(first, second) : null;
+        }
+        else
+        {
+            game = new MahjongGame(LayoutCatalog.Find("Standard Turtle") ?? LayoutCatalog.Default, Seed);
+        }
+    }
+}

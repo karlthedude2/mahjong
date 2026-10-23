@@ -18,12 +18,25 @@
     <div class="buttons">
         <button type="button" class="btn btn-primary" disabled="@running" @onclick="() => RunAsync(missingOnly: false)">Redraw all</button>
         <button type="button" class="btn btn-secondary" disabled="@running" @onclick="() => RunAsync(missingOnly: true)">Missing only</button>
+        <button type="button" class="btn btn-secondary" disabled="@running" @onclick="HelpPicturesAsync">How-to-play pictures</button>
     </div>
 
     <div class="stage">
         @if (current != null)
         {
             <Board3D @key="current" @ref="board" Game="game!" TileSet="TileSets.Ivory3D" ReadOnly="true" Blank="true" PixelRatio="1" />
+        }
+    </div>
+
+    @* The how-to-play pages' pictures: the game as it looks, faces and all, at 800×600. *@
+    <div class="help-stage">
+        @if (helpPicture == "mahjong-3d")
+        {
+            <Board3D @ref="helpBoard" Game="helpGame!" TileSet="TileSets.Marble3D" ReadOnly="true" PixelRatio="1" />
+        }
+        else if (helpPicture == "mahjong-cube")
+        {
+            <CubeBoard @ref="helpCube" Game="helpGame!" Stone="@(TileSets.Ivory3D.Stone!)" ReadOnly="true" PixelRatio="1" />
         }
     </div>
 
@@ -40,6 +53,10 @@
     private const int Seed = 1;
 
     private Board3D? board;
+    private Board3D? helpBoard;
+    private CubeBoard? helpCube;
+    private string? helpPicture;
+    private MahjongGame? helpGame;
     private LayoutDefinition? current;
     private MahjongGame? game;
     private bool running;
@@ -80,6 +97,41 @@
         }
 
         (current, game) = (null, null);
+        running = false;
+    }
+
+    // Mahjong 3D (Turtle, marble) and the small cube (ivory), each saved as an 800×600 picture.
+    private async Task HelpPicturesAsync()
+    {
+        running = true;
+        log.Clear();
+        foreach (var (name, layout) in new[] { ("mahjong-3d", LayoutCatalog.Find("Standard Turtle")!), ("mahjong-cube", CubeLayouts.ForSize(4)) })
+        {
+            (helpPicture, helpGame) = (name, new MahjongGame(layout, Seed));
+            StateHasChanged();
+            string? picture = null;
+            for (int i = 0; i < 80 && picture == null; i++)
+            {
+                await Task.Delay(100);
+                picture = name == "mahjong-3d" ? (helpBoard == null ? null : await helpBoard.SnapshotAsync()) : (helpCube == null ? null : await helpCube.SnapshotAsync());
+            }
+
+            // A moment more for the face pictures and the shadows, then the picture itself.
+            await Task.Delay(1500);
+            picture = name == "mahjong-3d" ? await helpBoard!.SnapshotAsync() : await helpCube!.SnapshotAsync();
+            if (picture == null)
+            {
+                log.Add($"{name}: not drawn in time");
+                continue;
+            }
+
+            var response = await Http.PostAsync("dev/how-to-play-pictures/" + name,
+                new ByteArrayContent(Convert.FromBase64String(picture[(picture.IndexOf(',') + 1)..])));
+            log.Add($"{name}: {(response.IsSuccessStatusCode ? "saved " : "")}{await response.Content.ReadAsStringAsync()}");
+            StateHasChanged();
+        }
+
+        (helpPicture, helpGame) = (null, null);
         running = false;
     }
 

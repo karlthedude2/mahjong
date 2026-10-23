@@ -22,3 +22,9 @@
 .log {
     font-size: 0.85rem;
 }
+
+/* The how-to-play pictures' size. */
+.help-stage {
+    width: 800px;
+    height: 600px;
+}

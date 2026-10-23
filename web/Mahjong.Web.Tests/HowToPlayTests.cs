@@ -95,6 +95,16 @@ public sealed partial class HowToPlayTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task TheHeaderLinksToHelpInANewTabFromTheGame()
+    {
+        string game = await app.CreateClient().GetStringAsync("/");
+        string privacy = await app.CreateClient().GetStringAsync("/privacy");
+
+        Assert.Matches("<a class=\"icon-link\" href=\"how-to-play\" target=\"_blank\" rel=\"noopener\"", game);
+        Assert.Contains("<a class=\"icon-link\" href=\"how-to-play\" aria-label", privacy);
+    }
+
     [GeneratedRegex("<h1[ >]")]
     private static partial Regex H1();
 }

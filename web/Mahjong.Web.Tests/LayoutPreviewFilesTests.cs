@@ -53,6 +53,22 @@ public sealed class LayoutPreviewFilesTests : IDisposable
     public void RefusesAPictureWithoutTransparency() =>
         Assert.Throws<ArgumentException>(() => LayoutPreviewFiles.Save("arena", Png(400, 300, colorType: 2), folder, null));
 
+    [Fact]
+    public void SavesAHowToPlayPicture()
+    {
+        string path = LayoutPreviewFiles.SaveHelpPicture("mahjong-cube", Png(800, 600, colorType: 6), folder);
+
+        Assert.Equal(Path.Combine(folder, "mahjong-cube.png"), path);
+        Assert.True(File.Exists(path));
+    }
+
+    [Theory]
+    [InlineData("chess", 800, 600)]
+    [InlineData("../mahjong-cube", 800, 600)]
+    [InlineData("mahjong-3d", 400, 300)]
+    public void RefusesAWrongHowToPlayPicture(string name, int width, int height) =>
+        Assert.Throws<ArgumentException>(() => LayoutPreviewFiles.SaveHelpPicture(name, Png(width, height, colorType: 6), folder));
+
     // A minimal valid PNG of the given size: signature, IHDR, one empty-ish IDAT, IEND.
     private static byte[] Png(int width, int height, byte colorType)
     {
