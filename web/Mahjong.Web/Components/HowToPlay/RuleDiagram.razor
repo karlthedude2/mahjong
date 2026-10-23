@@ -71,32 +71,32 @@
         Tile(svg, 20, 50, w, h, "東", ok: true);
         Tile(svg, 20 + w, 50, w, h, "南", ok: false);
         Tile(svg, 20 + 2 * w, 50, w, h, "西", ok: true);
-        Label(svg, 20 + 1.5 * w, 140, Es ? "Los extremos están libres" : "The ends are free");
+        Label(svg, 20 + 1.5 * w, 142, Es ? "Los extremos, libres" : "The ends are free", Ink, 18);
 
         // The covered tile is greyed rather than crossed: a cross would be hidden under the tile on top.
         Tile(svg, 250, 58, w, h, "北", dim: true);
         Tile(svg, 250 + w / 2, 38, w, h, "中", Bad, ok: true);
-        Label(svg, 250 + w, 140, Es ? "Una ficha encima la bloquea" : "A tile on top blocks it");
+        Label(svg, 250 + w, 142, Es ? "Una encima la bloquea" : "One on top blocks it", Ink, 18);
         return Wrap(svg, 420, 160, Es ? "Qué fichas están libres" : "Which tiles are free");
     }
 
-    // Matching: identical twins only.
+    // Matching: identical twins only. One pair per row, its verdict beside it.
     private static string Match()
     {
         var svg = new StringBuilder();
-        const double w = 46, h = 60;
-        void Pair(double x, string a, string ca, string b, string cb, bool ok, string text)
+        const double w = 40, h = 52;
+        void Pair(double y, string a, string ca, string b, string cb, bool ok, string text)
         {
-            Tile(svg, x, 30, w, h, a, ca);
-            Tile(svg, x + w + 8, 30, w, h, b, cb);
-            Mark(svg, x + w + 4, 22, ok);
-            Label(svg, x + w + 4, 120, text);
+            Tile(svg, 20, y, w, h, a, ca);
+            Tile(svg, 20 + w + 8, y, w, h, b, cb);
+            Mark(svg, 20 + 2 * w + 26, y + h / 2, ok);
+            Label(svg, 20 + 2 * w + 46, y + h / 2 + 7, text, ok ? Good : Bad, 20, "start");
         }
 
-        Pair(50, "中", Bad, "中", Bad, true, Es ? "Iguales: forman pareja" : "Identical: a pair");
-        Pair(205, "中", Bad, "發", Good, false, Es ? "Distintas" : "Different");
-        Pair(360, "❀1", Bad, "❀2", Bad, false, Es ? "Dos flores distintas" : "Two different flowers");
-        return Wrap(svg, 500, 140, Es ? "Qué fichas forman pareja" : "Which tiles match");
+        Pair(14, "中", Bad, "中", Bad, true, Es ? "Iguales: pareja" : "Identical: a pair");
+        Pair(84, "中", Bad, "發", Good, false, Es ? "Distintas" : "Different");
+        Pair(154, "❀1", Bad, "❀2", Bad, false, Es ? "Dos flores distintas" : "Two different flowers");
+        return Wrap(svg, 380, 220, Es ? "Qué fichas forman pareja" : "Which tiles match");
     }
 
     // The cube, one face seen straight on: corners and edges can be taken at first, the middle can't.
@@ -104,7 +104,7 @@
     {
         var svg = new StringBuilder();
         const double s = 50;
-        double x0 = 40, y0 = 20;
+        double x0 = 50, y0 = 14;
         for (int r = 0; r < 4; r++)
         {
             for (int c = 0; c < 4; c++)
@@ -114,11 +114,11 @@
             }
         }
 
-        Label(svg, 400, 70, Es ? "Esquinas y aristas: dos lados" : "Corners and edges: two open", Good, 15);
-        Label(svg, 400, 90, Es ? "abiertos que se juntan en una arista" : "sides that meet at an edge", Good, 15);
-        Label(svg, 400, 140, Es ? "Centro de una cara: un solo" : "Middle of a face: only one", Bad, 15);
-        Label(svg, 400, 160, Es ? "lado abierto, aún no" : "open side, not yet", Bad, 15);
-        return Wrap(svg, 600, 230, Es ? "Qué fichas del cubo se pueden retirar" : "Which cube tiles can be taken");
+        Label(svg, 20, 240, Es ? "✓ Esquinas y aristas: dos lados" : "✓ Corners and edges: two open", Good, 18, "start");
+        Label(svg, 20, 262, Es ? "despejados que no son opuestos" : "sides that aren't opposite", Good, 18, "start");
+        Label(svg, 20, 292, Es ? "✗ Centro de una cara: un solo" : "✗ Middle of a face: only one", Bad, 18, "start");
+        Label(svg, 20, 314, Es ? "lado despejado, todavía no" : "open side, not yet", Bad, 18, "start");
+        return Wrap(svg, 300, 330, Es ? "Qué fichas del cubo se pueden retirar" : "Which cube tiles can be taken");
     }
 
     // Connect: lines with no, one and two turns join a pair; three turns don't.
@@ -141,13 +141,16 @@
             string points = string.Join(" ", path.Select(p => $"{ox + p.Item1 * c + c / 2 - 2},{oy + p.Item2 * c + c / 2 - 2}"));
             svg.Append($"<polyline points=\"{points}\" fill=\"none\" stroke=\"{(ok ? Good : Bad)}\" stroke-width=\"3.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>");
             Mark(svg, ox + c * 6.4, oy - c * 0.4, ok);
-            Label(svg, ox + c * 3, oy + c * 5.6, text);
+            Label(svg, ox + c * 2.5, oy + c * 5.7, text, Ink, 20);
         }
 
-        Panel(40, 45, [(0, 3), (1, 3), (5, 3)], (0, 1), (5, 1), [(0, 1), (5, 1)], true, Es ? "Recta: sin vueltas" : "Straight: no turns");
-        Panel(310, 45, [(1, 1), (2, 1), (4, 3)], (0, 0), (3, 3), [(0, 0), (3, 0), (3, 3)], true, Es ? "Una vuelta" : "One turn");
-        Panel(40, 265, [(2, 3), (3, 3), (1, 2), (4, 2)], (1, 3), (4, 3), [(1, 3), (1, 4), (4, 4), (4, 3)], true, Es ? "Dos vueltas, por fuera" : "Two turns, round the edge");
-        Panel(310, 265, [(1, 0), (1, 1), (2, 3), (3, 2), (3, 0), (5, 2)], (0, 0), (5, 3), [(0, 0), (0, 2), (2, 2), (2, 1), (4, 1), (4, 3), (5, 3)], false, Es ? "Tres vueltas o más: no" : "Three or more turns: no");
+        double[][] origins = [[40, 45], [310, 45], [40, 265], [310, 265]];
+        for (int i = 0; i < ConnectExamples.All.Length; i++)
+        {
+            var e = ConnectExamples.All[i];
+            Panel(origins[i][0], origins[i][1], e.Blocks, e.A, e.B, e.Line.Select(p => ((double)p.Col, (double)p.Row)).ToArray(), e.Allowed, Es ? e.Spanish : e.English);
+        }
+
         return Wrap(svg, 560, 460, Es ? "Cómo se unen las parejas en Conectar" : "How pairs are joined in Connect");
     }
 

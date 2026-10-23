@@ -19,8 +19,8 @@
     <h2>Which tiles can be taken</h2>
     <p>
         Each tile in the cube is a small cube itself, with six sides. A tile can be taken when <strong>two of its sides that meet at
-        an edge are open</strong>: one open side across (left or right) and one open side on another axis (above or below, in front
-        or behind). Two open sides facing opposite ways, like left and right, aren't enough.
+        an edge are open</strong>: any two open sides that aren't opposite each other, such as the top and the front. Two open sides
+        facing opposite ways, like the top and the bottom, aren't enough.
     </p>
     <RuleDiagram Kind="cube" Caption="On a full cube, the corners and edges can be taken first. Tiles in the middle of a face have only one open side until their neighbours go." />
     <p>
@@ -48,8 +48,8 @@
 
     <h2>Scoring</h2>
     <p>
-        The cube is scored like the other games: points for every tile, pace and speed bonuses, finish bonuses for a quick finish,
-        and a no-shuffle bonus. Each size has its own leaderboard. <a href="how-to-play/mahjong-solitaire#scoring">See how scoring works.</a>
+        The cube is scored like the other games: points for every tile, pace and speed bonuses, and finish bonuses (including the
+        no-shuffle bonus) when you clear it inside five minutes. Each size has its own leaderboard. <a href="how-to-play/mahjong-solitaire#scoring">See how scoring works.</a>
     </p>
 
     <h2>Tips</h2>
@@ -65,15 +65,15 @@
 
     <h2>Questions</h2>
     <dl>
-        <dt>Why can't I take a tile with three open sides in a row?</dt>
-        <dd>Open sides only count in pairs that meet at an edge. Left and right are on the same axis, so they count as one; you
-            need one of those plus an open side above, below, in front or behind.</dd>
+        <dt>Why can't I take a tile that's open on two sides?</dt>
+        <dd>The two open sides must meet at an edge. A tile open only on opposite sides, such as its left and right with its top,
+            bottom, front and back covered, has to wait until one of those others opens.</dd>
         <dt>Can every cube be cleared?</dt>
         <dd>With Guaranteed winnable path on, yes: the cube is dealt so there's a way through, though a wrong order can still leave
             you stuck. Undo, or shuffle the tiles left.</dd>
         <dt>Is there a quick way to see the rules while playing?</dt>
-        <dd>The first time you play, a short note explains how to turn the cube and which tiles can be taken. The ⓘ next to the game
-            in the settings shows the rule too.</dd>
+        <dd>When a cube game starts, a short note explains how to turn the cube and which tiles can be taken, until you tick
+            "Don't show again". The ⓘ next to the game in the settings shows the rule too.</dd>
     </dl>
 
     <HelpNav Current="HelpPages.Cube" />

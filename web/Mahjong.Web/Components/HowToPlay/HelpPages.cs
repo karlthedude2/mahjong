@@ -40,7 +40,8 @@ public static class HelpPages
     /// </summary>
     public static (string Page, string Language)? Parse(string relativePath)
     {
-        string path = relativePath.Trim('/');
+        // The router matches addresses in any letter case, so this does too.
+        string path = relativePath.Trim('/').ToLowerInvariant();
         string language = "en";
         foreach (var prefix in Prefixes)
         {
@@ -53,6 +54,28 @@ public static class HelpPages
 
         return path == Hub || path.StartsWith(Hub + "/", StringComparison.Ordinal) ? (path, language) : null;
     }
+}
+
+/// <summary>
+/// One of the Connect diagram's examples, on a board 6 cells wide and 4 high: the blocking tiles, the
+/// pair, the line drawn between them (cells, corners only; -1 and 6 or 4 are outside the board) and
+/// whether the rule allows it. HowToPlayTests checks each against ConnectRules.
+/// </summary>
+public sealed record ConnectExample((int Col, int Row)[] Blocks, (int Col, int Row) A, (int Col, int Row) B, (int Col, int Row)[] Line, bool Allowed, string English, string Spanish);
+
+public static class ConnectExamples
+{
+    public const int Columns = 6;
+    public const int Rows = 4;
+
+    public static readonly ConnectExample[] All =
+    [
+        new([(0, 3), (1, 3), (5, 3)], (0, 1), (5, 1), [(0, 1), (5, 1)], true, "Straight: no turns", "Recta: sin vueltas"),
+        new([(1, 1), (2, 1), (4, 3)], (0, 0), (3, 3), [(0, 0), (3, 0), (3, 3)], true, "One turn", "Una vuelta"),
+        new([(2, 3), (3, 3), (1, 2), (4, 2)], (1, 3), (4, 3), [(1, 3), (1, 4), (4, 4), (4, 3)], true, "Two turns, round the edge", "Dos vueltas, por fuera"),
+        // Every way out of A (up, left) and into B (from the right, from below) needs a third turn.
+        new([(1, 0), (0, 1), (5, 2), (4, 3), (2, 2), (3, 1)], (0, 0), (5, 3), [(0, 0), (0, -1), (6, -1), (6, 3), (5, 3)], false, "Three turns: no", "Tres vueltas: no"),
+    ];
 }
 
 /// <summary>On a help page, the address's language comes first, ahead of the cookie and the browser.</summary>

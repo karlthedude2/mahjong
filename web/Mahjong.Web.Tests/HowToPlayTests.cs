@@ -83,6 +83,17 @@ public sealed partial class HowToPlayTests : IDisposable
         Assert.Contains("language/en?returnUrl=%2Fhow-to-play%2Fmahjong-cube", spanish);
     }
 
+    [Theory]
+    [InlineData("/How-To-Play/Connect", "How to play Connect", "en")]
+    [InlineData("/ES/how-to-play/connect", "Cómo jugar Conectar", "es")]
+    public async Task AddressesInAnyCaseShowTheRightPage(string path, string heading, string language)
+    {
+        string html = await app.CreateClient().GetStringAsync(path);
+
+        Assert.Contains(heading, html);
+        Assert.Contains($"<html lang=\"{language}\"", html);
+    }
+
     [Fact]
     public async Task TheSitemapListsEveryHelpPage()
     {
@@ -103,6 +114,27 @@ public sealed partial class HowToPlayTests : IDisposable
 
         Assert.Matches("<a class=\"icon-link\" href=\"how-to-play\" target=\"_blank\" rel=\"noopener\"", game);
         Assert.Contains("<a class=\"icon-link\" href=\"how-to-play\" aria-label", privacy);
+    }
+
+    // The Connect diagram teaches the rule, so each example must be what the game itself decides:
+    // the allowed ones join with at most two turns, the refused one can't be joined at all.
+    [Fact]
+    public void TheConnectDiagramMatchesTheRule()
+    {
+        var layout = (Mahjong.Core.LayoutDefinition)Activator.CreateInstance(typeof(Mahjong.Core.LayoutDefinition),
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic, null,
+            ["diagram", Array.Empty<Mahjong.Core.Position>(), Mahjong.Core.GameKind.Connect,
+             Mahjong.Web.Components.HowToPlay.ConnectExamples.Columns, Mahjong.Web.Components.HowToPlay.ConnectExamples.Rows,
+             Mahjong.Core.Gravity.None, "diagram"], null)!;
+        static Mahjong.Core.Position At((int Col, int Row) cell) => new Mahjong.Core.Cell(cell.Col, cell.Row).ToPosition();
+
+        foreach (var example in Mahjong.Web.Components.HowToPlay.ConnectExamples.All)
+        {
+            var occupied = example.Blocks.Append(example.A).Append(example.B).Select(At).ToHashSet();
+            var path = Mahjong.Core.ConnectRules.FindPath(layout, occupied, At(example.A), At(example.B));
+
+            Assert.True(example.Allowed == (path != null), $"{example.English}: the rule says {(path == null ? "no" : "yes")}");
+        }
     }
 
     [GeneratedRegex("<h1[ >]")]
