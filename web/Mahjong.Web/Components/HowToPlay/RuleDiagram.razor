@@ -1,0 +1,185 @@
+@using System.Text
+@using System.Net
+
+@*
+    A small drawing of one rule, labelled in the page's language: which tiles are free, which tiles
+    match, which cube tiles can be taken, the Connect line, and gravity. Built as SVG in code (Razor
+    reserves <text>), so it's sharp at any size and its words are translated with the page.
+*@
+<figure>
+    @((MarkupString)Svg())
+    <figcaption>@Caption</figcaption>
+</figure>
+
+@code {
+    /// <summary>"free", "match", "cube", "connect" or "gravity".</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "free";
+
+    [Parameter, EditorRequired] public string Caption { get; set; } = "";
+
+    private static bool Es => Strings.IsSpanish;
+
+    private const string Ivory = "#f5ecd6", Edge = "#b9a17a", Ink = "#2b2116", Good = "#1f7a4d", Bad = "#b8321f", Muted = "#8a7a62";
+
+    private string Svg() => Kind switch
+    {
+        "match" => Match(),
+        "cube" => Cube(),
+        "connect" => Connect(),
+        "gravity" => Gravity(),
+        _ => Free(),
+    };
+
+    // A tile: a face with a darker edge below and to the right, a symbol, and an optional tick or cross.
+    private static void Tile(StringBuilder svg, double x, double y, double w, double h, string symbol, string color = Ink, bool? ok = null, bool dim = false)
+    {
+        svg.Append($"<g opacity=\"{(dim ? 0.55 : 1)}\">");
+        svg.Append($"<rect x=\"{x + 4}\" y=\"{y + 4}\" width=\"{w}\" height=\"{h}\" rx=\"6\" fill=\"{Edge}\"/>");
+        svg.Append($"<rect x=\"{x}\" y=\"{y}\" width=\"{w}\" height=\"{h}\" rx=\"6\" fill=\"{Ivory}\" stroke=\"{Edge}\" stroke-width=\"1.5\"/>");
+        if (symbol.Length > 0)
+        {
+            svg.Append($"<text x=\"{x + w / 2}\" y=\"{y + h / 2 + 8}\" text-anchor=\"middle\" font-size=\"{Math.Round(w * 0.5)}\" font-weight=\"700\" fill=\"{color}\">{WebUtility.HtmlEncode(symbol)}</text>");
+        }
+
+        svg.Append("</g>");
+        if (ok is bool good)
+        {
+            Mark(svg, x + w - 2, y - 2, good);
+        }
+    }
+
+    // A round green tick or red cross badge centred on (cx, cy).
+    private static void Mark(StringBuilder svg, double cx, double cy, bool good)
+    {
+        svg.Append($"<circle cx=\"{cx}\" cy=\"{cy}\" r=\"11\" fill=\"{(good ? Good : Bad)}\"/>");
+        svg.Append(good
+            ? $"<path d=\"M{cx - 5} {cy} l3.5 3.5 l6.5 -7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
+            : $"<path d=\"M{cx - 4.5} {cy - 4.5} l9 9 M{cx + 4.5} {cy - 4.5} l-9 9\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\"/>");
+    }
+
+    private static void Label(StringBuilder svg, double x, double y, string text, string color = Ink, int size = 15, string anchor = "middle") =>
+        svg.Append($"<text x=\"{x}\" y=\"{y}\" text-anchor=\"{anchor}\" font-size=\"{size}\" fill=\"{color}\">{WebUtility.HtmlEncode(text)}</text>");
+
+    private static string Wrap(StringBuilder svg, int width, int height, string title) =>
+        $"<svg class=\"diagram\" viewBox=\"0 0 {width} {height}\" role=\"img\" aria-label=\"{WebUtility.HtmlEncode(title)}\" font-family=\"system-ui, sans-serif\">{svg}</svg>";
+
+    // Solitaire and 3D: a row of three (the ends are free, the middle isn't), and a tile with one on top.
+    private static string Free()
+    {
+        var svg = new StringBuilder();
+        const double w = 46, h = 60;
+        Tile(svg, 20, 50, w, h, "東", ok: true);
+        Tile(svg, 20 + w, 50, w, h, "南", ok: false);
+        Tile(svg, 20 + 2 * w, 50, w, h, "西", ok: true);
+        Label(svg, 20 + 1.5 * w, 142, Es ? "Los extremos, libres" : "The ends are free", Ink, 18);
+
+        // The covered tile is greyed rather than crossed: a cross would be hidden under the tile on top.
+        Tile(svg, 250, 58, w, h, "北", dim: true);
+        Tile(svg, 250 + w / 2, 38, w, h, "中", Bad, ok: true);
+        Label(svg, 250 + w, 142, Es ? "Una encima la bloquea" : "One on top blocks it", Ink, 18);
+        return Wrap(svg, 420, 160, Es ? "Qué fichas están libres" : "Which tiles are free");
+    }
+
+    // Matching: identical twins only. One pair per row, its verdict beside it.
+    private static string Match()
+    {
+        var svg = new StringBuilder();
+        const double w = 40, h = 52;
+        void Pair(double y, string a, string ca, string b, string cb, bool ok, string text)
+        {
+            Tile(svg, 20, y, w, h, a, ca);
+            Tile(svg, 20 + w + 8, y, w, h, b, cb);
+            Mark(svg, 20 + 2 * w + 26, y + h / 2, ok);
+            Label(svg, 20 + 2 * w + 46, y + h / 2 + 7, text, ok ? Good : Bad, 20, "start");
+        }
+
+        Pair(14, "中", Bad, "中", Bad, true, Es ? "Iguales: pareja" : "Identical: a pair");
+        Pair(84, "中", Bad, "發", Good, false, Es ? "Distintas" : "Different");
+        Pair(154, "❀1", Bad, "❀2", Bad, false, Es ? "Dos flores distintas" : "Two different flowers");
+        return Wrap(svg, 380, 220, Es ? "Qué fichas forman pareja" : "Which tiles match");
+    }
+
+    // The cube, one face seen straight on: corners and edges can be taken at first, the middle can't.
+    private static string Cube()
+    {
+        var svg = new StringBuilder();
+        const double s = 50;
+        double x0 = 50, y0 = 14;
+        for (int r = 0; r < 4; r++)
+        {
+            for (int c = 0; c < 4; c++)
+            {
+                bool inside = r is 1 or 2 && c is 1 or 2;
+                Tile(svg, x0 + c * s, y0 + r * s, s - 6, s - 6, "", ok: !inside, dim: inside);
+            }
+        }
+
+        Label(svg, 20, 240, Es ? "✓ Esquinas y aristas: dos lados" : "✓ Corners and edges: two open", Good, 18, "start");
+        Label(svg, 20, 262, Es ? "despejados que no son opuestos" : "sides that aren't opposite", Good, 18, "start");
+        Label(svg, 20, 292, Es ? "✗ Centro de una cara: un solo" : "✗ Middle of a face: only one", Bad, 18, "start");
+        Label(svg, 20, 314, Es ? "lado despejado, todavía no" : "open side, not yet", Bad, 18, "start");
+        return Wrap(svg, 300, 330, Es ? "Qué fichas del cubo se pueden retirar" : "Which cube tiles can be taken");
+    }
+
+    // Connect: lines with no, one and two turns join a pair; three turns don't.
+    private static string Connect()
+    {
+        var svg = new StringBuilder();
+        const double c = 30;
+        // A 6 × 4 board (the darker area) with a ring of empty space around it, where a line may run.
+        void Panel(double ox, double oy, (int col, int row)[] blocks, (int col, int row) a, (int col, int row) b, (double, double)[] path, bool ok, string text)
+        {
+            svg.Append($"<rect x=\"{ox - c}\" y=\"{oy - c}\" width=\"{c * 8}\" height=\"{c * 6}\" rx=\"8\" fill=\"#f3ecdc\"/>");
+            svg.Append($"<rect x=\"{ox - 3}\" y=\"{oy - 3}\" width=\"{c * 6 + 2}\" height=\"{c * 4 + 2}\" rx=\"4\" fill=\"#e0d3b4\"/>");
+            foreach (var (col, row) in blocks)
+            {
+                Tile(svg, ox + col * c, oy + row * c, c - 4, c - 4, "", dim: true);
+            }
+
+            Tile(svg, ox + a.col * c, oy + a.row * c, c - 4, c - 4, "東", Bad);
+            Tile(svg, ox + b.col * c, oy + b.row * c, c - 4, c - 4, "東", Bad);
+            string points = string.Join(" ", path.Select(p => $"{ox + p.Item1 * c + c / 2 - 2},{oy + p.Item2 * c + c / 2 - 2}"));
+            svg.Append($"<polyline points=\"{points}\" fill=\"none\" stroke=\"{(ok ? Good : Bad)}\" stroke-width=\"3.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>");
+            Mark(svg, ox + c * 6.4, oy - c * 0.4, ok);
+            Label(svg, ox + c * 2.5, oy + c * 5.7, text, Ink, 20);
+        }
+
+        double[][] origins = [[40, 45], [310, 45], [40, 265], [310, 265]];
+        for (int i = 0; i < ConnectExamples.All.Length; i++)
+        {
+            var e = ConnectExamples.All[i];
+            Panel(origins[i][0], origins[i][1], e.Blocks, e.A, e.B, e.Line.Select(p => ((double)p.Col, (double)p.Row)).ToArray(), e.Allowed, Es ? e.Spanish : e.English);
+        }
+
+        return Wrap(svg, 560, 460, Es ? "Cómo se unen las parejas en Conectar" : "How pairs are joined in Connect");
+    }
+
+    // Gravity: after a pair goes, the tiles above fall into the gap (or slide left).
+    private static string Gravity()
+    {
+        var svg = new StringBuilder();
+        const double c = 34;
+        void Column(double ox, string[] tiles, string text)
+        {
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                if (tiles[i].Length > 0)
+                {
+                    Tile(svg, ox, 20 + i * c, c - 4, c - 4, tiles[i]);
+                }
+                else
+                {
+                    svg.Append($"<rect x=\"{ox}\" y=\"{20 + i * c}\" width=\"{c - 4}\" height=\"{c - 4}\" rx=\"5\" fill=\"none\" stroke=\"{Muted}\" stroke-dasharray=\"4 3\"/>");
+                }
+            }
+
+            Label(svg, ox + c / 2, 20 + tiles.Length * c + 22, text);
+        }
+
+        Column(40, ["北", "西", "", "南"], Es ? "Antes" : "Before");
+        svg.Append($"<path d=\"M105 95 h80\" stroke=\"{Ink}\" stroke-width=\"3\" marker-end=\"url(#arrow)\"/>");
+        svg.Append($"<defs><marker id=\"arrow\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto\"><path d=\"M0 0 L10 5 L0 10z\" fill=\"{Ink}\"/></marker></defs>");
+        Column(250, ["", "北", "西", "南"], Es ? "Con gravedad hacia abajo" : "With gravity down");
+        return Wrap(svg, 360, 200, Es ? "La gravedad llena los huecos" : "Gravity fills the gaps");
+    }
+}

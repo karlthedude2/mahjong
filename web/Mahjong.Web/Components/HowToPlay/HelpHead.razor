@@ -1,0 +1,36 @@
+@inject IConfiguration Config
+
+@*
+    A help page's title and description, and its links for search engines: the page itself as the
+    canonical address, and its versions in each language (English is the default).
+*@
+<PageTitle>@Title - Mahjong Haus</PageTitle>
+<HeadContent>
+    <meta name="description" content="@Description" />
+    <link rel="canonical" href="@Url(Strings.IsSpanish ? "es" : "en")" />
+    <link rel="alternate" hreflang="en" href="@Url("en")" />
+    @foreach (var prefix in HelpPages.Prefixes)
+    {
+        <link rel="alternate" hreflang="@prefix" href="@Url(prefix)" />
+    }
+    <link rel="alternate" hreflang="x-default" href="@Url("en")" />
+</HeadContent>
+
+@code {
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    /// <summary>The page without a language prefix, e.g. "how-to-play/connect".</summary>
+    [Parameter, EditorRequired] public string Page { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Description { get; set; } = "";
+
+    // The live site's address (https and Site:CanonicalHost) when it's configured, otherwise the one asked for.
+    private string Url(string language)
+    {
+        string root = Config["Site:CanonicalHost"] is { Length: > 0 } host ? $"https://{host}/"
+            : HttpContext is { } http ? $"{http.Request.Scheme}://{http.Request.Host}/" : "/";
+        return root + HelpPages.Path(Page, language);
+    }
+}

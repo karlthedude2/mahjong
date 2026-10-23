@@ -28,6 +28,15 @@
         </svg>
     </NavLink>
 
+    @* How to play, in this page's language. From the game it opens in a new tab, so a game under way isn't lost. *@
+    <a class="icon-link" href="@(Strings.IsSpanish ? "es/how-to-play" : "how-to-play")" target="@(OnGamePage ? "_blank" : null)"
+       rel="@(OnGamePage ? "noopener" : null)" aria-label="@L["How to play"]" data-tip="@L["How to play"]">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.5" />
+            <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17.2v.01" />
+        </svg>
+    </a>
+
     <span class="spacer"></span>
 
     <div class="right">
@@ -100,7 +109,14 @@
     // The language to switch to (the one not showing), named in that language.
     private static string OtherLanguage => Strings.IsSpanish ? "en" : "es";
     private static string OtherLanguageName => Strings.IsSpanish ? "Switch to English" : "Cambiar a español";
-    private string LanguageLink => $"language/{OtherLanguage}?returnUrl={Uri.EscapeDataString("/" + currentUrl)}";
+    // The game page: the site's root, with any ?settings= or ?replay= on it.
+    private bool OnGamePage => (currentUrl ?? "").Split('?', '#')[0].Length == 0;
+
+    // Back to the same page; on a how-to-play page, to its version in the other language.
+    private string LanguageLink => $"language/{OtherLanguage}?returnUrl={Uri.EscapeDataString("/" + ReturnPage())}";
+
+    private string? ReturnPage() =>
+        HelpPages.Parse((currentUrl ?? "").Split('?', '#')[0]) is { } help ? HelpPages.Path(help.Page, OtherLanguage) : currentUrl;
 
     protected override void OnInitialized()
     {

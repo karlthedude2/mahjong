@@ -35,7 +35,11 @@
                             <path d="M12 11v6M12 7.5v.01" />
                         </svg>
                     </button>
-                    <span class="info-note below" role="note">@GameRules</span>
+                    <span class="info-note below" role="note">
+                        @GameRules
+                        @* The full rules, in a new tab so the game here isn't lost. *@
+                        <a class="rules-link" href="@HelpLink" target="_blank" rel="noopener">@L["How to play"]</a>
+                    </span>
                 </span>
             </div>
 
@@ -275,6 +279,15 @@
     private const string WinnableNote = "As in life, a winnable game can still be lost if you choose the wrong path. Choose wisely.";
 
     private BackgroundInfo background => Backgrounds.Find(backgroundId);
+
+    // The chosen game's how-to-play page, in the site's language (see Mahjong.Web's HelpPages).
+    private string HelpLink => (Strings.IsSpanish ? "es/" : "") + "how-to-play/" + tab switch
+    {
+        GameTab.ThreeD => "mahjong-3d",
+        GameTab.Cube => "mahjong-cube",
+        GameTab.Connect => "connect",
+        _ => "mahjong-solitaire",
+    };
 
     private string GameRules => tab switch
     {

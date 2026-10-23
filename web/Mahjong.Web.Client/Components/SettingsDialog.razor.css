@@ -586,6 +586,27 @@ select.cover.right {
 .info:focus-within .info-note,
 .info.open .info-note {
     opacity: 1;
+    /* Showing, it can be reached: the game's note holds a link. */
+    pointer-events: auto;
+}
+
+/* Bridges the small gap under the button, so moving the pointer down to the note keeps it open. */
+.info-note.below::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -6px;
+    height: 6px;
+}
+
+.rules-link {
+    display: block;
+    margin-top: 6px;
+    color: #F3EEDC;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 /* Footer: always in view. */

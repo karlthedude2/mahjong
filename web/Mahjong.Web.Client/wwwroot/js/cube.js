@@ -234,6 +234,12 @@ export function create(host, dotnet, options = {}) {
             changed();
         },
 
+        // The cube as drawn now, as a PNG data URL (for the how-to-play pictures).
+        snapshot() {
+            renderer.render(scene, camera);
+            return renderer.domElement.toDataURL("image/png");
+        },
+
         remove(ids) {
             for (const id of ids) {
                 const mesh = meshes.get(id);

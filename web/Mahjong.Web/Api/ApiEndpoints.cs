@@ -41,7 +41,7 @@ public static partial class ApiEndpoints
         app.MapGet("/sitemap.xml", (HttpRequest request, IConfiguration config) =>
         {
             string root = SiteRoot(request, config);
-            var urls = PublicPages.Select(page => $"  <url><loc>{root}{page}</loc></url>\n");
+            var urls = PublicPages.Concat(Components.HowToPlay.HelpPages.All()).Select(page => $"  <url><loc>{root}{page}</loc></url>\n");
             return Results.Text(
                 $"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n{string.Concat(urls)}</urlset>\n",
                 "application/xml");

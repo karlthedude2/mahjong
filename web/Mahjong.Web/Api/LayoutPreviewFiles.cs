@@ -23,7 +23,7 @@ public static class LayoutPreviewFiles
     {
         var layout = LayoutCatalog.All.Concat(ConnectLayouts.BaseBoards).FirstOrDefault(l => LayoutPreviews.Slug(l.PreviewName) == slug)
             ?? throw new ArgumentException($"No layout's picture is called \"{slug}\".");
-        Check(png);
+        Check(png, Width, Height);
 
         var written = new List<string> { Path.Combine(previewsFolder, slug + ".png") };
         if (!string.IsNullOrWhiteSpace(copyTo))
@@ -40,8 +40,29 @@ public static class LayoutPreviewFiles
         return written;
     }
 
+    /// <summary>The how-to-play pages' pictures of the 3D views: their names, and their size.</summary>
+    public static readonly string[] HelpPictures = ["mahjong-3d", "mahjong-cube"];
+
+    public const int HelpWidth = 800;
+    public const int HelpHeight = 600;
+
+    /// <summary>Writes a how-to-play picture ({name}.png, an 800×600 PNG) to the help pictures folder.</summary>
+    public static string SaveHelpPicture(string name, byte[] png, string folder)
+    {
+        if (!HelpPictures.Contains(name))
+        {
+            throw new ArgumentException($"No how-to-play picture is called \"{name}\".");
+        }
+
+        Check(png, HelpWidth, HelpHeight);
+        Directory.CreateDirectory(folder);
+        string path = Path.Combine(folder, name + ".png");
+        File.WriteAllBytes(path, png);
+        return path;
+    }
+
     // The PNG header: the signature, then IHDR's width, height and colour type (6 = RGBA).
-    private static void Check(byte[] png)
+    private static void Check(byte[] png, int expectedWidth, int expectedHeight)
     {
         if (png.Length < 33 || !png.AsSpan(0, 8).SequenceEqual(Signature))
         {
@@ -50,9 +71,9 @@ public static class LayoutPreviewFiles
 
         int width = BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16));
         int height = BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20));
-        if (width != Width || height != Height)
+        if (width != expectedWidth || height != expectedHeight)
         {
-            throw new ArgumentException($"The picture is {width}×{height}; it should be {Width}×{Height}.");
+            throw new ArgumentException($"The picture is {width}×{height}; it should be {expectedWidth}×{expectedHeight}.");
         }
 
         if (png[25] != 6)

@@ -1,0 +1,35 @@
+@page "/how-to-play/mahjong-solitaire"
+@page "/how-to-play/mahjong-3d"
+@page "/how-to-play/mahjong-cube"
+@page "/how-to-play/connect"
+@page "/es/how-to-play/mahjong-solitaire"
+@page "/es/how-to-play/mahjong-3d"
+@page "/es/how-to-play/mahjong-cube"
+@page "/es/how-to-play/connect"
+@inject NavigationManager Navigation
+
+@*
+    A game's how-to-play page, written out in full in each language. One route per game (the router
+    has no way to limit a parameter to a list), so any other address is the site's 404.
+*@
+@switch ((game.Slug, Strings.IsSpanish))
+{
+    case ("mahjong-solitaire", false): <SolitaireEn /> break;
+    case ("mahjong-solitaire", true): <SolitaireEs /> break;
+    case ("mahjong-3d", false): <ThreeDEn /> break;
+    case ("mahjong-3d", true): <ThreeDEs /> break;
+    case ("mahjong-cube", false): <CubeEn /> break;
+    case ("mahjong-cube", true): <CubeEs /> break;
+    case ("connect", false): <ConnectEn /> break;
+    case ("connect", true): <ConnectEs /> break;
+}
+
+@code {
+    private HelpGame game = HelpPages.Solitaire;
+
+    protected override void OnParametersSet()
+    {
+        string page = HelpPages.Parse(Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0])?.Page ?? "";
+        game = HelpPages.Find(page[(page.LastIndexOf('/') + 1)..]) ?? HelpPages.Solitaire;
+    }
+}

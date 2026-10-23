@@ -1,0 +1,106 @@
+<HelpHead Page="how-to-play/mahjong-solitaire" Title="How to play Mahjong Solitaire"
+          Description="How to play Mahjong Solitaire: the goal, the tiles, which tiles are free, scoring, and tips for clearing the board. Free to play in your browser." />
+
+<article class="help" lang="en">
+    <h1>How to play Mahjong Solitaire</h1>
+    <p class="lead">
+        Mahjong Solitaire is a matching game for one player, played with the 144 tiles of a mahjong set. The tiles are stacked
+        in a shape, called a layout, and you clear it by taking away matching pairs, one pair at a time.
+    </p>
+
+    <BoardPicture Alt="A Mahjong Solitaire game: the Turtle layout, its tiles stacked in layers" Caption="The Turtle, the classic layout, at the start of a game." />
+
+    <h2>The goal</h2>
+    <p>
+        Remove every tile from the board. Each move takes away two matching tiles, so a full layout of 144 tiles takes 72 moves.
+        You can only take tiles that are free, which is what makes it a puzzle: the order you take pairs in decides whether the
+        board can still be cleared.
+    </p>
+
+    <h2>The tiles</h2>
+    <p>
+        A set has 42 kinds of tile. Most come four times; the winds, flowers and seasons come twice. Each tile matches only its
+        identical twin: a red dragon with a red dragon, the 3 of bamboo with the 3 of bamboo, the first flower with the first
+        flower. Two different flowers, or two different seasons, don't make a pair.
+    </p>
+    <TileGuide />
+    <RuleDiagram Kind="match" Caption="Only identical tiles make a pair. Different tiles, even two flowers, don't." />
+
+    <h2>Which tiles are free</h2>
+    <p>A tile is free, and can be taken, when both of these are true:</p>
+    <ul>
+        <li><strong>Nothing lies on top of it.</strong> Even a tile that covers it only partly, from the layer above, blocks it.</li>
+        <li><strong>Its left side or its right side is open.</strong> A tile with neighbours on both its left and right is stuck
+            until one of them goes. Tiles above or below it on the screen don't matter; only left and right do.</li>
+    </ul>
+    <RuleDiagram Kind="free" Caption="In a row, only the ends are free. A tile with another on top of it isn't free, even when its sides are open." />
+    <p>
+        On a fresh board, that usually means the tiles at the ends of each row and the tile at the very top of the pile.
+        Each pair you take opens up others.
+    </p>
+
+    <h2>Playing on Mahjong Haus</h2>
+    <ol>
+        <li><strong>Choose your game.</strong> Open the settings (the gear in the top bar) and choose Mahjong Solitaire, a layout,
+            your tiles and a background, then press Start game.</li>
+        <li><strong>Take a pair.</strong> Tap one free tile, then its twin. Both disappear. Tap a selected tile again to let it go.</li>
+        <li><strong>Use the tools under the board.</strong> Undo and redo take moves back and forward. A hint shows you a pair you
+            can take. Shuffle rearranges the tiles still on the board when you're stuck. Pause stops the clock.</li>
+        <li><strong>Watch a demo.</strong> The eye button lets the computer play the same deal from the start, so you can see one
+            way through it. A game the computer has played isn't ranked.</li>
+    </ol>
+    <p>
+        With <strong>Guaranteed winnable path</strong> turned on in the settings (the default), every deal can be cleared: the tiles
+        are dealt so that at least one order of moves takes them all. You can still get stuck by taking pairs in the wrong order.
+        Turn it off for random deals, dealt like a real set, where some boards can't be cleared at all.
+    </p>
+
+    <h2 id="scoring">Scoring and leaderboards</h2>
+    <p>Every game is timed from your first move, and scored as you play:</p>
+    <ul>
+        <li><strong>Tile points:</strong> each tile is worth its face value: 10 for the suits, 20 for the dragons and the peacock,
+            and 40 for the winds, flowers and seasons.</li>
+        <li><strong>Pace bonus:</strong> a five-minute bonus clock starts with the game. Every 20 tiles you take adds the seconds
+            left on it.</li>
+        <li><strong>Speed bonus:</strong> take 20 tiles inside one 30-second window to earn 100 points for every second still left in it.</li>
+        <li><strong>Finish bonuses:</strong> clear the board before the bonus clock runs out and you also earn:
+            <ul>
+                <li>30 points for every second left on it;</li>
+                <li>a quick-finish bonus that starts at 5,000 and drops in steps after 2 minutes 40 seconds;</li>
+                <li>a no-shuffle bonus of 3,000, less 1,000 for each shuffle and 500 for each hint.</li>
+            </ul>
+            Take longer than five minutes and you keep your tile points and the bonuses earned along the way, but not these.</li>
+    </ul>
+    <p>
+        Each layout has its own <a href="leaderboards">leaderboard</a>. Sign in to keep your wins, track your statistics and see
+        where you rank. If you play as a guest and win, sign in on the same device within a day to keep that game.
+    </p>
+
+    <h2>Tips and strategy</h2>
+    <ul>
+        <li><strong>Look before you tap.</strong> When several pairs are free, choose the one that frees the most tiles, not the
+            first one you see.</li>
+        <li><strong>Work on the tall stacks and long rows early.</strong> Tiles buried under high piles or in the middle of long rows
+            take the longest to reach, so open them up while you still have choices.</li>
+        <li><strong>Watch the third and fourth of a kind.</strong> When three tiles of a kind are free, take the pair that leaves
+            the third able to reach the fourth. If two tiles of a kind are buried under each other, take the pair on top first.</li>
+        <li><strong>Count what's blocked.</strong> If both remaining tiles of a kind lie under the same stack, that stack needs
+            clearing before anything else.</li>
+        <li><strong>Use undo to explore.</strong> Undo costs no points (though the clock keeps running), so try a line of moves and take it back if it leads nowhere.</li>
+        <li><strong>Save hints and shuffles for real dead ends.</strong> Both cost bonus points.</li>
+    </ul>
+
+    <h2>Questions</h2>
+    <dl>
+        <dt>Can every game be won?</dt>
+        <dd>With Guaranteed winnable path on, yes: every deal has a way through, though you can still take a wrong turn. Random deals can't always be cleared.</dd>
+        <dt>What if no pairs are free?</dt>
+        <dd>Undo some moves and try another order, or shuffle the tiles left on the board.</dd>
+        <dt>Do I need an account?</dt>
+        <dd>No. You can play as a guest. An account keeps your scores, your statistics and your place on the leaderboards.</dd>
+        <dt>Is it free?</dt>
+        <dd>Yes. Mahjong Haus runs in your browser on a phone, tablet or computer, with nothing to download.</dd>
+    </dl>
+
+    <HelpNav Current="HelpPages.Solitaire" />
+</article>
