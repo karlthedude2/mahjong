@@ -100,7 +100,11 @@
     // The language to switch to (the one not showing), named in that language.
     private static string OtherLanguage => Strings.IsSpanish ? "en" : "es";
     private static string OtherLanguageName => Strings.IsSpanish ? "Switch to English" : "Cambiar a español";
-    private string LanguageLink => $"language/{OtherLanguage}?returnUrl={Uri.EscapeDataString("/" + currentUrl)}";
+    // Back to the same page; on a how-to-play page, to its version in the other language.
+    private string LanguageLink => $"language/{OtherLanguage}?returnUrl={Uri.EscapeDataString("/" + ReturnPage())}";
+
+    private string? ReturnPage() =>
+        HelpPages.Parse((currentUrl ?? "").Split('?', '#')[0]) is { } help ? HelpPages.Path(help.Page, OtherLanguage) : currentUrl;
 
     protected override void OnInitialized()
     {

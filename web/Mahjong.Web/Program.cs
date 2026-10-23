@@ -32,8 +32,9 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 
-// English and Spanish (see Mahjong.Web.Client.Strings): the player's choice (a cookie set by
-// /language/{code}), otherwise the browser's preferred language, otherwise English.
+// English and Spanish (see Mahjong.Web.Client.Strings): on a how-to-play page the address's language
+// (/es/... is Spanish); elsewhere the player's choice (a cookie set by /language/{code}), otherwise
+// the browser's preferred language, otherwise English.
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -43,6 +44,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
     options.ApplyCurrentCultureToResponseHeaders = true;
     options.RequestCultureProviders =
     [
+        new Mahjong.Web.Components.HowToPlay.HelpCultureProvider(),
         new CookieRequestCultureProvider(),
         new AcceptLanguageHeaderRequestCultureProvider(),
     ];
@@ -153,6 +155,20 @@ app.UseWhen(
 app.UseHttpsRedirection();
 RedirectToCanonicalHost(app, config["Site:CanonicalHost"]);
 app.UseRequestLocalization();
+// Reading a how-to-play page in a language makes it the site's language too, so "Play now" opens
+// the game in it.
+app.Use(async (context, next) =>
+{
+    if (Mahjong.Web.Components.HowToPlay.HelpPages.Parse(context.Request.Path.Value ?? "") is { } page)
+    {
+        context.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(page.Language)),
+            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), IsEssential = true, SameSite = SameSiteMode.Lax, Secure = context.Request.IsHttps });
+    }
+
+    await next();
+});
 // Spanish numbers and dates are written the Mexican way (see Strings.FormattingCulture).
 app.Use((context, next) =>
 {
