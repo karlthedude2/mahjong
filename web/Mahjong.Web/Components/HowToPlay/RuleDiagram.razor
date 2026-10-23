@@ -68,16 +68,16 @@
     {
         var svg = new StringBuilder();
         const double w = 46, h = 60;
-        Tile(svg, 60, 50, w, h, "東", ok: true);
-        Tile(svg, 60 + w, 50, w, h, "南", ok: false);
-        Tile(svg, 60 + 2 * w, 50, w, h, "西", ok: true);
-        Label(svg, 60 + 1.5 * w, 140, Es ? "Los extremos están libres" : "The ends are free");
+        Tile(svg, 20, 50, w, h, "東", ok: true);
+        Tile(svg, 20 + w, 50, w, h, "南", ok: false);
+        Tile(svg, 20 + 2 * w, 50, w, h, "西", ok: true);
+        Label(svg, 20 + 1.5 * w, 140, Es ? "Los extremos están libres" : "The ends are free");
 
         // The covered tile is greyed rather than crossed: a cross would be hidden under the tile on top.
-        Tile(svg, 380, 58, w, h, "北", dim: true);
-        Tile(svg, 380 + w / 2, 38, w, h, "中", Bad, ok: true);
-        Label(svg, 380 + w, 140, Es ? "Una ficha encima la bloquea" : "A tile on top blocks it");
-        return Wrap(svg, 600, 160, Es ? "Qué fichas están libres" : "Which tiles are free");
+        Tile(svg, 250, 58, w, h, "北", dim: true);
+        Tile(svg, 250 + w / 2, 38, w, h, "中", Bad, ok: true);
+        Label(svg, 250 + w, 140, Es ? "Una ficha encima la bloquea" : "A tile on top blocks it");
+        return Wrap(svg, 420, 160, Es ? "Qué fichas están libres" : "Which tiles are free");
     }
 
     // Matching: identical twins only.
@@ -93,10 +93,10 @@
             Label(svg, x + w + 4, 120, text);
         }
 
-        Pair(30, "中", Bad, "中", Bad, true, Es ? "Iguales: forman pareja" : "Identical: a pair");
-        Pair(230, "中", Bad, "發", Good, false, Es ? "Distintas" : "Different");
-        Pair(430, "❀1", Bad, "❀2", Bad, false, Es ? "Dos flores distintas" : "Two different flowers");
-        return Wrap(svg, 600, 140, Es ? "Qué fichas forman pareja" : "Which tiles match");
+        Pair(50, "中", Bad, "中", Bad, true, Es ? "Iguales: forman pareja" : "Identical: a pair");
+        Pair(205, "中", Bad, "發", Good, false, Es ? "Distintas" : "Different");
+        Pair(360, "❀1", Bad, "❀2", Bad, false, Es ? "Dos flores distintas" : "Two different flowers");
+        return Wrap(svg, 500, 140, Es ? "Qué fichas forman pareja" : "Which tiles match");
     }
 
     // The cube, one face seen straight on: corners and edges can be taken at first, the middle can't.
