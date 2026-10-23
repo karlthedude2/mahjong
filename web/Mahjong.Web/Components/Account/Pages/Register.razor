@@ -17,49 +17,57 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>@L["Register"]</PageTitle>
+<PageTitle>@L["Create an account"]</PageTitle>
 
-<h1>@L["Register"]</h1>
+@*
+    Sign up, in the sign-in page's dark style. The emoji helper and the avatars are folded away (they
+    open in place) so the form fits a phone screen; the display name's one rule stays in view.
+*@
+<div class="auth-page compact">
+    <h1>@L["Create an account"]</h1>
 
-<div class="row">
-    <div class="col-lg-6">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>@L["Create a new account."]</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.DisplayName" id="Input.DisplayName" class="form-control" autocomplete="nickname" aria-required="true" placeholder="@L["Your name"]" />
-                <label for="Input.DisplayName">@L["Display name (shown on leaderboards)"]</label>
-                <ValidationMessage For="() => Input.DisplayName" class="text-danger" />
-            </div>
+    <ExternalLoginPicker />
+
+    <div class="divider">@L["or with your email"]</div>
+
+    <StatusMessage Message="@Message" />
+    <EditForm Model="Input" method="post" OnValidSubmit="RegisterUser" FormName="register">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" role="alert" />
+        <div>
+            <label class="auth-field">
+                <span>@L["Display name"]</span>
+                <InputText @bind-Value="Input.DisplayName" id="Input.DisplayName" autocomplete="nickname" aria-required="true" />
+            </label>
+            <p class="name-note">@L["Shown on the leaderboards."] @L["Choose carefully: it can't be changed later."]</p>
+        </div>
+        <details>
+            <summary>@L["Add an emoji"]</summary>
             <DisplayNameHelp TargetId="Input.DisplayName" />
-            <AvatarPicker Legend="@L["Avatar (you can change it later)"]" @bind-Value="Input.Avatar" />
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" id="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="Input.Email">@L["Email"]</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="@L["Password"]" />
-                <label for="Input.Password">@L["Password"]</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="@L["Password"]" />
-                <label for="Input.ConfirmPassword">@L["Confirm password"]</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-            </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">@L["Register"]</button>
-        </EditForm>
-    </div>
-    <div class="col-lg-4 col-lg-offset-2">
-        <section>
-            <h3>@L["Use another service to register."]</h3>
-            <hr />
-            <ExternalLoginPicker />
-        </section>
+        </details>
+        <details>
+            <summary>@L["Avatar (you can change it later)"]</summary>
+            <AvatarPicker Legend="@L["Avatar"]" @bind-Value="Input.Avatar" />
+        </details>
+        <label class="auth-field">
+            <span>@L["Email"]</span>
+            <InputText @bind-Value="Input.Email" id="Input.Email" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+        </label>
+        <div class="pair-row">
+            <label class="auth-field">
+                <span>@L["Password"]</span>
+                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" autocomplete="new-password" aria-required="true" />
+            </label>
+            <label class="auth-field">
+                <span>@L["Confirm"]</span>
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" id="Input.ConfirmPassword" autocomplete="new-password" aria-required="true" />
+            </label>
+        </div>
+        <button type="submit" class="auth-primary">@L["Create account"]</button>
+    </EditForm>
+
+    <div class="foot">
+        <span>@L["Already have an account?"] <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Login", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))"><strong>@L["Sign in"]</strong></a></span>
     </div>
 </div>
 

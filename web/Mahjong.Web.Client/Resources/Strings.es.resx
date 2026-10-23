@@ -533,4 +533,16 @@
   <data name="That deal couldn't be found." xml:space="preserve"><value>No se encontró ese reparto.</value></data>
   <data name="This deal couldn't be found. It may never have been on a leaderboard." xml:space="preserve"><value>No se encontró este reparto. Quizás nunca estuvo en una clasificación.</value></data>
   <data name="Your current game ends here and won't be saved." xml:space="preserve"><value>Tu partida actual termina aquí y no se guardará.</value></data>
+  <data name="{0} (coming soon)" xml:space="preserve"><value>{0} (próximamente)</value></data>
+  <data name="Already have an account?" xml:space="preserve"><value>¿Ya tienes cuenta?</value></data>
+  <data name="Confirm" xml:space="preserve"><value>Confirmar</value></data>
+  <data name="Create an account" xml:space="preserve"><value>Crear una cuenta</value></data>
+  <data name="Forgot password?" xml:space="preserve"><value>¿Olvidaste tu contraseña?</value></data>
+  <data name="Keep your wins, your stats and your place on the leaderboards." xml:space="preserve"><value>Guarda tus victorias, tus estadísticas y tu lugar en las clasificaciones.</value></data>
+  <data name="New here?" xml:space="preserve"><value>¿Eres nuevo?</value></data>
+  <data name="or with your email" xml:space="preserve"><value>o con tu correo</value></data>
+  <data name="Resend the confirmation email" xml:space="preserve"><value>Reenviar el correo de confirmación</value></data>
+  <data name="Sign in with a passkey" xml:space="preserve"><value>Iniciar sesión con una llave de acceso</value></data>
+  <data name="soon" xml:space="preserve"><value>pronto</value></data>
+  <data name="Shown on the leaderboards." xml:space="preserve"><value>Aparece en las clasificaciones.</value></data>
 </root>
