@@ -545,4 +545,14 @@
   <data name="Sign in with a passkey" xml:space="preserve"><value>Iniciar sesión con una llave de acceso</value></data>
   <data name="soon" xml:space="preserve"><value>pronto</value></data>
   <data name="Shown on the leaderboards." xml:space="preserve"><value>Aparece en las clasificaciones.</value></data>
+  <data name="Play" xml:space="preserve"><value>Jugar</value></data>
+  <data name="Random" xml:space="preserve"><value>Al azar</value></data>
+  <data name="Solitaire" xml:space="preserve"><value>Solitario</value></data>
+  <data name="Connect" xml:space="preserve"><value>Conectar</value></data>
+  <data name="Cube" xml:space="preserve"><value>Cubo</value></data>
+  <data name="About the leaderboards" xml:space="preserve"><value>Sobre las clasificaciones</value></data>
+  <data name="Played" xml:space="preserve"><value>Jugadas</value></data>
+  <data name="Won" xml:space="preserve"><value>Ganadas</value></data>
+  <data name="1 win" xml:space="preserve"><value>1 victoria</value></data>
+  <data name="{0} wins" xml:space="preserve"><value>{0} victorias</value></data>
 </root>

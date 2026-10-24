@@ -1,0 +1,86 @@
+/* In the dark pages: the original score on a raised card, its Play button beside it. */
+.replay-intro,
+.closed,
+.replay-empty {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: #B8AE9C;
+}
+
+/* The link is in translated markup, so it has no scope attribute. */
+.replay-intro ::deep a {
+    color: #F3EEDC;
+}
+
+.original {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 14px 16px;
+    border: 1px solid #3A312B;
+    border-radius: 14px;
+    background: #201A16;
+}
+
+.original-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.overline {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #B8AE9C;
+}
+
+.original-score {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.original-meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: #B8AE9C;
+}
+
+.play-deal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 12px;
+    background: #D7263D;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.play-deal:hover {
+    background: #e63a50;
+    color: #fff;
+}
+
+.play-deal svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+.replay-heading {
+    margin: 4px 0 10px;
+    font-size: 18px;
+    font-weight: 600;
+}

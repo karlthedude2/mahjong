@@ -6,22 +6,27 @@
 
 <PageTitle>@(info == null ? L["Replays"] : L["{0}'s {1} deal", info.OriginalPlayer, L.LayoutName(info.Layout)]) - Mahjong Haus</PageTitle>
 
-@if (info == null)
-{
-    <h1>@L["Replays"]</h1>
-    <p>@L.Html("This deal couldn't be found. It may never have been on a leaderboard. <a href=\"leaderboards\">Back to the leaderboards</a>")</p>
-}
-else
-{
-    <h1>
-        @L["{0}'s {1} deal", info.OriginalPlayer, L.LayoutName(info.Layout)]
-        @if (info.RandomDeal)
-        {
-            <span class="badge bg-secondary align-middle fs-6">@L["Random deal"]</span>
-        }
-    </h1>
-    <ReplayDetails Info="info" />
-}
+<div class="dark-page">
+    @if (info == null)
+    {
+        <h1>@L["Replays"]</h1>
+        <p class="status">@L.Html("This deal couldn't be found. It may never have been on a leaderboard. <a href=\"leaderboards\">Back to the leaderboards</a>")</p>
+    }
+    else
+    {
+        <div>
+            <a class="back-link" href="leaderboards?layout=@Uri.EscapeDataString(info.Layout)">&larr; @L["Back to leaderboards"]</a>
+            <h1>
+                @L["{0}'s {1} deal", info.OriginalPlayer, L.LayoutName(info.Layout)]
+                @if (info.RandomDeal)
+                {
+                    <span class="title-tag">@L["Random deal"]</span>
+                }
+            </h1>
+        </div>
+        <ReplayDetails Info="info" />
+    }
+</div>
 
 @code {
     private ReplayInfo? info;

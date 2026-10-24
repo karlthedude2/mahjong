@@ -522,3 +522,197 @@ html[data-sound="off"] .sound-toggle .icon-sound-off {
 .auth-page .display-name-help p {
     color: #B8AE9C;
 }
+
+/* The leaderboards, a deal's replays and My stats (Components/Pages/Leaderboards, Replays, Stats): the
+   settings' dark style, wider than sign-in so a score fits on one line on a computer. */
+.content:has(.dark-page) {
+    padding: 24px 28px;
+    background: #171310;
+    color: #F3EEDC;
+    font-family: Outfit, system-ui, sans-serif;
+}
+
+@media (max-width: 600px) {
+    .content:has(.dark-page) {
+        flex: 1;
+        margin: 0;
+        padding: 16px;
+        border-radius: 0;
+    }
+}
+
+.dark-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dark-page h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.dark-page a {
+    color: #F3EEDC;
+}
+
+.dark-page .status {
+    margin: 0;
+    color: #B8AE9C;
+}
+
+.page-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-head h1 {
+    flex: 1;
+    min-width: 0;
+}
+
+/* The game switch and the layout list, on one row when there's room (also in the game page's
+   leaderboard dialog). */
+.board-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.seg {
+    display: flex;
+    flex: 1 1 auto;
+    border: 1px solid #3A312B;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #201A16;
+}
+
+.seg > a,
+.seg > button {
+    flex: 1;
+    padding: 9px 14px;
+    border: 0;
+    background: transparent;
+    color: #F3EEDC;
+    font: 600 14px Outfit, system-ui, sans-serif;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.seg > * + * {
+    border-left: 1px solid #3A312B;
+}
+
+.seg > a:hover,
+.seg > button:hover {
+    background: #2B231E;
+    color: #fff;
+}
+
+.seg > .active,
+.seg > .active:hover {
+    background: #D7263D;
+    color: #fff;
+}
+
+.seg .long {
+    display: none;
+}
+
+@media (min-width: 600px) {
+    .seg .short {
+        display: none;
+    }
+
+    .seg .long {
+        display: inline;
+    }
+}
+
+/* A list with its label small inside the box, like the settings' Game list. */
+.select-field {
+    position: relative;
+    display: block;
+    flex: 1 1 220px;
+    max-width: 100%;
+    margin: 0;
+}
+
+@media (min-width: 600px) {
+    .select-field {
+        flex: 0 0 240px;
+    }
+}
+
+.select-field > span {
+    position: absolute;
+    left: 14px;
+    top: 7px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #B8AE9C;
+    pointer-events: none;
+}
+
+.select-field select {
+    appearance: none;
+    width: 100%;
+    height: 52px;
+    padding: 18px 44px 0 14px;
+    border: 1px solid #3A312B;
+    border-radius: 12px;
+    background: #201A16;
+    color: #F3EEDC;
+    font: 600 17px Outfit, system-ui, sans-serif;
+    cursor: pointer;
+}
+
+.select-field select:focus-visible,
+.seg > :focus-visible {
+    outline: 3px solid #F3EEDC;
+    outline-offset: 1px;
+}
+
+.select-field svg {
+    position: absolute;
+    right: 14px;
+    top: 16px;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #D7263D;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.dark-page .back-link {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #B8AE9C;
+    text-decoration: none;
+}
+
+.dark-page .back-link:hover {
+    color: #F3EEDC;
+}
+
+.title-tag {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #2B231E;
+    border: 1px solid #3A312B;
+    color: #B8AE9C;
+    font-size: 13px;
+    font-weight: 600;
+    vertical-align: middle;
+}

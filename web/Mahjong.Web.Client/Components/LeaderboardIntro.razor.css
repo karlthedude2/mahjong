@@ -1,0 +1,63 @@
+.about {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.about summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #B8AE9C;
+    list-style: none;
+    cursor: pointer;
+}
+
+.about summary::-webkit-details-marker {
+    display: none;
+}
+
+.about summary:hover,
+.about[open] summary {
+    color: #F3EEDC;
+    background: #2B231E;
+}
+
+.about summary:focus-visible {
+    outline: 3px solid #F3EEDC;
+    outline-offset: 1px;
+}
+
+.about svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* Opens as a panel under the button, over what's below. */
+.about p {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    z-index: 5;
+    width: min(22rem, calc(100vw - 32px));
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid #3A312B;
+    border-radius: 12px;
+    background: #2B231E;
+    color: #F3EEDC;
+    font-size: 14px;
+    line-height: 1.45;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* The link is in translated markup, so it has no scope attribute. */
+.about p ::deep a {
+    color: #fff;
+}

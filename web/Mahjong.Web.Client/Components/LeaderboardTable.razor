@@ -1,42 +1,65 @@
 @using Mahjong.Web.Client.Api
 
 @*
-    A leaderboard's scores, each with links to play its deal and to see its replay list. Shared by
-    the Leaderboards page and the leaderboard dialog on the game page (which catches those links
-    and handles them in place).
+    A leaderboard's scores on a light panel, each row on two lines on a phone (name and score, then
+    time, date and the deal's icon links) and on one line on a computer. Shared by the Leaderboards
+    page, the leaderboard dialog on the game page (which catches the links and handles them in
+    place) and a deal's replay list (no deal links there; a badge on the scores that beat the original).
 *@
-<div class="table-responsive">
-    <table class="table table-sm">
-        <thead>
-            <tr><th scope="col">#</th><th scope="col">@L["Player"]</th><th scope="col" class="text-end">@L["Score"]</th><th scope="col" class="text-end" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</th><th scope="col" class="text-end">@L["Date"]</th><th scope="col" class="text-end" title="@L["Play the same deal and try to beat it. Replays are ranked on their own list."]">@L["Replay"]</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var entry in Entries)
-            {
-                <tr>
-                    <td>@entry.Rank</td>
-                    <td>
-                        <AvatarImage Id="@entry.Avatar" Size="24" CssClass="me-1" />
-                        @entry.DisplayName
-                        @if (entry.RandomDeal)
-                        {
-                            <span class="badge bg-secondary ms-1" title="@L["Won on a random deal, which isn't guaranteed to be clearable"]">@L["Random deal"]</span>
-                        }
-                    </td>
-                    <td class="text-end">@entry.Score.ToString("N0")</td>
-                    <td class="text-end">@entry.TimeText</td>
-                    <td class="text-end">@entry.AchievedUtc.ToString("d MMM yyyy")</td>
-                    <td class="text-end text-nowrap replay-links">
-                        <a href="?replay=@entry.GameId" title="@L["Play this exact deal"]">@L["Play this deal"]</a>
-                        <span class="dot">&middot;</span>
-                        <a href="replays/@entry.GameId" title="@L["Best replay scores on this deal"]">@L["Replays ({0})", entry.ReplayCount]</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="scores-panel @(ShowDealLinks ? null : "no-deal")">
+    <div class="scores-head" aria-hidden="true">
+        <span>#</span><span class="player">@L["Player"]</span><span class="num">@L["Score"]</span><span class="num" title="@L["How long the game took (pauses not counted)"]">@L["Time"]</span><span class="num">@L["Date"]</span>
+        @if (ShowDealLinks)
+        {
+            <span class="num" title="@L["Play the same deal and try to beat it. Replays are ranked on their own list."]">@L["Deal"]</span>
+        }
+    </div>
+    <ol class="scores">
+        @foreach (var entry in Entries)
+        {
+            <li>
+                <span class="rank @(entry.Rank <= 3 ? $"medal-{entry.Rank}" : null)">@entry.Rank</span>
+                <span class="avatar"><AvatarImage Id="@entry.Avatar" Size="32" /></span>
+                <span class="name">@entry.DisplayName</span>
+                <span class="score">@entry.Score.ToString("N0")</span>
+                <span class="meta">
+                    @if (entry.TimeText != "")
+                    {
+                        <span class="time">@entry.TimeText</span>
+                        <span class="dot" aria-hidden="true">&middot;</span>
+                    }
+                    <span class="date">@entry.AchievedUtc.ToString("d MMM yyyy")</span>
+                    @if (entry.RandomDeal)
+                    {
+                        <span class="tag" title="@L["Won on a random deal, which isn't guaranteed to be clearable"]"><span class="short">@L["Random"]</span><span class="long">@L["Random deal"]</span></span>
+                    }
+                    @if (BeatScore is { } beat && entry.Score > beat)
+                    {
+                        <span class="tag beat">@L["Beat the original"]</span>
+                    }
+                </span>
+                @if (ShowDealLinks)
+                {
+                    <span class="actions">
+                        <a class="icon-action" href="?replay=@entry.GameId" title="@L["Play this exact deal"]" aria-label="@L["Play this deal"]">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M7 4l13 8-13 8z" /></svg><span class="label">@L["Play"]</span>
+                        </a>
+                        <a class="icon-action" href="replays/@entry.GameId" title="@L["Best replay scores on this deal"]" aria-label="@L["Replays ({0})", entry.ReplayCount]">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4" /></svg>@entry.ReplayCount
+                        </a>
+                    </span>
+                }
+            </li>
+        }
+    </ol>
 </div>
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<LeaderboardEntry> Entries { get; set; } = [];
+
+    /// <summary>Whether each score links to playing its deal and to its replay list.</summary>
+    [Parameter] public bool ShowDealLinks { get; set; } = true;
+
+    /// <summary>On a replay list, the original's score: the scores above it get a badge.</summary>
+    [Parameter] public int? BeatScore { get; set; }
 }

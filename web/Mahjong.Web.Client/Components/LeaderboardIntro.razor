@@ -1,6 +1,14 @@
 @using Mahjong.Web.Client.Api
 
-@* What the leaderboards are: shared by the Leaderboards page and the leaderboard dialog. *@
-<p>
-    @L.Html("The top {0} verified scores for each layout. <a href=\"Account/Login\">Sign in</a> and play to get on the board. Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong> were won on a randomly dealt board, which isn't guaranteed to be clearable.", LeaderboardEntry.ListSize)
-</p>
+@*
+    What the leaderboards are, folded behind an info button that opens it in a small panel. Shared by
+    the Leaderboards page and the leaderboard dialog. A <details>, so it opens on the static page too.
+*@
+<details class="about">
+    <summary aria-label="@L["About the leaderboards"]" title="@L["About the leaderboards"]">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 11v6M12 7.5v.01" /></svg>
+    </summary>
+    <p>
+        @L.Html("The top {0} verified scores for each layout. <a href=\"Account/Login\">Sign in</a> and play to get on the board. Think you can do better on someone's deal? <strong>Play this deal</strong> deals you the exact same tiles. Replays are ranked on that deal's own list, so the original first-play score always stays here. Scores marked <strong>Random deal</strong> were won on a randomly dealt board, which isn't guaranteed to be clearable.", LeaderboardEntry.ListSize)
+    </p>
+</details>
