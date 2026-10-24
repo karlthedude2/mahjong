@@ -14,7 +14,7 @@
         <header>
             @if (ReplayId != null)
             {
-                <button type="button" class="btn btn-light btn-sm back" @onclick="() => OnShowLeaderboard.InvokeAsync(LayoutName)">
+                <button type="button" class="back" @onclick="() => OnShowLeaderboard.InvokeAsync(LayoutName)">
                     &larr; @L["Back to leaderboards"]
                 </button>
             }
@@ -28,7 +28,7 @@
                     @L["{0}'s {1} deal", replay.OriginalPlayer, L.LayoutName(replay.Layout)]
                     @if (replay.RandomDeal)
                     {
-                        <span class="badge bg-secondary align-middle fs-6 ms-2">@L["Random deal"]</span>
+                        <span class="title-tag">@L["Random deal"]</span>
                     }
                 }
                 else
@@ -36,7 +36,11 @@
                     @L["Replays"]
                 }
             </h2>
-            <button type="button" class="btn-close" aria-label="@L["Close"]" @onclick="CloseAsync"></button>
+            @if (ReplayId == null)
+            {
+                <LeaderboardIntro />
+            }
+            <button type="button" class="btn-close btn-close-white" aria-label="@L["Close"]" @onclick="CloseAsync"></button>
         </header>
 
         @* Keyed to what's shown, so moving between the leaderboard and a replay list starts at the top. *@
@@ -54,26 +58,25 @@
             }
             else
             {
-                <LeaderboardIntro />
-
-                <ul class="nav nav-pills mb-3">
-                    @foreach (var kind in Kinds)
-                    {
-                        <li class="nav-item">
-                            <button type="button" class="nav-link @(kind == Kind ? "active" : null)" @onclick="() => ShowKindAsync(kind)">@KindName(kind)</button>
-                        </li>
-                    }
-                </ul>
-
-                <label class="picker">
-                    <span>@PickerLabel</span>
-                    <select class="form-select form-select-sm" value="@LayoutName" @onchange="OnLayoutChangedAsync">
-                        @foreach (var l in Layouts.Where(l => l.Kind == Kind))
+                <div class="board-controls">
+                    <div class="seg" role="group" aria-label="@L["Game"]">
+                        @foreach (var kind in Kinds)
                         {
-                            <option value="@l.Name">@L.LayoutName(l)</option>
+                            <button type="button" class="@(kind == Kind ? "active" : null)" aria-pressed="@(kind == Kind ? "true" : "false")" @onclick="() => ShowKindAsync(kind)"><span class="short">@KindShortName(kind)</span><span class="long">@KindName(kind)</span></button>
                         }
-                    </select>
-                </label>
+                    </div>
+
+                    <label class="select-field">
+                        <span>@PickerLabel</span>
+                        <select value="@LayoutName" @onchange="OnLayoutChangedAsync">
+                            @foreach (var l in Layouts.Where(l => l.Kind == Kind))
+                            {
+                                <option value="@l.Name">@L.LayoutName(l)</option>
+                            }
+                        </select>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                    </label>
+                </div>
 
                 @if (entries == null)
                 {
@@ -162,6 +165,13 @@
         GameKind.Connect => L["Connect (Shisen-Sho)"],
         GameKind.Cube => L["Mahjong Cube"],
         _ => L["Mahjong Solitaire"],
+    };
+
+    private string KindShortName(GameKind kind) => kind switch
+    {
+        GameKind.Connect => L["Connect"],
+        GameKind.Cube => L["Cube"],
+        _ => L["Solitaire"],
     };
 
     // A game's tab opens on its first board (Twin Peaks for solitaire, as on the Leaderboards page).

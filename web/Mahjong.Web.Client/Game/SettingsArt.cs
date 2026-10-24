@@ -15,6 +15,7 @@ public static class SettingsArt
         "onyx" => "#1E1C1F",
         "beige" => "#D8C3A0",
         "squareMarble" => "url('textures/square-marble.jpg') center / cover",
+        "amethyst" => "url('textures/amethyst.jpg') center / cover",
         _ => "#EFE6D0",
     };
 

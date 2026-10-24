@@ -1,14 +1,286 @@
-/* Phones: the two replay links one above the other, so the row fits without scrolling sideways. */
-@media (max-width: 600px) {
-    .replay-links {
-        white-space: normal !important;
+/* A light panel in the dark pages, easy to read. It switches to one line per score when the panel
+   itself is wide (a container query), so it's right on the page and in the game page's dialog. */
+.scores-panel {
+    flex-shrink: 0;
+    container-type: inline-size;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #F7F1E3;
+    color: #2b2116;
+    font-family: Outfit, system-ui, sans-serif;
+    font-size: 15px;
+}
+
+.scores-head {
+    display: none;
+}
+
+.scores {
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+}
+
+/* Phone: rank and avatar on the left; the name and score on the first line, then time, date and the
+   deal's links. Nothing wraps; a long name is cut short with an ellipsis. */
+.scores li {
+    display: grid;
+    grid-template-columns: 26px 32px minmax(0, 1fr) auto;
+    grid-template-areas:
+        "rank avatar name score"
+        "rank avatar meta actions";
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 3px;
+    padding: 9px 12px;
+    white-space: nowrap;
+}
+
+.scores li + li {
+    border-top: 1px solid #e6dcc6;
+}
+
+.no-deal .scores li {
+    grid-template-areas:
+        "rank avatar name score"
+        "rank avatar meta meta";
+}
+
+.rank {
+    grid-area: rank;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: 700;
+    color: #6b5a44;
+}
+
+.medal-1 { background: #d9a400; color: #fff; }
+.medal-2 { background: #9aa3ad; color: #fff; }
+.medal-3 { background: #b4703a; color: #fff; }
+
+.avatar {
+    grid-area: avatar;
+    display: flex;
+}
+
+.name {
+    grid-area: name;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+}
+
+.score {
+    grid-area: score;
+    justify-self: end;
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.meta {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+    color: #6b5a44;
+}
+
+.time {
+    font-variant-numeric: tabular-nums;
+}
+
+.tag {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: #e6dcc6;
+    color: #2b2116;
+    font-size: 11px;
+}
+
+.tag.beat {
+    background: #d4ead0;
+    color: #1f5a2a;
+}
+
+.tag .long {
+    display: none;
+}
+
+.actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.icon-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 32px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid #d8ccb2;
+    border-radius: 8px;
+    background: #fff;
+    color: #2b2116;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.icon-action:hover {
+    border-color: #b8a888;
+    color: #000;
+}
+
+.icon-action:focus-visible {
+    outline: 3px solid #D7263D;
+    outline-offset: 1px;
+}
+
+.icon-action svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.icon-action svg .fill {
+    fill: currentColor;
+    stroke: none;
+}
+
+.icon-action .label {
+    display: none;
+}
+
+/* Wide: one row per score under a header, columns lined up (the fixed ones on the right). */
+@container (min-width: 640px) {
+    .scores-head,
+    .scores li {
+        column-gap: 12px;
+        padding-left: 14px;
+        padding-right: 14px;
     }
 
-    .replay-links a {
-        display: block;
+    .scores-head {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) 84px 64px 112px 128px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        background: #ece2cc;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #6b5a44;
     }
 
-    .replay-links .dot {
+    .scores-head .num {
+        text-align: right;
+    }
+
+    .scores-head > span:first-child {
+        text-align: center;
+    }
+
+    .scores {
+        padding: 0;
+    }
+
+    .scores li {
+        grid-template-columns: 30px 30px minmax(0, 1fr) auto 84px 64px 112px 128px;
+        grid-template-areas: none;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .no-deal .scores-head {
+        grid-template-columns: 30px minmax(0, 1fr) 84px 64px 112px;
+    }
+
+    .no-deal .scores li {
+        grid-template-columns: 30px 30px minmax(0, 1fr) auto 84px 64px 112px;
+        grid-template-areas: none;
+    }
+
+    .scores li > *,
+    .meta > * {
+        grid-row: 1;
+    }
+
+    .rank { grid-column: 1; justify-self: center; }
+    .avatar { grid-column: 2; }
+    .name { grid-column: 3; }
+    .score { grid-column: 5; font-size: 15px; }
+    .actions { grid-column: 8; }
+
+    .meta {
+        display: contents;
+        font-size: 15px;
+    }
+
+    .meta .dot {
         display: none;
+    }
+
+    .time {
+        grid-column: 6;
+        justify-self: end;
+        color: #2b2116;
+    }
+
+    .date {
+        grid-column: 7;
+        justify-self: end;
+    }
+
+    .tag {
+        grid-column: 4;
+        justify-self: start;
+    }
+
+    /* Both badges on one score (a random deal that beat the original): the second goes below. */
+    .tag + .tag {
+        grid-row: 2;
+    }
+
+    .tag .short {
+        display: none;
+    }
+
+    .tag .long {
+        display: inline;
+    }
+
+    .icon-action {
+        height: 30px;
+        padding: 0 10px;
+        gap: 6px;
+        font-size: 13px;
+    }
+
+    .icon-action svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    .icon-action .label {
+        display: inline;
     }
 }

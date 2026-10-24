@@ -33,12 +33,13 @@ public static class TileSets
     public static readonly TileSetInfo Onyx3D = new("3d-onyx", "Onyx", TileSetKind.ThreeD, "onyx");
     public static readonly TileSetInfo Beige3D = new("3d-beige", "Beige", TileSetKind.ThreeD, "beige");
     public static readonly TileSetInfo Marble3D = new("3d-marble", "Marble", TileSetKind.ThreeD, "squareMarble");
+    public static readonly TileSetInfo Amethyst3D = new("3d-amethyst", "Amethyst", TileSetKind.ThreeD, "amethyst");
 
     /// <summary>The sets for flat boards: Mahjong Solitaire and Connect.</summary>
     public static IReadOnlyList<TileSetInfo> Flat { get; } = [Classic, Simple];
 
     /// <summary>The stones for Mahjong 3D and the Mahjong Cube.</summary>
-    public static IReadOnlyList<TileSetInfo> Stones { get; } = [Ivory3D, Onyx3D, Beige3D, Marble3D];
+    public static IReadOnlyList<TileSetInfo> Stones { get; } = [Ivory3D, Onyx3D, Beige3D, Marble3D, Amethyst3D];
 
     public static IReadOnlyList<TileSetInfo> All { get; } = [.. Flat, .. Stones];
 

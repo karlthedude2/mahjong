@@ -7,40 +7,41 @@
 
 <PageTitle>@L["Leaderboards"] - Mahjong Haus</PageTitle>
 
-<h1>@L["Leaderboards"]</h1>
-<LeaderboardIntro />
+<div class="dark-page">
+    <div class="page-head">
+        <h1>@L["Leaderboards"]</h1>
+        <LeaderboardIntro />
+    </div>
 
-<ul class="nav nav-pills mb-3">
-    <li class="nav-item">
-        <a class="nav-link @(game == GameKind.Solitaire ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(DefaultLayoutName)">@L["Mahjong Solitaire"]</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link @(game == GameKind.Connect ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)">@L["Connect (Shisen-Sho)"]</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link @(game == GameKind.Cube ? "active" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Cube[0].Name)">@L["Mahjong Cube"]</a>
-    </li>
-</ul>
+    <div class="board-controls">
+        <nav class="seg" aria-label="@L["Game"]">
+            <a class="@(game == GameKind.Solitaire ? "active" : null)" aria-current="@(game == GameKind.Solitaire ? "page" : null)" href="leaderboards?layout=@Uri.EscapeDataString(DefaultLayoutName)"><span class="short">@L["Solitaire"]</span><span class="long">@L["Mahjong Solitaire"]</span></a>
+            <a class="@(game == GameKind.Connect ? "active" : null)" aria-current="@(game == GameKind.Connect ? "page" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Connect[0].Name)"><span class="short">@L["Connect"]</span><span class="long">@L["Connect (Shisen-Sho)"]</span></a>
+            <a class="@(game == GameKind.Cube ? "active" : null)" aria-current="@(game == GameKind.Cube ? "page" : null)" href="leaderboards?layout=@Uri.EscapeDataString(LayoutCatalog.Cube[0].Name)"><span class="short">@L["Cube"]</span><span class="long">@L["Mahjong Cube"]</span></a>
+        </nav>
 
-<form method="get" class="d-flex gap-2 align-items-center mb-3">
-    <label for="layout" class="form-label mb-0">@(game switch { GameKind.Connect => L["Board"], GameKind.Cube => L["Board size"], _ => L["Layout"] })</label>
-    <select id="layout" name="layout" class="form-select w-auto" onchange="this.form.submit()">
-        @foreach (var l in Choices)
-        {
-            <option value="@l.Name" selected="@(l.Name == selected)">@L.LayoutName(l)</option>
-        }
-    </select>
-    <noscript><button type="submit" class="btn btn-primary">@L["Show"]</button></noscript>
-</form>
+        <form method="get" class="select-field">
+            <span>@(game switch { GameKind.Connect => L["Board"], GameKind.Cube => L["Board size"], _ => L["Layout"] })</span>
+            <select id="layout" name="layout" aria-label="@(game switch { GameKind.Connect => L["Board"], GameKind.Cube => L["Board size"], _ => L["Layout"] })" onchange="this.form.submit()">
+                @foreach (var l in Choices)
+                {
+                    <option value="@l.Name" selected="@(l.Name == selected)">@L.LayoutName(l)</option>
+                }
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            <noscript><button type="submit" class="btn btn-primary mt-2">@L["Show"]</button></noscript>
+        </form>
+    </div>
 
-@if (entries.Count == 0)
-{
-    <p>@L["No scores on {0} yet. Be the first!", L.LayoutName(selected)]</p>
-}
-else
-{
-    <LeaderboardTable Entries="entries" />
-}
+    @if (entries.Count == 0)
+    {
+        <p class="status">@L["No scores on {0} yet. Be the first!", L.LayoutName(selected)]</p>
+    }
+    else
+    {
+        <LeaderboardTable Entries="entries" />
+    }
+</div>
 
 @code {
     private const string DefaultLayoutName = "Twin Peaks";
