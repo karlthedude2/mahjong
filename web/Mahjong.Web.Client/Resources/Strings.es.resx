@@ -555,4 +555,5 @@
   <data name="Won" xml:space="preserve"><value>Ganadas</value></data>
   <data name="1 win" xml:space="preserve"><value>1 victoria</value></data>
   <data name="{0} wins" xml:space="preserve"><value>{0} victorias</value></data>
+  <data name="Amethyst" xml:space="preserve"><value>Amatista</value></data>
 </root>

@@ -16,6 +16,7 @@ public sealed class SettingsArtTests
     [InlineData("3d-onyx", "#1E1C1F")]
     [InlineData("3d-beige", "#D8C3A0")]
     [InlineData("3d-marble", "url('textures/square-marble.jpg') center / cover")]
+    [InlineData("3d-amethyst", "url('textures/amethyst.jpg') center / cover")]
     public void EachStoneHasItsOwnLook(string id, string css) =>
         Assert.Equal(css, SettingsArt.StoneCss(TileSets.Find(id)));
 

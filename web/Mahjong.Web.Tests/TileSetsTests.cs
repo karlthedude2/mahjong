@@ -9,7 +9,7 @@ public sealed class TileSetsTests
     public void FlatSetsAndStonesAreSeparateLists()
     {
         Assert.Equal(["classic", "simple"], TileSets.Flat.Select(s => s.Id));
-        Assert.Equal(["ivory", "onyx", "beige", "squareMarble"], TileSets.Stones.Select(s => s.Stone));
+        Assert.Equal(["ivory", "onyx", "beige", "squareMarble", "amethyst"], TileSets.Stones.Select(s => s.Stone));
         Assert.All(TileSets.Flat, s => Assert.NotEqual(TileSetKind.ThreeD, s.Kind));
         Assert.All(TileSets.Stones, s => Assert.Equal(TileSetKind.ThreeD, s.Kind));
         Assert.Equal(TileSets.Flat.Concat(TileSets.Stones), TileSets.All);
